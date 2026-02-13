@@ -1,0 +1,37 @@
+## Problemática Identificada
+
+El trabajo colaborativo suele verse afectado por la falta de organización y seguimiento, lo que provoca confusión sobre responsabilidades, retrasos en las entregas y conflictos entre los integrantes de un equipo. La dificultad para coordinar tareas, establecer tiempos claros y visualizar el avance real del proyecto impide que los esfuerzos individuales se integren de manera coherente, dando como resultado trabajos incompletos o de baja calidad. Esta problemática no radica únicamente en las personas, sino en la ausencia de herramientas simples y adecuadas que permitan estructurar y controlar el proceso de trabajo en grupo.
+
+## Limitaciones del contexto colombiano
+
+En Colombia la principal barrera para la adopción de herramientas tecnológicas avanzadas no es únicamente la conectividad, sino el desarrollo de competencias digitales. Como advierte el reporte divulgado por La Nota Económica citando datos del MinTIC, “solo el 34,7 % de los colombianos cuenta con habilidades digitales básicas”, lo que implica que “2 de cada 3 personas aún no saben usar adecuadamente la tecnología para estudiar, trabajar o realizar trámites en línea” (La Nota Económica, 2025). Esto muestra que una gran parte de la población estudiantil no posee aún las competencias necesarias para desenvolverse en entornos digitales complejos.
+
+Aunque más del 80 % de los hogares posee acceso a internet, el uso se concentra principalmente en redes sociales y mensajería, lo que revela que el acceso no se traduce automáticamente en aprovechamiento educativo o productivo. Por ello, el informe señala que el país permanece en un “modo básico” de alfabetización digital y que la brecha actual se relaciona con la falta de formación tecno-pedagógica y acompañamiento en el uso significativo de las herramientas digitales.
+
+Este panorama se refleja también en el Índice de Brecha Digital Nacional, entregado por MinTIC, cuyos valores, entre 2018 y 2024, se mantienen alrededor de 0,38–0,40, indicando que persisten desigualdades importantes en acceso, aprovechamiento y habilidades digitales. En este escenario, exigir el uso de plataformas diseñadas para desarrolladores profesionales implica introducir herramientas cuya complejidad supera las capacidades digitales promedio del estudiantado, generando barreras de entrada antes que oportunidades de aprendizaje tecnológico.
+
+![Tomado de: Índice de Brecha Digital Nacional. 2024. MinTIC](https://github.com/user-attachments/assets/5ac308c0-939c-438b-a5ad-be1e91128c78)
+
+## Limitaciones de GitHub y plataformas similares en el entorno educativo
+
+Diversos estudios académicos muestran que GitHub, aunque es fundamental para el desarrollo profesional de software, presenta dificultades cuando se introduce en contextos educativos. Feliciano et al. (2016), al estudiar la experiencia estudiantil en cursos de ingeniería de software, observaron que muchos estudiantes enfrentaban problemas debido a la “falta de familiarización con Git y GitHub”, lo cual provocaba dificultades para aprovechar funciones como *pull requests* e *issues*. Los propios estudiantes señalaron que habría sido útil contar con “una clase introductoria dedicada a aprender cómo se usa GitHub al principio del curso”, lo que evidencia que la plataforma requiere formación previa para poder utilizarse correctamente.
+
+El mismo estudio recoge que varios estudiantes percibían que “GitHub simplemente no está diseñado para la educación”, señalando que la plataforma no cubre necesidades educativas básicas como la entrega formal de tareas o la gestión de calificaciones, obligando a los docentes a utilizar plataformas complementarias para cubrir funciones académicas esenciales. En adición , se reportan problemas de usabilidad, como la sobrecarga de notificaciones, donde estudiantes afirmaron recibir “millones de emails”, lo cual terminaba reduciendo su participación en actividades colaborativas debido al exceso de información. Estas experiencias reflejan que la lógica de funcionamiento de la plataforma no se adapta naturalmente al flujo educativo.
+
+Por otra parte, investigaciones que analizan el uso de herramientas del ecosistema GitHub, como Copilot, muestran que incluso usuarios expertos enfrentan dificultades técnicas. Zhang et al. (2023) encontraron que la principal limitación reportada por los practicantes es la “dificultad de integración”, lo que indica que incluso desarrolladores experimentados encuentran barreras técnicas para integrar adecuadamente estas herramientas en su flujo de trabajo.
+
+Estudios que utilizan datos de GitHub como objeto de investigación señalan limitaciones técnicas asociadas a la plataforma misma. Cosentino et al. (2016) reportan que muchos trabajos académicos encuentran problemas en la recolección de datos debido a restricciones de la API de GitHub, como límites de solicitudes y eventos que no se devuelven correctamente, lo que demuestra que se enfrentan obstáculos técnicos al trabajar con esta plataforma. Si estos problemas aparecen en contextos profesionales y de investigación, es razonable esperar que estudiantes sin experiencia técnica enfrenten dificultades aún mayores.
+
+En adición, el Classroom Report de GitHub en el año 2020 muestra una pobre utilización de la herramienta en el país, lo que refuerza la oportunidad que existe en el desarrollo de una nueva plataforma que colabore a la solución de la problemática. 
+ 
+![Tomado de: Classroom Report Github 2020](https://github.com/user-attachments/assets/b89ae9e5-352d-40c1-8489-336476bdea8c)
+
+En conjunto, estas evidencias indican que GitHub y plataformas similares fueron diseñadas para comunidades técnicas especializadas y no para estudiantes que recién comienzan a desarrollar competencias digitales y colaborativas.
+
+## Por qué es necesario EntregaYa *(Propuesta de valor)*
+
+La combinación entre una brecha significativa de habilidades digitales en Colombia y la complejidad técnica de plataformas profesionales evidencia la necesidad de una solución educativa más accesible. Mientras GitHub responde a necesidades propias del desarrollo profesional de software y algunas herramientas para la gestión de proyectos, el entorno académico requiere herramientas que acompañen progresivamente el aprendizaje tecnológico sin imponer barreras técnicas iniciales.
+
+EntregaYa se diferencia de plataformas existentes porque propone un entorno pensado desde la experiencia estudiantil, priorizando la facilidad de uso, la claridad visual y la colaboración académica sin requerir conocimientos previos de control de versiones o configuración técnica. En lugar de exigir que los estudiantes se adapten a una herramienta profesional compleja, la propuesta busca adaptar la tecnología a las necesidades reales del entorno educativo, permitiendo que más estudiantes participen en procesos colaborativos digitales sin sentirse excluidos o frustrados.
+
+De esta forma, la plataforma no pretende reemplazar herramientas profesionales, sino funcionar como un puente formativo que permita a los estudiantes desarrollar progresivamente competencias digitales y, cuando estén preparados, migrar a plataformas técnicas más avanzadas. En el contexto colombiano, donde la alfabetización digital aún presenta desafíos significativos, ofrecer un entorno tecnológico más cercano, intuitivo y pedagógico no solo mejora la experiencia de aprendizaje, sino que contribuye a cerrar brechas de participación tecnológica en el ámbito educativo.
