@@ -1,0 +1,13 @@
+//Conectar a GitHub
+
+spring.datasource.url=jdbc:postgresql://localhost:5432/entregaya
+spring.datasource.username=entregaya_user
+spring.datasource.password=tu_password_real
+
+
+//Esquema de la base de datos
+CREATE TABLE users (
+    id BIGSERIAL PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL
+);
