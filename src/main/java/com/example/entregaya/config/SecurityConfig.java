@@ -26,7 +26,7 @@ public class SecurityConfig {
 
         // Configuracion de autorizacion de rutas
         http.authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/css/**").permitAll() //permitAll para rutas publicas, redireccione siempre a la pagina de login
+                        .requestMatchers("/login","/register", "/css/**").permitAll() //permitAll para rutas publicas, redireccione siempre a la pagina de login
                         .anyRequest().authenticated() //las que no sean /login necesita login primero
                 )
 
