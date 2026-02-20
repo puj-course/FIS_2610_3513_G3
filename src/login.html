@@ -76,22 +76,5 @@ button:hover {
 </form>
 </div>
 
-<script>
-document.getElementById("loginForm").addEventListener("submit", function(e) {
-    e.preventDefault();
-
-    var usuario = document.getElementById("usuario").value;
-    var contrasena = document.getElementById("contrasena").value;
-    var error = document.getElementById("errorMsg");
-
-    if(usuario === "" || contrasena === "") {
-        error.style.display = "block";
-    } else {
-        error.style.display = "none";
-        alert("Inicio de sesión exitoso (simulado)");
-    }
-});
-</script>
-
 </body>
 </html>
