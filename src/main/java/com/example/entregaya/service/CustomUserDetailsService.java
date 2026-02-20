@@ -3,6 +3,7 @@ package com.example.entregaya.service;
 import com.example.entregaya.model.User;
 import com.example.entregaya.repository.UserRepository;
 import org.springframework.security.core.userdetails.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 /**
@@ -14,9 +15,11 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     // Repositorio para consultar usuarios en Postgres
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public CustomUserDetailsService(UserRepository userRepository) {
+    public CustomUserDetailsService(UserRepository userRepository,  PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
@@ -36,5 +39,19 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .username(user.getUsername())
                 .password(user.getPassword()) //contraseña encriptada por Bcrypt
                 .build();
+    }
+
+    /**
+     * Registra un nuevo usuario en la base de datos.
+     * Encripta la contraseña antes de guardarla.
+     */
+    public User register(String username, String password) {
+        if(userRepository.findByUsername(username).isPresent()){
+            throw new IllegalArgumentException("El usuario: " +username+ " ya existe\n");
+        }
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword(passwordEncoder.encode(password));
+        return userRepository.save(user);
     }
 }

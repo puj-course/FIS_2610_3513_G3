@@ -19,6 +19,13 @@ public class AuthController {
     }
 
     /**
+     * Muestra el formulario de registro.
+     */
+    @GetMapping("/register")
+    public String registerForm() {
+        return "register"; // retorna register.html
+    }
+    /**
      * Pagina principal luego de autenticacion.
      */
     @GetMapping("/dashboard")
