@@ -1,0 +1,19 @@
+Cambios realizados en rama Castrillo
+
+Se implementó la estructura base del módulo de autenticación usando arquitectura MVC con Spring Boot.
+
+Creación de paquetes: config, controller, service, repository, model.
+
+Configuración de conexión a PostgreSQL.
+
+Implementación de SecurityConfig para manejo de login, rutas protegidas y logout.
+
+Creación de AuthController para manejar las vistas de login y dashboard.
+
+Implementación de UserRepository para acceso a base de datos con JPA.
+
+Implementación de CustomUserDetailsService para autenticación con usuarios almacenados en base de datos.
+
+Creación de vistas login.html y dashboard.html.
+
+Se deja funcional el módulo básico de inicio de sesión conectado a base de datos.
