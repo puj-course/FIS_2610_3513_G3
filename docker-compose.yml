@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: entregaya_db
+    restart: always
+    environment:
+      POSTGRES_USER: 1234
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: entregaya
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Opcional: montar un directorio local para backups
+      # - ./backups:/backups
+      # Opcional: scripts de inicialización
+      # - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - postgres_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Opcional: pgAdmin para administración web
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin_entregaya
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: silver@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "8080:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - postgres_network
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+
+networks:
+  postgres_network:
+    driver: bridge
