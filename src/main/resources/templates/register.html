@@ -2,7 +2,7 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Entrega Ya - Login</title>
+    <title>Entrega Ya - Crear Cuenta</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -16,7 +16,7 @@
         .card {
             background-color: white;
             padding: 30px;
-            width: 350px;
+            width: 380px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             box-sizing: border-box;
@@ -44,33 +44,28 @@
         .secondary { background-color: #ccc; }
         .secondary:hover { background-color: #aaa; }
         .msg-error { color: red; font-size: 13px; margin-bottom: 10px; }
-        .msg-success { color: green; font-size: 13px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 <div class="card">
-    <h2>ENTREGA YA</h2>
+    <h2>Crear Cuenta</h2>
 
-    <!-- Thymeleaf muestra el error si Spring Security falla la autenticación -->
-    <p class="msg-error" th:if="${param.error}">Usuario o contraseña incorrectos.</p>
-    <!-- Thymeleaf muestra confirmación de logout -->
-    <p class="msg-success" th:if="${param.logout}">Sesión cerrada correctamente.</p>
-    <!-- Flash de registro exitoso -->
-    <p class="msg-success" th:if="${success}" th:text="${success}"></p>
+    <!-- Error desde el servidor (usuario duplicado, etc.) -->
+    <p class="msg-error" th:if="${error}" th:text="${error}"></p>
 
     <!--
-        El action apunta a /login (manejado por Spring Security automáticamente).
-        Spring Security espera los campos con name="username" y name="password".
-        El token CSRF es obligatorio para evitar ataques de tipo Cross-Site Request Forgery.
+        El formulario envía POST /register al AuthController.
+        Spring procesará los datos y llamará a CustomUserDetailsService.register().
+        La contraseña se encriptará con BCrypt antes de guardarse en PostgreSQL.
     -->
-    <form th:action="@{/login}" method="post">
+    <form th:action="@{/register}" method="post">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-        <input type="text" name="username" placeholder="Usuario" required>
-        <input type="password" name="password" placeholder="Contraseña" required>
-        <button type="submit">Iniciar Sesión</button>
+        <input type="text" name="username" placeholder="Nombre de usuario" required minlength="3">
+        <input type="password" name="password" placeholder="Contraseña" required minlength="6">
+        <button type="submit">Registrarse</button>
     </form>
 
-    <button class="secondary" onclick="window.location.href='/register'">Crear cuenta</button>
+    <button class="secondary" onclick="window.location.href='/login'">Volver al Login</button>
 </div>
 </body>
 </html>
