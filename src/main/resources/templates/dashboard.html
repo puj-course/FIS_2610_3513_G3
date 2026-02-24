@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Entrega Ya - Dashboard</title>
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; display: flex; }
+        .sidebar {
+            width: 220px;
+            background-color: #2f3542;
+            color: white;
+            height: 100vh;
+            padding-top: 20px;
+        }
+        .sidebar h2 { text-align: center; }
+        .sidebar ul { list-style: none; padding: 0; }
+        .sidebar ul li { padding: 15px; cursor: pointer; }
+        .sidebar ul li:hover { background-color: #57606f; }
+        .main { flex: 1; background-color: #f1f2f6; }
+        .topbar {
+            height: 60px;
+            background-color: white;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 0 20px;
+            gap: 12px;
+        }
+        /* Nombre del usuario autenticado */
+        .username { font-weight: bold; color: #2f3542; }
+        /* Botón de logout — usa un form para enviar POST con CSRF */
+        .logout-btn {
+            padding: 8px 16px;
+            background-color: #f4a535;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .logout-btn:hover { background-color: #e0932b; }
+        .content { padding: 30px; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>ENTREGA YA</h2>
+    <ul>
+        <li>Tareas</li>
+        <li>Equipos</li>
+        <li>Calendario</li>
+        <li>Chat</li>
+        <li>Proyectos</li>
+        <li>Reportes</li>
+    </ul>
+</div>
+
+<div class="main">
+    <div class="topbar">
+        <!--
+            #authentication.name — inyecta el username del usuario autenticado.
+            Requiere la dependencia thymeleaf-extras-springsecurity6 en el pom.xml.
+        -->
+        <span class="username" th:text="'Hola, ' + ${#authentication.name}">Usuario</span>
+
+        <!--
+            El logout DEBE ser POST con token CSRF para que Spring Security lo acepte.
+            Un simple <a href="/logout"> no funciona por seguridad.
+        -->
+        <form th:action="@{/logout}" method="post" style="margin:0">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="logout-btn">Cerrar sesión</button>
+        </form>
+    </div>
+
+    <div class="content">
+        <h1>Bienvenido al Dashboard</h1>
+        <p>Sesión activa como: <strong sec:authentication="name">usuario</strong></p>
+        <p>Aquí puedes gestionar tus tareas y equipos.</p>
+    </div>
+</div>
+
+</body>
+</html>
