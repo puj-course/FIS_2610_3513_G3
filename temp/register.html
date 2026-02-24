@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Entrega Ya - Crear Cuenta</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+.card {
+    background-color: white;
+    padding: 30px;
+    width: 380px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    box-sizing: border-box;
+}
+h2 { text-align: center; margin-bottom: 20px; }
+input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+button {
+    width: 100%;
+    padding: 10px;
+    background-color: #f4a535;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+button:hover { background-color: #e0932b; }
+.secondary { background-color: #ccc; }
+.secondary:hover { background-color: #aaa; }
+.msg-error { color: red; font-size: 13px; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<div class="card">
+    <h2>Crear Cuenta</h2>
+
+    <!-- Error desde el servidor (usuario duplicado, etc.) -->
+    <p class="msg-error" th:if="${error}" th:text="${error}"></p>
+
+    <!--
+        El formulario envía POST /register al AuthController.
+        Spring procesará los datos y llamará a CustomUserDetailsService.register().
+        La contraseña se encriptará con BCrypt antes de guardarse en PostgreSQL.
+    -->
+    <form th:action="@{/register}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <input type="text" name="username" placeholder="Nombre de usuario" required minlength="3">
+        <input type="password" name="password" placeholder="Contraseña" required minlength="6">
+        <button type="submit">Registrarse</button>
+    </form>
+
+    <button class="secondary" onclick="window.location.href='/login'">Volver al Login</button>
+</div>
+</body>
+</html>
