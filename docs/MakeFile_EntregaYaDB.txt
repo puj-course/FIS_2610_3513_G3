@@ -6,8 +6,45 @@ spring.datasource.password=tu_password_real
 
 
 //Esquema de la base de datos
+//Creacion de la tabla de usuarios
 CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
     username VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL
+);
+
+//Creacion de la tabla trabajo, representa un proyecto
+CREATE TABLE trabajo (
+    id BIGSERIAL PRIMARY KEY,
+    nombreTrabajo VARCHAR(255) UNIQUE NOT NULL,
+    descripcion VARCHAR(255),
+    fechaInicio TIMESTAMP,
+    fechaEntrega TIMESTAMP
+);
+
+//creacion de la tabla Colaboradores, relaciona la tabla usuarios y trabajo
+CREATE TABLE colaboradores (
+    usersid BIGINT NOT NULL,
+    trabajoid BIGINT NOT NULL,
+    PRIMARY KEY (usersid, trabajoid),
+    FOREIGN KEY (usersid) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (trabajoid) REFERENCES trabajo(id) ON DELETE CASCADE
+);
+
+CREATE TABLE tarea (
+    id BIGSERIAL PRIMARY KEY,
+    nombre VARCHAR(255) NOT NULL,
+    descripcion VARCHAR(255) NOT NULL,
+    fechanicio TIMESTAMP,
+    fechafinal TIMESTAMP,
+    trabajo_id BIGINT NOT NULL,
+    FOREIGN KEY (trabajo_id) REFERENCES trabajo(id) ON DELETE CASCADE
+);
+
+CREATE TABLE tarea_responsables (
+    tarea_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    PRIMARY KEY (tarea_id, user_id),
+    FOREIGN KEY (tarea_id) REFERENCES tarea(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
