@@ -30,3 +30,21 @@ CREATE TABLE colaboradores (
     FOREIGN KEY (usersid) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (trabajoid) REFERENCES trabajo(id) ON DELETE CASCADE
 );
+
+CREATE TABLE tarea (
+    id BIGSERIAL PRIMARY KEY,
+    nombre VARCHAR(255) NOT NULL,
+    descripcion VARCHAR(255) NOT NULL,
+    fechanicio TIMESTAMP,
+    fechafinal TIMESTAMP,
+    trabajo_id BIGINT NOT NULL,
+    FOREIGN KEY (trabajo_id) REFERENCES trabajo(id) ON DELETE CASCADE
+);
+
+CREATE TABLE tarea_responsables (
+    tarea_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    PRIMARY KEY (tarea_id, user_id),
+    FOREIGN KEY (tarea_id) REFERENCES tarea(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
