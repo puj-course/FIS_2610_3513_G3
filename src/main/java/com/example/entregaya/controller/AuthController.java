@@ -46,7 +46,7 @@ public class AuthController {
             return "redirect:/login";
         }catch(IllegalArgumentException il){
             redirectAttributes.addFlashAttribute("error", il.getMessage());
-            return "redirect:/login";
+            return "redirect:/register";
         }
     }
 
