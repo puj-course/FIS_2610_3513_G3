@@ -56,7 +56,10 @@ Como estudiante quiero configurar mis notificaciones para recibir solo avisos im
 Como estudiante quiero editar mi perfil para mantener mi información actualizada.
 
 ### HU-19
-Como estudiante quiero que mis archivos se guarden automáticamente para no perder avances del trabajo.
-
-### HU-20
 Como estudiante quiero ver quién es responsable de cada tarea para evitar confusiones en el trabajo grupal.
+
+### HU-NF-01
+Como estudiante quiero que el panel principal cargue en 2 segundos para poder acceder a mis trabajos sin perder tiempo.
+
+### HU-NF-02
+Como estudiante quiero que mis archivos se guarden automáticamente cada minuto para no perder avances del trabajo.
