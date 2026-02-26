@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EntregaYa - Detalle Trabajo</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background:#f4f4f4; margin:0; padding:0; }
+    header { background:#13161e; color:#fff; padding:14px 18px; }
+    header strong { font-size: 16px; }
+    .wrapper { max-width: 980px; margin: 22px auto; padding: 0 14px; }
+    .detail-card { 
+      background:#fff; 
+      border-radius:10px; 
+      padding:18px; 
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+    }
+    .detail-card h2 { margin: 0 0 8px 0; color: #13161e; }
+    .status-text { color:#666; margin:0 0 16px 0; font-size: 14px; }
+    .info-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+      gap: 24px; 
+      margin-bottom: 20px; 
+    }
+    .info-section { }
+    .field { margin-bottom: 14px; }
+    .field-label { 
+      color:#666; 
+      font-size:12px; 
+      font-weight: 600; 
+      text-transform: uppercase; 
+      letter-spacing: 0.5px; 
+    }
+    .field-content { 
+      font-size:14px; 
+      margin-top:6px; 
+      color: #333; 
+    }
+    .field-content ul { margin: 4px 0; padding-left: 20px; }
+    .field-content li { margin: 3px 0; }
+    .action-bar { 
+      display:flex; 
+      gap:10px; 
+      padding-top: 16px; 
+      border-top: 1px solid #eee; 
+    }
+    .primary-btn { 
+      background:#f4a535; 
+      border:none; 
+      padding:10px 16px; 
+      border-radius:6px; 
+      cursor:pointer; 
+      color: #fff;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .primary-btn:hover { background:#e0932b; }
+    .secondary-btn { 
+      background:#fff; 
+      border:1px solid #ddd; 
+      padding:10px 16px; 
+      border-radius:6px; 
+      cursor:pointer;
+      text-decoration: none;
+      display: inline-block;
+      color: #333;
+      font-size: 14px;
+    }
+    .secondary-btn:hover { background:#f8f8f8; }
+  </style>
+</head>
+<body>
+<header>
+  <strong>ENTREGAYA</strong> — Detalle del trabajo
+</header>
+<div class="wrapper">
+  <div class="detail-card">
+    <h2>Informe de Estructuras de Datos</h2>
+    <p class="status-text">Estado: <strong>Pendiente</strong></p>
+    
+    <div class="info-grid">
+      <div class="info-section">
+        <div class="field">
+          <div class="field-label">Curso</div>
+          <div class="field-content">Estructuras de Datos</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Fecha de creación</div>
+          <div class="field-content">2026-02-21</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Fecha de entrega</div>
+          <div class="field-content">2026-02-28</div>
+        </div>
+      </div>
+      
+      <div class="info-section">
+        <div class="field">
+          <div class="field-label">Descripción</div>
+          <div class="field-content">
+            Preparar informe con explicación de estructuras, complejidad y pruebas.
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">Integrantes</div>
+          <div class="field-content">
+            <ul>
+              <li>Juan</li>
+              <li>Esteban</li>
+              <li>Daniel</li>
+              <li>Andrés</li>
+              <li>Alejandro</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="action-bar">
+      <a class="secondary-btn" href="lista-trabajos.html">← Volver</a>
+      <button class="primary-btn">Editar</button>
+      <button class="primary-btn">Marcar como finalizado</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

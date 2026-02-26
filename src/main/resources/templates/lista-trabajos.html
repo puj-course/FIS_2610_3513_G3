@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EntregaYa - Detalle Trabajo</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f4f4f4; margin:0; }
+    header { background:#13161e; color:#fff; padding:14px 18px; }
+    .container { max-width: 980px; margin: 22px auto; padding: 0 14px; }
+    .card { background:#fff; border-radius:10px; padding:18px; box-shadow: 0 0 10px rgba(0,0,0,0.08); }
+    .row { display:flex; gap:18px; flex-wrap:wrap; }
+    .col { flex: 1; min-width: 260px; }
+    .label { color:#666; font-size:12px; margin-top:10px; }
+    .value { font-size:14px; margin-top:4px; }
+    .btn { background:#f4a535; border:none; padding:10px 12px; border-radius:6px; cursor:pointer; }
+    .btn:hover { background:#e0932b; }
+    .btn-secondary { background:#fff; border:1px solid #ccc; }
+    .btn-secondary:hover { background:#eee; }
+    .actions { display:flex; gap:10px; margin-top:16px; }
+    ul { padding-left: 18px; }
+    a { color:#1f5eff; text-decoration:none; }
+  </style>
+</head>
+<body>
+<header>
+  <strong>ENTREGAYA</strong> — Trabajos
+</header>
+
+<div class="container">
+  <div class="toolbar">
+    <input class="search" type="text" placeholder="Buscar trabajo..." />
+    <button class="btn">Crear trabajo</button>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <span class="tag">Pendiente</span>
+      <h3>Informe de Estructuras de Datos</h3>
+      <div class="meta">Curso: Estructuras de Datos • Fecha: 2026-02-21</div>
+      <div class="meta">Integrantes: 5 • Entrega: 2026-02-28</div>
+      <p><a href="detalle-trabajo.html">Ver detalle</a></p>
+    </div>
+
+    <div class="card">
+      <span class="tag">En progreso</span>
+      <h3>Mockups módulo Gestión</h3>
+      <div class="meta">Curso: FIS • Fecha: 2026-02-20</div>
+      <div class="meta">Integrantes: 6 • Entrega: 2026-03-02</div>
+      <p><a href="detalle-trabajo.html">Ver detalle</a></p>
+    </div>
+
+    <div class="card">
+      <span class="tag">Finalizado</span>
+      <h3>DDL Base de Datos</h3>
+      <div class="meta">Curso: Bases de Datos • Fecha: 2026-02-19</div>
+      <div class="meta">Integrantes: 4 • Entrega: 2026-02-19</div>
+      <p><a href="detalle-trabajo.html">Ver detalle</a></p>
+    </div>
+  </div>
+</div>
+</body>
+</html>
