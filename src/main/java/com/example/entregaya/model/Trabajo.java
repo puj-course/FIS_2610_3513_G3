@@ -105,4 +105,12 @@ public class Trabajo {
     public void agregarColaborador(User user) {
         this.colaboradores.add(user);
     }
+
+    public Set<Tarea> getTareas() {
+        return tareas;
+    }
+
+    public void setTareas(Set<Tarea> tareas) {
+        this.tareas = tareas;
+    }
 }
