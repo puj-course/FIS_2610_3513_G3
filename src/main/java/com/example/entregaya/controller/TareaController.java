@@ -22,6 +22,7 @@ public class TareaController {
     public String formulario(Model model, @PathVariable long trabajoId) {
         model.addAttribute("tarea", new Tarea());
         model.addAttribute("trabajoId", trabajoId);
+        model.addAttribute("dificultades", Tarea.Dificultad.values());
         return "trabajos/tareas";
     }
     @PostMapping("/nueva")
@@ -31,9 +32,13 @@ public class TareaController {
     }
 
     @PostMapping("/{tareaId}/eliminar")
-    public String eliminar(@PathVariable Long trabajoId,
-                           @PathVariable Long tareaId) {
+    public String eliminar(@PathVariable Long trabajoId, @PathVariable Long tareaId) {
         customTareaDetailsService.eliminar(tareaId);
+        return "redirect:/trabajos/" + trabajoId;
+    }
+    @PostMapping
+    public String completar(@PathVariable Long trabajoId, @PathVariable Long tareaId) {
+        customTareaDetailsService.toggleCompletada(tareaId);
         return "redirect:/trabajos/" + trabajoId;
     }
 }
