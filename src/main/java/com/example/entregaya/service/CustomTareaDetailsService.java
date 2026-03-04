@@ -42,7 +42,7 @@ public class CustomTareaDetailsService {
     //alternar estado de tarea, completada/pendiente
     public void toggleCompletada(Long tareaId) {
         Tarea tarea = findById(tareaId);
-        tarea.setCompletada(!tarea.getCompletada());
+        tarea.setCompletada(!tarea.getIsCompletada());
         tareaRepository.save(tarea);
     }
 
@@ -54,7 +54,7 @@ public class CustomTareaDetailsService {
 
         int pesoTotal = tareas.stream().mapToInt(t -> t.getDificultad().getPeso()).sum();
 
-        int pesoCompletado = tareas.stream().filter(Tarea::getCompletada).mapToInt(t -> t.getDificultad().getPeso()).sum();
+        int pesoCompletado = tareas.stream().filter(Tarea::getIsCompletada).mapToInt(t -> t.getDificultad().getPeso()).sum();
 
         return (int) Math.round((pesoCompletado * 100.0) / pesoTotal);
     }

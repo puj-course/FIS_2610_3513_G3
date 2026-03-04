@@ -35,7 +35,7 @@ public class TrabajoController {
         }
 
         model.addAttribute("trabajos", trabajos);
-        model.addAttribute("progressos", progresos);
+        model.addAttribute("progresos", progresos);
         return "trabajo/lista";
     }
     @GetMapping("/nuevo")

@@ -36,7 +36,7 @@ public class TareaController {
         customTareaDetailsService.eliminar(tareaId);
         return "redirect:/trabajos/" + trabajoId;
     }
-    @PostMapping
+    @PostMapping("/{tareaId}/completar")
     public String completar(@PathVariable Long trabajoId, @PathVariable Long tareaId) {
         customTareaDetailsService.toggleCompletada(tareaId);
         return "redirect:/trabajos/" + trabajoId;
