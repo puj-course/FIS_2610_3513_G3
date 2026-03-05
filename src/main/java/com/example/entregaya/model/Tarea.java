@@ -138,7 +138,7 @@ public class Tarea {
         this.dificultad = dificultad;
     }
 
-    public boolean getCompletada() {
+    public boolean getIsCompletada() {
         return completada;
     }
 
