@@ -1,9 +1,10 @@
 package com.example.entregaya.config;
 
+import com.example.entregaya.service.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -17,6 +18,11 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class SecurityConfig {
 
+    private final CustomUserDetailsService userDetailsService;
+
+    public SecurityConfig(CustomUserDetailsService userDetailsService) {
+        this.userDetailsService = userDetailsService;
+    }
     /**
      * Configuracion del filtro de seguridad.
      * Se definen las reglas de acceso.
@@ -26,7 +32,7 @@ public class SecurityConfig {
 
         // Configuracion de autorizacion de rutas
         http.authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/css/**").permitAll() //permitAll para rutas publicas, redireccione siempre a la pagina de login
+                        .requestMatchers("/login","/register", "/css/**", "/js/**","/img/**").permitAll() //permitAll para rutas publicas, redireccione siempre a la pagina de login
                         .anyRequest().authenticated() //las que no sean /login necesita login primero
                 )
 
@@ -39,19 +45,23 @@ public class SecurityConfig {
 
                 // Configuracion del logout
                 .logout(logout -> logout
-                        .logoutSuccessUrl("/logout") //redireccion despues de cerrar sesion
+                        .logoutSuccessUrl("/login?logout") //redireccion despues de cerrar sesion
                         .permitAll()
                 );
 
         return http.build();
     }
 
-    /**
-     * Bean para encriptar contraseñas usando BCrypt.
-     * Es obligatorio para validar contraseñas almacenadas en la base de datos.
-     */
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public DaoAuthenticationProvider authenticationProvider(
+            CustomUserDetailsService userDetailsService,
+            PasswordEncoder passwordEncoder) {
+
+        DaoAuthenticationProvider provider =
+                new DaoAuthenticationProvider(userDetailsService);
+
+        provider.setPasswordEncoder(passwordEncoder);
+        return provider;
     }
+
 }
