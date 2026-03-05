@@ -16,6 +16,7 @@ public class CustomTareaDetailsService {
         this.tareaRepository = tareaRepository;
         this.trabajoRepository = trabajoRepository;
     }
+
     //Crear una tarea asociada a un trabajo
     public Tarea crearTarea(Tarea tarea, Long trabajoId) {
         Trabajo trabajo =  trabajoRepository.findById(trabajoId)
@@ -38,4 +39,23 @@ public class CustomTareaDetailsService {
         tareaRepository.deleteById(Id);
     }
 
+    //alternar estado de tarea, completada/pendiente
+    public void toggleCompletada(Long tareaId) {
+        Tarea tarea = findById(tareaId);
+        tarea.setCompletada(!tarea.getIsCompletada());
+        tareaRepository.save(tarea);
+    }
+
+    // Calcular el progreso de un trabajo teniendo en cuenta las dificultades de las tareas
+    public int calcularProgreso(Long trabajoId) {
+        List<Tarea> tareas = tareaRepository.findBytrabajoId(trabajoId);
+
+        if (tareas.isEmpty()) return 0;
+
+        int pesoTotal = tareas.stream().mapToInt(t -> t.getDificultad().getPeso()).sum();
+
+        int pesoCompletado = tareas.stream().filter(Tarea::getIsCompletada).mapToInt(t -> t.getDificultad().getPeso()).sum();
+
+        return (int) Math.round((pesoCompletado * 100.0) / pesoTotal);
+    }
 }

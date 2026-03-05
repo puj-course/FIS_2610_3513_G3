@@ -39,19 +39,40 @@ public class Tarea {
     )
     private Set<User> responsables = new HashSet<>();
 
+    // Enum de dificultad de tarea
+    public enum Dificultad {
+        SIMPLE, MEDIA, ALTA;
+
+        // Peso por dificicultad
+        public int getPeso() {
+            return switch (this) {
+                case SIMPLE -> 1;
+                case MEDIA  -> 2;
+                case ALTA   -> 3;
+            };
+        }
+    }
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Dificultad dificultad = Dificultad.MEDIA;
+
+    // Estado de la tarea
+    @Column(nullable = false)
+    private boolean completada = false;
     public Tarea() {
     }
 
-    public Tarea(Long id, String nombre, String descripcion, LocalDateTime fechaInicio, LocalDateTime fechaFinal) {
+    public Tarea(Long id, String nombre, String descripcion, LocalDateTime fechaInicio, LocalDateTime fechaFinal, Dificultad dificultad) {
         this.id = id;
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.fechaInicio = fechaInicio;
         this.fechaFinal = fechaFinal;
+        this.dificultad = dificultad;
     }
 
     // Getters y Setters
-
 
     public Long getId() {
         return id;
@@ -108,4 +129,21 @@ public class Tarea {
     public void setResponsables(Set<User> responsables) {
         this.responsables = responsables;
     }
+
+    public Dificultad getDificultad() {
+        return dificultad;
+    }
+
+    public void setDificultad(Dificultad dificultad) {
+        this.dificultad = dificultad;
+    }
+
+    public boolean getIsCompletada() {
+        return completada;
+    }
+
+    public void setCompletada(boolean completada) {
+        this.completada = completada;
+    }
+
 }

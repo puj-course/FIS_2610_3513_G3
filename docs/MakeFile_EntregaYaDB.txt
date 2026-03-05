@@ -35,9 +35,11 @@ CREATE TABLE tarea (
     id BIGSERIAL PRIMARY KEY,
     nombre VARCHAR(255) NOT NULL,
     descripcion VARCHAR(255) NOT NULL,
-    fechanicio TIMESTAMP,
+    fechainicio TIMESTAMP,
     fechafinal TIMESTAMP,
     trabajo_id BIGINT NOT NULL,
+    dificultad VARCHAR(20) NOT NULL DEFAULT 'MEDIA',
+    completada BOOLEAN NOT NULL DEFAULT FALSE,
     FOREIGN KEY (trabajo_id) REFERENCES trabajo(id) ON DELETE CASCADE
 );
 
