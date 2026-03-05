@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>EntregaYa - Nueva Tarea</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; }
+        header {
+            background: #2f3542;
+            color: #fff;
+            padding: 14px 20px;
+        }
+        header strong { font-size: 16px; }
+        .container {
+            max-width: 600px;
+            margin: 36px auto;
+            padding: 0 16px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 28px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        .card h2 { margin: 0 0 6px 0; color: #2f3542; }
+        .card .subtitle {
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 22px;
+        }
+        label {
+            display: block;
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        input[type="text"], textarea, input[type="datetime-local"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            font-family: Arial, sans-serif;
+        }
+        textarea { height: 80px; resize: vertical; }
+        input:focus, textarea:focus { outline: none; border-color: #f4a535; }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .priority-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .priority-option input[type="radio"] { display: none; }
+        .priority-option label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 2px solid #e0e0e0;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.15s;
+            color: #666;
+        }
+        .priority-option input[type="radio"]:checked + label {
+            border-color: transparent;
+            color: #fff;
+        }
+        .priority-option.baja input:checked + label   { background: #27ae60; }
+        .priority-option.media input:checked + label  { background: #f4a535; }
+        .priority-option.alta input:checked + label   { background: #e84040; }
+        .priority-option.baja label:hover   { border-color: #27ae60; color: #27ae60; }
+        .priority-option.media label:hover  { border-color: #f4a535; color: #f4a535; }
+        .priority-option.alta label:hover   { border-color: #e84040; color: #e84040; }
+        .actions { display: flex; gap: 10px; margin-top: 8px; }
+        .btn-primary {
+            background: #f4a535;
+            color: #fff;
+            border: none;
+            padding: 11px 22px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary:hover { background: #e0932b; }
+        .btn-secondary {
+            background: #fff;
+            color: #333;
+            border: 1px solid #ccc;
+            padding: 11px 22px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-secondary:hover { background: #f0f0f0; }
+    </style>
+</head>
+<body>
+
+<header>
+    <strong>ENTREGAYA</strong> — Nueva Tarea
+</header>
+
+<div class="container">
+    <div class="card">
+        <h2>Crear nueva tarea</h2>
+        <p class="subtitle">Trabajo ID: <span th:text="${trabajoId}"></span></p>
+
+        <!--
+            POST /trabajos/{trabajoId}/tareas/nueva
+            TareaController.guardar() asocia la tarea al trabajo
+            mediante CustomTareaDetailsService.crearTarea().
+        -->
+        <form th:action="@{/trabajos/{id}/tareas/nueva(id=${trabajoId})}"
+              th:object="${tarea}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+            <label for="nombre">Nombre de la tarea *</label>
+            <input type="text" id="nombre" th:field="*{nombre}"
+                   placeholder="Ej. Redactar introducción" required/>
+
+            <label for="descripcion">Descripción</label>
+            <textarea id="descripcion" th:field="*{descripcion}"
+                      placeholder="Detalla qué implica esta tarea..."></textarea>
+
+            <label>Dificultad</label>
+            <div class="priority-group">
+                <div class="priority-option baja">
+                    <input type="radio" id="pSimple" name="dificultad" value="SIMPLE"/>
+                    <label for="pSimple">🟢 Simple</label>
+                </div>
+                <div class="priority-option media">
+                    <input type="radio" id="pMedia" name="dificultad" value="MEDIA" checked/>
+                    <label for="pMedia">🟡 Media</label>
+                </div>
+                <div class="priority-option alta">
+                    <input type="radio" id="pAlta" name="dificultad" value="ALTA"/>
+                    <label for="pAlta">🔴 Alta</label>
+                </div>
+            </div>
+
+            <div class="row">
+                <div>
+                    <label for="fechaInicio">Fecha de inicio</label>
+                    <input type="datetime-local" id="fechaInicio" th:field="*{fechaInicio}"/>
+                </div>
+                <div>
+                    <label for="fechaFinal">Fecha de fin</label>
+                    <input type="datetime-local" id="fechaFinal" th:field="*{fechaFinal}"/>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="submit" class="btn-primary">Crear tarea</button>
+                <a th:href="@{/trabajos/{id}(id=${trabajoId})}" class="btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

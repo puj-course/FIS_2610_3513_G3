@@ -4,6 +4,7 @@ import com.example.entregaya.model.Tarea;
 import com.example.entregaya.repository.TareaRepository;
 import com.example.entregaya.service.CustomUserDetailsService;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -62,11 +63,15 @@ public class AuthController {
      * Pagina principal luego de autenticacion.
      */
     @GetMapping("/dashboard")
-    public String dashboard(@RequestParam(name = "id", required = false) Long id) {
+    public String dashboard(@RequestParam(name = "id", required = false) Long id, Model model) {
         long startTime = System.currentTimeMillis();
-        List<Tarea> listaTareas = tareaRepository.buscarPorTrabajoNativo(id);
+        List<Tarea> listaTareas = new java.util.ArrayList<>();
+        if (id != null) {
+            listaTareas = tareaRepository.buscarPorTrabajoNativo(id);
+        }
         long backendDuration = System.currentTimeMillis() - startTime;
         System.out.println("Timepo: " + backendDuration + "ms");
+        model.addAttribute("id", id);
 
         return "dashboard"; // Retorna dashboard.html
     }

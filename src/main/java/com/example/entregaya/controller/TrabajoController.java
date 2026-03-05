@@ -1,6 +1,7 @@
 package com.example.entregaya.controller;
 
 
+import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
 import com.example.entregaya.service.CustomTrabajoDetailsService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,13 +21,15 @@ public class TrabajoController {
     }
     @GetMapping
     public String trabajo(Model model, @AuthenticationPrincipal UserDetails user) {
-        model.addAttribute("trabajos", customTrabajoDetailsService.listarPorUsuario(user.getUsername()));
-        return "trabajo/lista";
+        if (user == null) return "redirect:/login";
+        model.addAttribute("trabajo", new Trabajo());
+        return "lista-trabajos";
     }
+
     @GetMapping("/nuevo")
     public String formulario(Model model) {
         model.addAttribute("trabajo", new Trabajo());
-        return "trabajo/formulario";
+        return "trabajos/formulario";
     }
     @PostMapping("/nuevo")
     public String guardar(@ModelAttribute Trabajo trabajo, @AuthenticationPrincipal UserDetails user) {
@@ -43,5 +46,16 @@ public class TrabajoController {
     public String eliminar (@PathVariable long id) {
         customTrabajoDetailsService.obtenerPorId(id);
         return "redirect:/trabajos";
+    }
+    @GetMapping("/CrearTarea")
+    public String CrearTarea(Model model) {
+        model.addAttribute("tarea", new Tarea());
+        return "trabajos/CrearTarea";
+    }
+
+    @GetMapping("/trabajos-especificos")
+    public String TrabajosEspecificos(Model model) {
+        model.addAttribute("trabajo", new Trabajo());
+        return "trabajos-especificos";
     }
 }
