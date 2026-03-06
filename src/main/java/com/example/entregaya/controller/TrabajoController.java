@@ -1,6 +1,7 @@
 package com.example.entregaya.controller;
 
 
+import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
 import com.example.entregaya.service.CustomTrabajoDetailsService;
 import com.example.entregaya.service.CustomTareaDetailsService;
@@ -59,5 +60,16 @@ public class TrabajoController {
     public String eliminar (@PathVariable long id) {
         customTrabajoDetailsService.eliminar(id);
         return "redirect:/trabajos";
+    }
+    @GetMapping("/CrearTarea")
+    public String CrearTarea(Model model) {
+        model.addAttribute("tarea", new Tarea());
+        return "trabajos/CrearTarea";
+    }
+
+    @GetMapping("/trabajos-especificos")
+    public String TrabajosEspecificos(Model model) {
+        model.addAttribute("trabajo", new Trabajo());
+        return "trabajos-especificos";
     }
 }
