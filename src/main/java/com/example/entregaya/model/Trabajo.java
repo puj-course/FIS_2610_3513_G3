@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @Entity
 @Table(name = "trabajo")
@@ -19,9 +20,11 @@ public class Trabajo {
     @Column(name = "descripcion")
     private String descripcion;
 
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     @Column(name = "fechainicio")
     private LocalDateTime fechaInicio;
 
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     @Column(name = "fechaentrega")
     private LocalDateTime fechaEntrega;
 

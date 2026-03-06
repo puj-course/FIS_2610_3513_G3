@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrega Ya - Detalle Trabajo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+        }
+
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        header strong { color: #FF6B35; font-size: 16px; }
+        header a {
+            color: #95a5a6;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        header a:hover { color: white; }
+
+        .container {
+            max-width: 860px;
+            margin: 30px auto;
+            padding: 0 16px;
+        }
+
+        /* Tarjeta info trabajo */
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.08);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .trabajo-titulo {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .trabajo-desc {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .info-row {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            font-size: 13px;
+            color: #95a5a6;
+            margin-bottom: 16px;
+        }
+        .info-row span strong { color: #2c3e50; }
+
+        /* Barra de progreso */
+        .progress-section { margin-bottom: 8px; }
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #7f8c8d;
+            margin-bottom: 6px;
+        }
+        .progress-bar {
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #3498db;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        /* Acciones trabajo */
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+            padding-top: 16px;
+            border-top: 1px solid #ecf0f1;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: Arial, sans-serif;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-primary { background-color: #f4a535; color: white; }
+        .btn-primary:hover { background-color: #e0932b; }
+        .btn-danger { background-color: #e74c3c; color: white; }
+        .btn-danger:hover { background-color: #c0392b; }
+
+        /* Colaboradores */
+        .colaboradores {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 4px;
+        }
+        .colaborador-tag {
+            background: #eaf4fb;
+            color: #2980b9;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* Sección tareas */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .section-header h2 {
+            font-size: 17px;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        /* Tabla tareas */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0,0,0,0.08);
+        }
+        thead {
+            background-color: #2c3e50;
+            color: white;
+        }
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        td {
+            padding: 12px 16px;
+            font-size: 13px;
+            color: #2c3e50;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background-color: #f8f9fa; }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 9px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .badge-simple    { background: #d4edda; color: #155724; }
+        .badge-media     { background: #fff3cd; color: #856404; }
+        .badge-alta      { background: #f8d7da; color: #721c24; }
+        .badge-pendiente { background: #cce5ff; color: #004085; }
+        .badge-completada{ background: #d4edda; color: #155724; }
+
+        .tarea-actions {
+            display: flex;
+            gap: 6px;
+        }
+        .btn-sm {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 3px;
+            font-size: 12px;
+            font-family: Arial, sans-serif;
+            cursor: pointer;
+        }
+        .btn-completar  { background-color: #27ae60; color: white; }
+        .btn-completar:hover { background-color: #219a52; }
+        .btn-deshacer   { background-color: #95a5a6; color: white; }
+        .btn-deshacer:hover { background-color: #7f8c8d; }
+        .btn-eliminar   { background-color: #e74c3c; color: white; }
+        .btn-eliminar:hover { background-color: #c0392b; }
+
+        /* Sin tareas */
+        .empty-tareas {
+            text-align: center;
+            padding: 40px;
+            color: #95a5a6;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.08);
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <strong>ENTREGA YA</strong>
+    <a th:href="@{/trabajos}">← Volver a trabajos</a>
+</header>
+
+<div class="container">
+
+    <!-- Info del trabajo -->
+    <div class="card">
+        <div class="card-header">
+            <div class="trabajo-titulo" th:text="${trabajo.nombreTrabajo}">Nombre del trabajo</div>
+        </div>
+
+        <div class="trabajo-desc"
+             th:if="${trabajo.descripcion}"
+             th:text="${trabajo.descripcion}">
+            Descripción
+        </div>
+
+        <div class="info-row">
+            <span th:if="${trabajo.fechaInicio}">
+                📅 Inicio: <strong th:text="${#temporals.format(trabajo.fechaInicio, 'dd/MM/yyyy')}">--</strong>
+            </span>
+            <span th:if="${trabajo.fechaEntrega}">
+                ⏰ Entrega: <strong th:text="${#temporals.format(trabajo.fechaEntrega, 'dd/MM/yyyy')}">--</strong>
+            </span>
+            <span>
+                👥 Integrantes: <strong th:text="${#sets.size(trabajo.colaboradores)}">0</strong>
+            </span>
+            <span>
+                📋 Tareas: <strong th:text="${#sets.size(trabajo.tareas)}">0</strong>
+            </span>
+        </div>
+
+        <!-- Colaboradores -->
+        <div th:if="${not #sets.isEmpty(trabajo.colaboradores)}">
+            <div style="font-size:12px; color:#95a5a6; margin-bottom:6px;">COLABORADORES</div>
+            <div class="colaboradores">
+                <span class="colaborador-tag"
+                      th:each="col : ${trabajo.colaboradores}"
+                      th:text="${col.username}">
+                    Usuario
+                </span>
+            </div>
+        </div>
+
+        <!-- Progreso -->
+        <div class="progress-section" style="margin-top:16px;">
+            <div class="progress-label">
+                <span>Progreso general</span>
+                <span th:text="${progreso} + '%'">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" th:style="'width:' + ${progreso} + '%'"></div>
+            </div>
+        </div>
+
+        <!-- Acciones del trabajo -->
+        <div class="card-actions">
+            <a th:href="@{/trabajos/{id}/tareas/nueva(id=${trabajo.id})}" class="btn btn-primary">
+                + Nueva tarea
+            </a>
+            <form th:action="@{/trabajos/{id}/eliminar(id=${trabajo.id})}" method="post" style="margin:0"
+                  onsubmit="return confirm('¿Eliminar este trabajo y todas sus tareas?')">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" class="btn btn-danger">Eliminar trabajo</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tareas -->
+    <div class="section-header">
+        <h2>Tareas</h2>
+    </div>
+
+    <!-- Con tareas -->
+    <table th:if="${not #sets.isEmpty(trabajo.tareas)}">
+        <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Dificultad</th>
+            <th>Fecha límite</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="tarea : ${trabajo.tareas}">
+            <td>
+                <div th:text="${tarea.nombre}" style="font-weight:bold;">Nombre</div>
+                <div th:if="${tarea.descripcion}"
+                     th:text="${tarea.descripcion}"
+                     style="font-size:12px; color:#95a5a6; margin-top:2px;">
+                </div>
+            </td>
+            <td>
+                    <span class="badge"
+                          th:classappend="${tarea.dificultad.name() == 'SIMPLE'} ? 'badge-simple' : (${tarea.dificultad.name() == 'MEDIA'} ? 'badge-media' : 'badge-alta')"
+                          th:text="${tarea.dificultad.name()}">
+                        MEDIA
+                    </span>
+            </td>
+            <td th:text="${tarea.fechaFinal != null} ? ${#temporals.format(tarea.fechaFinal, 'dd/MM/yyyy')} : '—'">—</td>
+            <td>
+                    <span class="badge"
+                          th:classappend="${tarea.isCompletada} ? 'badge-completada' : 'badge-pendiente'"
+                          th:text="${tarea.isCompletada} ? 'Completada' : 'Pendiente'">
+                        Pendiente
+                    </span>
+            </td>
+            <td>
+                <div class="tarea-actions">
+                    <!-- Completar / Deshacer -->
+                    <form th:action="@{/trabajos/{wId}/tareas/{tId}/completar(wId=${trabajo.id}, tId=${tarea.id})}"
+                          method="post" style="margin:0">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <button type="submit"
+                                class="btn-sm"
+                                th:classappend="${tarea.isCompletada} ? 'btn-deshacer' : 'btn-completar'"
+                                th:text="${tarea.isCompletada} ? 'Deshacer' : 'Completar'">
+                        </button>
+                    </form>
+                    <!-- Eliminar -->
+                    <form th:action="@{/trabajos/{wId}/tareas/{tId}/eliminar(wId=${trabajo.id}, tId=${tarea.id})}"
+                          method="post" style="margin:0"
+                          onsubmit="return confirm('¿Eliminar esta tarea?')">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <button type="submit" class="btn-sm btn-eliminar">Eliminar</button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <!-- Sin tareas -->
+    <div class="empty-tareas" th:if="${#sets.isEmpty(trabajo.tareas)}">
+        <p>No hay tareas aún.</p>
+        <a th:href="@{/trabajos/{id}/tareas/nueva(id=${trabajo.id})}"
+           style="display:inline-block; margin-top:12px; padding:8px 18px; background:#f4a535; color:white; border-radius:4px; text-decoration:none; font-size:13px;">
+            + Agregar primera tarea
+        </a>
+    </div>
+
+</div>
+</body>
+</html>
