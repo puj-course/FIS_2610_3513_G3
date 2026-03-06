@@ -38,6 +38,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getUsername())
                 .password(user.getPassword()) //contraseña encriptada por Bcrypt
+                .roles("USER")
                 .build();
     }
 
@@ -48,6 +49,9 @@ public class CustomUserDetailsService implements UserDetailsService {
     public User register(String username, String password) {
         if(userRepository.findByUsername(username).isPresent()){
             throw new IllegalArgumentException("El usuario: " +username+ " ya existe\n");
+        }
+        if(password==null || password.length()<6){
+            throw new IllegalArgumentException("la contraseña debe tener mas de 6 carcateres");
         }
         User user = new User();
         user.setUsername(username);

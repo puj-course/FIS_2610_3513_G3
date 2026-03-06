@@ -1,351 +1,132 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ENTREGA YA — Detalle de Tarea</title>
-
-<style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
---bg: #f5f3ef;
---surface: #ffffff;
---surface2: #fdf8f0;
---accent: #f4a535;
---accent2: #e05c2a;
---dark: #13161e;
---text: #1e2130;
---muted: #7a7d8a;
---border: #e8e4dc;
---progress: #3b82f6;
---radius: 12px;
-}
-
-body {
-font-family: 'Segoe UI', sans-serif;
-background: var(--bg);
-min-height: 100vh;
-color: var(--text);
-}
-
-header {
-background: var(--dark);
-padding: 14px 24px;
-display: flex;
-align-items: center;
-justify-content: space-between;
-}
-.header-brand {
-font-family: 'Segoe UI', sans-serif;
-font-size: 1rem;
-font-weight: 800;
-color: #fff;
-letter-spacing: 0.5px;
-}
-.header-brand span {
-background: linear-gradient(90deg, var(--accent), var(--accent2));
--webkit-background-clip: text;
--webkit-text-fill-color: transparent;
-background-clip: text;
-}
-.header-sub { font-size: 0.78rem; color: #7a7d8a; font-weight: 300; }
-
-.wrapper {
-max-width: 760px;
-margin: 32px auto;
-padding: 0 16px;
-animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both;
-}
-@keyframes fadeUp {
-from { opacity:0; transform:translateY(18px); }
-to { opacity:1; transform:translateY(0); }
-}
-
-.back-link {
-display: inline-flex;
-align-items: center;
-gap: 6px;
-font-size: 0.83rem;
-color: var(--muted);
-text-decoration: none;
-margin-bottom: 18px;
-transition: color 0.2s;
-}
-.back-link:hover { color: var(--accent2); }
-
-.card {
-background: var(--surface);
-border-radius: 16px;
-border: 1px solid var(--border);
-overflow: hidden;
-box-shadow: 0 4px 24px rgba(0,0,0,0.06);
-}
-.card-stripe {
-height: 4px;
-background: linear-gradient(90deg, var(--accent), var(--accent2));
-}
-
-.task-header {
-padding: 20px 24px 18px;
-border-bottom: 1px solid var(--border);
-display: flex;
-align-items: flex-start;
-justify-content: space-between;
-gap: 12px;
-}
-.task-title {
-font-family: 'Segoe UI', sans-serif;
-font-size: 1.25rem;
-font-weight: 700;
-color: var(--text);
-}
-.status-badge {
-display: inline-flex;
-align-items: center;
-gap: 6px;
-padding: 5px 12px;
-border-radius: 999px;
-font-size: 0.75rem;
-font-weight: 500;
-white-space: nowrap;
-flex-shrink: 0;
-}
-.status-badge.progress {
-background: #eff6ff;
-color: var(--progress);
-border: 1px solid #bfdbfe;
-}
-.status-badge.progress::before {
-content: '';
-width: 7px; height: 7px;
-border-radius: 50%;
-background: var(--progress);
-animation: pulse 1.4s infinite;
-}
-@keyframes pulse {
-0%,100% { opacity:1; transform:scale(1); }
-50% { opacity:0.5; transform:scale(1.4); }
-}
-
-.info-grid {
-display: grid;
-grid-template-columns: 1fr 1fr;
-}
-@media (max-width: 540px) { .info-grid { grid-template-columns: 1fr; } }
-
-.info-block {
-padding: 18px 24px;
-border-bottom: 1px solid var(--border);
-}
-.info-block:nth-child(odd) { border-right: 1px solid var(--border); }
-.info-block.full { grid-column: 1 / -1; border-right: none; border-bottom: none; }
-
-.info-label {
-font-size: 0.7rem;
-font-weight: 600;
-text-transform: uppercase;
-letter-spacing: 0.8px;
-color: var(--muted);
-margin-bottom: 6px;
-}
-.info-value { font-size: 0.92rem; color: var(--text); }
-.info-value.highlight { font-size: 1rem; font-weight: 500; }
-
-.date-tag {
-display: inline-flex;
-align-items: center;
-gap: 5px;
-background: #fff1f0;
-color: #dc2626;
-border: 1px solid #fecaca;
-padding: 3px 10px;
-border-radius: 6px;
-font-size: 0.83rem;
-font-weight: 500;
-}
-
-/* Priority */
-.priority-group {
-display: flex;
-gap: 8px;
-margin-top: 4px;
-flex-wrap: wrap;
-}
-.priority-btn {
-padding: 6px 16px;
-border-radius: 8px;
-border: 1.5px solid var(--border);
-background: var(--surface2);
-font-family: 'Segoe UI', sans-serif;
-font-size: 0.83rem;
-font-weight: 500;
-cursor: pointer;
-color: var(--muted);
-transition: all 0.18s;
-}
-.priority-btn:hover { border-color: var(--accent); color: var(--text); background: #fdf6ec; }
-.priority-btn.active.low { background:#f0fdf4; color:#16a34a; border-color:#86efac; }
-.priority-btn.active.medium { background:#fefce8; color:#ca8a04; border-color:#fde047; }
-.priority-btn.active.high { background:#fff1f0; color:#dc2626; border-color:#fca5a5; }
-
-.section {
-padding: 20px 24px;
-border-bottom: 1px solid var(--border);
-}
-.comment-label {
-font-size: 0.7rem;
-font-weight: 600;
-text-transform: uppercase;
-letter-spacing: 0.8px;
-color: var(--muted);
-margin-bottom: 8px;
-}
-textarea {
-width: 100%;
-min-height: 90px;
-background: var(--surface2);
-border: 1.5px solid var(--border);
-border-radius: var(--radius);
-padding: 12px 14px;
-font-family: 'Segoe UI', sans-serif;
-font-size: 0.88rem;
-color: var(--text);
-resize: vertical;
-outline: none;
-transition: border-color 0.2s, box-shadow 0.2s;
-}
-textarea::placeholder { color: #c4c1ba; }
-textarea:focus {
-border-color: var(--accent);
-box-shadow: 0 0 0 3px rgba(244,165,53,0.12);
-}
-
-.action-bar {
-padding: 18px 24px;
-display: flex;
-gap: 10px;
-flex-wrap: wrap;
-align-items: center;
-}
-.btn {
-padding: 10px 18px;
-border-radius: 8px;
-font-family: 'Segoe UI', sans-serif;
-font-size: 0.88rem;
-font-weight: 500;
-cursor: pointer;
-transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
-border: none;
-}
-.btn:hover { transform: translateY(-1px); }
-.btn-complete {
-background: linear-gradient(135deg, var(--accent), var(--accent2));
-color: #fff;
-box-shadow: 0 4px 14px rgba(244,165,53,0.3);
-}
-.btn-complete:hover { box-shadow: 0 6px 20px rgba(244,165,53,0.45); }
-.btn-complete.done {
-background: linear-gradient(135deg,#22c55e,#16a34a);
-box-shadow: 0 4px 14px rgba(34,197,94,0.3);
-}
-.btn-edit {
-background: var(--surface2);
-color: var(--text);
-border: 1.5px solid var(--border);
-}
-.btn-edit:hover { background: #ece9e3; }
-.btn-back {
-background: transparent;
-color: var(--muted);
-border: 1.5px solid var(--border);
-text-decoration: none;
-display: inline-flex;
-align-items: center;
-gap: 4px;
-}
-.btn-back:hover { color: var(--text); background: #f0ede7; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EntregaYa - Detalle Trabajo</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background:#f4f4f4; margin:0; padding:0; }
+    header { background:#13161e; color:#fff; padding:14px 18px; }
+    header strong { font-size: 16px; }
+    .wrapper { max-width: 980px; margin: 22px auto; padding: 0 14px; }
+    .detail-card { 
+      background:#fff; 
+      border-radius:10px; 
+      padding:18px; 
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+    }
+    .detail-card h2 { margin: 0 0 8px 0; color: #13161e; }
+    .status-text { color:#666; margin:0 0 16px 0; font-size: 14px; }
+    .info-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+      gap: 24px; 
+      margin-bottom: 20px; 
+    }
+    .info-section { }
+    .field { margin-bottom: 14px; }
+    .field-label { 
+      color:#666; 
+      font-size:12px; 
+      font-weight: 600; 
+      text-transform: uppercase; 
+      letter-spacing: 0.5px; 
+    }
+    .field-content { 
+      font-size:14px; 
+      margin-top:6px; 
+      color: #333; 
+    }
+    .field-content ul { margin: 4px 0; padding-left: 20px; }
+    .field-content li { margin: 3px 0; }
+    .action-bar { 
+      display:flex; 
+      gap:10px; 
+      padding-top: 16px; 
+      border-top: 1px solid #eee; 
+    }
+    .primary-btn { 
+      background:#f4a535; 
+      border:none; 
+      padding:10px 16px; 
+      border-radius:6px; 
+      cursor:pointer; 
+      color: #fff;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .primary-btn:hover { background:#e0932b; }
+    .secondary-btn { 
+      background:#fff; 
+      border:1px solid #ddd; 
+      padding:10px 16px; 
+      border-radius:6px; 
+      cursor:pointer;
+      text-decoration: none;
+      display: inline-block;
+      color: #333;
+      font-size: 14px;
+    }
+    .secondary-btn:hover { background:#f8f8f8; }
+  </style>
 </head>
 <body>
-
 <header>
-<span class="header-brand">ENTREGA <span>YA</span></span>
-<span class="header-sub">Detalles de tarea</span>
+  <strong>ENTREGAYA</strong> — Detalle del trabajo
 </header>
-
 <div class="wrapper">
-<a href="Listatrabajos.html" class="back-link">← Volver a trabajos</a>
+  <div class="detail-card">
+    <h2>Informe de Estructuras de Datos</h2>
+    <p class="status-text">Estado: <strong>Pendiente</strong></p>
+    
+    <div class="info-grid">
+      <div class="info-section">
+        <div class="field">
+          <div class="field-label">Curso</div>
+          <div class="field-content">Estructuras de Datos</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Fecha de creación</div>
+          <div class="field-content">2026-02-21</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Fecha de entrega</div>
+          <div class="field-content">2026-02-28</div>
+        </div>
+      </div>
+      
+      <div class="info-section">
+        <div class="field">
+          <div class="field-label">Descripción</div>
+          <div class="field-content">
+            Preparar informe con explicación de estructuras, complejidad y pruebas.
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">Integrantes</div>
+          <div class="field-content">
+            <ul>
+              <li>Juan</li>
+              <li>Esteban</li>
+              <li>Daniel</li>
+              <li>Andrés</li>
+              <li>Alejandro</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
 
-<div class="card">
-<div class="card-stripe"></div>
-
-<div class="task-header">
-<div class="task-title">Tarea: Implementación</div>
-<span class="status-badge progress" id="statusBadge">En progreso</span>
+    <div class="action-bar">
+      <a class="secondary-btn" href="lista-trabajos.html">← Volver</a>
+      <button class="primary-btn">Editar</button>
+        <a class="primary-btn" th:href="@{/trabajos/CrearTarea}" style="text-decoration: none; text-align: center;">
+            Añadir Tarea
+        </a>
+      <button class="primary-btn">Marcar como finalizado</button>
+    </div>
+  </div>
 </div>
-
-<div class="info-grid">
-<div class="info-block">
-<div class="info-label">Responsable</div>
-<div class="info-value highlight">Juan</div>
-</div>
-<div class="info-block">
-<div class="info-label">Trabajo asociado</div>
-<div class="info-value">Informe de Estructuras de Datos</div>
-</div>
-<div class="info-block">
-<div class="info-label">Fecha límite</div>
-<div class="info-value">
-<span class="date-tag">⏰ 05/04/2026</span>
-</div>
-</div>
-<div class="info-block">
-<div class="info-label">Estado</div>
-<div class="info-value">En progreso</div>
-</div>
-
-<!-- Prioridad -->
-<div class="info-block full">
-<div class="info-label">Prioridad</div>
-<div class="priority-group">
-<button class="priority-btn low" onclick="setPriority(this)">🟢 Simple</button>
-<button class="priority-btn medium active" onclick="setPriority(this)">🟡 Media</button>
-<button class="priority-btn high" onclick="setPriority(this)">🔴 Alta</button>
-</div>
-</div>
-</div>
-
-<div class="section">
-<div class="comment-label">Comentarios</div>
-<textarea placeholder="Agrega un comentario o nota sobre esta tarea…"></textarea>
-</div>
-
-<div class="action-bar">
-<a href="Listatrabajos.html" class="btn btn-back">← Volver</a>
-<button class="btn btn-edit">✏ Editar</button>
-<button class="btn btn-complete" id="completeBtn" onclick="markComplete()">
-✓ Marcar como completado
-</button>
-</div>
-</div>
-</div>
-
-<script>
-function setPriority(el) {
-document.querySelectorAll('.priority-btn').forEach(b => b.classList.remove('active'));
-el.classList.add('active');
-}
-
-function markComplete() {
-const btn = document.getElementById('completeBtn');
-const badge = document.getElementById('statusBadge');
-btn.textContent = '✓ Completado';
-btn.classList.add('done');
-btn.disabled = true;
-badge.textContent = 'Completado';
-badge.style.cssText = 'background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;animation:none;';
-}
-</script>
 </body>
 </html>

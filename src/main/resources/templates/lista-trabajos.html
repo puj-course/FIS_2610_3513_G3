@@ -30,8 +30,9 @@
 <div class="container">
   <div class="toolbar">
     <input class="search" type="text" placeholder="Buscar trabajo..." />
-    <button class="btn">Crear trabajo</button>
-  </div>
+      <a th:href="@{/trabajos/nuevo}" style="text-decoration: none;">
+          <button type="button" class="btn">Crear trabajo</button>
+      </a>  </div>
 
   <div class="grid">
     <div class="card">
@@ -39,7 +40,7 @@
       <h3>Informe de Estructuras de Datos</h3>
       <div class="meta">Curso: Estructuras de Datos • Fecha: 2026-02-21</div>
       <div class="meta">Integrantes: 5 • Entrega: 2026-02-28</div>
-      <p><a href="detalle-trabajo.html">Ver detalle</a></p>
+        <p><a th:href="@{/trabajos/trabajos-especificos}">Ver detalle</a></p>
     </div>
 
     <div class="card">
@@ -47,7 +48,7 @@
       <h3>Mockups módulo Gestión</h3>
       <div class="meta">Curso: FIS • Fecha: 2026-02-20</div>
       <div class="meta">Integrantes: 6 • Entrega: 2026-03-02</div>
-      <p><a href="detalle-trabajo.html">Ver detalle</a></p>
+        <p><a th:href="@{/trabajos/trabajos-especificos}">Ver detalle</a></p>
     </div>
 
     <div class="card">
@@ -55,7 +56,7 @@
       <h3>DDL Base de Datos</h3>
       <div class="meta">Curso: Bases de Datos • Fecha: 2026-02-19</div>
       <div class="meta">Integrantes: 4 • Entrega: 2026-02-19</div>
-      <p><a href="detalle-trabajo.html">Ver detalle</a></p>
+        <p><a th:href="@{/trabajos-especificos}">Ver detalle</a></p>
     </div>
   </div>
 </div>

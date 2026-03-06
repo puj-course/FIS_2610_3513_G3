@@ -2,6 +2,9 @@ package com.example.entregaya.model;
 
 import jakarta.persistence.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Table(name = "users")
 public class User {
@@ -16,8 +19,11 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    //Constructores
+    @ManyToMany(mappedBy = "colaboradores")
+    private Set<Trabajo> trabajos = new HashSet<>();
 
+
+    //Constructores
     public User( ){
 
     }
@@ -54,5 +60,11 @@ public class User {
         this.password = password;
     }
 
+    public Set<Trabajo> getTrabajos() {
+        return trabajos;
+    }
 
+    public void setTrabajos(Set<Trabajo> trabajos) {
+        this.trabajos = trabajos;
+    }
 }

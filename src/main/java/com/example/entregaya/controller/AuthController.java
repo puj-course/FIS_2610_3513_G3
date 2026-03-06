@@ -1,11 +1,20 @@
 package com.example.entregaya.controller;
 
+import com.example.entregaya.model.Trabajo;
+import com.example.entregaya.service.CustomTareaDetailsService;
+import com.example.entregaya.service.CustomTrabajoDetailsService;
 import com.example.entregaya.service.CustomUserDetailsService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.ui.Model;
+
+
+import java.util.*;
 
 /**
  * Controlador encargado de manejar las vistas
@@ -16,9 +25,16 @@ public class AuthController {
 
 
     private final CustomUserDetailsService userDetailsService;
+    private final CustomTareaDetailsService customTareaDetailsService;
+    private final CustomTrabajoDetailsService customTrabajoDetailsService;
 
-    public AuthController(CustomUserDetailsService UserDetailsService) {
+    public AuthController(CustomUserDetailsService UserDetailsService,
+                          CustomTrabajoDetailsService customTrabajoDetailsService,
+                          CustomTareaDetailsService customTareaDetailsService) {
+
         this.userDetailsService = UserDetailsService;
+        this.customTareaDetailsService = customTareaDetailsService;
+        this.customTrabajoDetailsService = customTrabajoDetailsService;
     }
 
     /**
@@ -46,7 +62,7 @@ public class AuthController {
             return "redirect:/login";
         }catch(IllegalArgumentException il){
             redirectAttributes.addFlashAttribute("error", il.getMessage());
-            return "redirect:/login";
+            return "redirect:/register";
         }
     }
 
@@ -56,7 +72,20 @@ public class AuthController {
      * Pagina principal luego de autenticacion.
      */
     @GetMapping("/dashboard")
-    public String dashboard() {
+    public String dashboard(Model model, @AuthenticationPrincipal UserDetails userDetails) {
+        List<Trabajo> todos = customTrabajoDetailsService.listarPorUsuario(userDetails.getUsername());
+
+        Map<Long, Integer> progresos = new HashMap<>();
+        for (Trabajo trabajo : todos) {
+            progresos.put(trabajo.getId(), customTareaDetailsService.calcularProgreso(trabajo.getId()));
+        }
+        List<Trabajo> activos=todos.stream()
+                .filter(trabajo -> progresos.get(trabajo.getId()) <100)
+                .toList();
+        model.addAttribute("trabajos", activos);
+        model.addAttribute("progresos", progresos);
+        model.addAttribute("totalTrabajos", todos.size());
+        model.addAttribute("completados", todos.size()-activos.size());
         return "dashboard";
     }
 }
