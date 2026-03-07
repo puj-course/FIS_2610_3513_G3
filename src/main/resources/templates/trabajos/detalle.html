@@ -225,7 +225,7 @@
 
 <header>
     <strong>ENTREGA YA</strong>
-    <a th:href="@{/trabajos}">← Volver a trabajos</a>
+    <a th:href="@{/templates/trabajos}">← Volver a trabajos</a>
 </header>
 
 <div class="container">
@@ -282,7 +282,7 @@
 
         <!-- Acciones del trabajo -->
         <div class="card-actions">
-            <a th:href="@{/trabajos/{id}/tareas/nueva(id=${trabajo.id})}" class="btn btn-primary">
+            <a th:href="@{/trabajos/{trabajoId}/tareas/CrearTarea(trabajoId=${trabajo.id})}" class="btn btn-primary">
                 + Nueva tarea
             </a>
             <form th:action="@{/trabajos/{id}/eliminar(id=${trabajo.id})}" method="post" style="margin:0"
@@ -361,7 +361,7 @@
     <!-- Sin tareas -->
     <div class="empty-tareas" th:if="${#sets.isEmpty(trabajo.tareas)}">
         <p>No hay tareas aún.</p>
-        <a th:href="@{/trabajos/{id}/tareas/nueva(id=${trabajo.id})}"
+        <a th:href="@{/trabajos/{id}/tareas/CrearTarea(id=${trabajo.id})}"
            style="display:inline-block; margin-top:12px; padding:8px 18px; background:#f4a535; color:white; border-radius:4px; text-decoration:none; font-size:13px;">
             + Agregar primera tarea
         </a>
