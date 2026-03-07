@@ -52,9 +52,36 @@ public class TrabajoController {
 
     @GetMapping("/{id}")
     public String detalle(@PathVariable long id, Model model) {
-        model.addAttribute("trabajo", customTrabajoDetailsService.obtenerPorId(id));
+        Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
+        List<Tarea> tareas = customTareaDetailsService.tareas(id);
+        
+        // Calcular estadísticas
+        long completadas = tareas.stream().filter(Tarea::getIsCompletada).count();
+        long pendientes = tareas.stream()
+                .filter(t -> !t.getIsCompletada() && 
+                        (t.getFechaInicio() == null || t.getFechaInicio().isAfter(java.time.LocalDateTime.now())))
+                .count();
+        long enProgreso = tareas.stream()
+                .filter(t -> !t.getIsCompletada() && 
+                        t.getFechaInicio() != null && 
+                        !t.getFechaInicio().isAfter(java.time.LocalDateTime.now()))
+                .count();
+        
+        // Obtener próximas entregas (tareas no completadas ordenadas por fecha)
+        List<Tarea> proximasEntregas = tareas.stream()
+                .filter(t -> !t.getIsCompletada() && t.getFechaFinal() != null)
+                .sorted((t1, t2) -> t1.getFechaFinal().compareTo(t2.getFechaFinal()))
+                .limit(5)
+                .toList();
+        
+        model.addAttribute("trabajo", trabajo);
         model.addAttribute("progreso", customTareaDetailsService.calcularProgreso(id));
-        return "trabajo/detalle";
+        model.addAttribute("completadas", completadas);
+        model.addAttribute("pendientes", pendientes);
+        model.addAttribute("enProgreso", enProgreso);
+        model.addAttribute("proximasEntregas", proximasEntregas);
+        
+        return "trabajos/detalle";
     }
     @PostMapping("/{id}/eliminar")
     public String eliminar (@PathVariable long id) {
