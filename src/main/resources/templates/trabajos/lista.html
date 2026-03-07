@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>EntregaYa - Mis Trabajos</title>
     <style>
+        .header-brand{
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 22px;
+        }
+
+        .header-brand span{
+            color: #f4a535; /* el color naranja de YA */
+        }
         body { font-family: Arial, sans-serif; background:#f4f4f4; margin:0; }
         header { background:#13161e; color:#fff; padding:14px 18px; display:flex; justify-content:space-between; align-items:center; }
         .header-brand { font-size:1rem; font-weight:800; }
@@ -38,7 +48,9 @@
 <body>
 
 <header>
-    <span class="header-brand">ENTREGA <span>YA</span></span>
+    <a th:href="@{/dashboard}" class="header-brand">
+        ENTREGA <span>YA</span>
+    </a>
     <a th:href="@{/trabajos/nuevo}" class="btn btn-primary">+ Nuevo trabajo</a>
 </header>
 
@@ -83,7 +95,7 @@
             </div>
 
             <div class="card-actions">
-                <a th:href="@{/trabajos/{id}(id=${trabajo.id})}" class="btn btn-outline">Ver detalle</a>
+                <a th:href="@{/trabajos/{id}/detalle(id=${trabajo.id})}" class="btn btn-outline">Ver detalle</a>
 
                 <form th:action="@{/trabajos/{id}/eliminar(id=${trabajo.id})}" method="post" style="margin:0"
                       onsubmit="return confirm('¿Eliminar este trabajo?')">

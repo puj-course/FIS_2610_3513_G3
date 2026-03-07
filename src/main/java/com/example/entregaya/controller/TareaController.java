@@ -18,12 +18,12 @@ public class TareaController {
         this.customTareaDetailsService = customTareaDetailsService;
     }
 
-    @GetMapping("/nueva")
+    @GetMapping("/CrearTarea")
     public String formulario(Model model, @PathVariable long trabajoId) {
         model.addAttribute("tarea", new Tarea());
         model.addAttribute("trabajoId", trabajoId);
         model.addAttribute("dificultades", Tarea.Dificultad.values());
-        return "trabajos/tareas";
+        return "trabajos/tareas/CrearTarea";
     }
     @PostMapping("/nueva")
     public String guardar(@PathVariable long trabajoId, @ModelAttribute Tarea tarea) {
