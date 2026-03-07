@@ -325,7 +325,7 @@
     <div class="sidebar">
         <h2>ENTREGA YA</h2>
         <ul>
-            <li><a href="#trabajos">📋 Trabajos</a></li>
+            <li><a th:href="@{/trabajos}">📋 Trabajos</a></li>
             <li><a href="#equipos">👥 Equipos</a></li>
             <li><a href="#reportes">📊 Reportes</a></li>
         </ul>
@@ -388,7 +388,7 @@
                                 Vence: <span th:text="${#temporals.format(trabajo.fechaEntrega, 'dd/MM/yyyy')}">--/--/----</span>
                             </span>
                             <span th:unless="${trabajo.fechaEntrega}">Sin fecha límite</span>
-                            <a th:href="@{/trabajos/{id}(id=${trabajo.id})}">Ver detalle</a>
+                            <a th:href="@{/trabajos/{id}/detalle(id=${trabajo.id})}">Ver detalle</a>
                         </div>
                     </div>
                 </div>
