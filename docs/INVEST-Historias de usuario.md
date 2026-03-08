@@ -153,7 +153,9 @@ INVEST significa:
 - **I:** Función independiente.
 - **N:** Puede modificarse el contenido de ayuda.
 - **V:** Ayuda a resolver dudas del usuario.
-
+- **E:** Estimable.
+- **S:** Historia pequeña.
+- **T:** Se prueba accediendo a la sección de ayuda.
 ---
 
 ### HU-16 – Tiempo restante para la entrega
@@ -215,7 +217,3 @@ INVEST significa:
 - **E:** Estimable técnicamente.
 - **S:** Tamaño moderado.
 - **T:** Se prueba verificando el guardado automático cada minuto.
-- **E:** Estimable.
-- **S:** Historia pequeña.
-- **T:** Se prueba accediendo a la sección de ayuda.
-
