@@ -1,12 +1,22 @@
 # INVEST – Historias de Usuario
 
+El formato INVEST se usa para evaluar si una historia de usuario está bien definida.
+INVEST significa:
+
+- I – Independent (Independiente)
+- N – Negotiable (Negociable)
+- V – Valuable (Valiosa)
+- E – Estimable (Estimable)
+- S – Small (Pequeña)
+- T – Testable (Testeable)
+
 ### HU-01 – Registro e inicio de sesión
-- **I (Independent):** Independiente de otras funcionalidades.
-- **N (Negotiable):** Puede ajustarse el método de autenticación o registro.
-- **V (Valuable):** Permite al estudiante acceder a la plataforma.
-- **E (Estimable):** Fácil de estimar por ser una funcionalidad común.
-- **S (Small):** Historia pequeña y clara.
-- **T (Testable):** Se puede probar registrando un usuario e iniciando sesión.
+- **I:** Independiente de otras funcionalidades.
+- **N:** Puede ajustarse el método de autenticación o registro.
+- **V:** Permite al estudiante acceder a la plataforma.
+- **E:** Fácil de estimar por ser una funcionalidad común.
+- **S:** Historia pequeña y clara.
+- **T:** Se puede probar registrando un usuario e iniciando sesión.
 
 ---
 
