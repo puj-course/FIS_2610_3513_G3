@@ -64,22 +64,22 @@ public class TrabajoController {
         // Calcular estadísticas
         long completadas = tareas.stream().filter(Tarea::getIsCompletada).count();
         long pendientes = tareas.stream()
-                .filter(t -> !t.getIsCompletada() && 
+                .filter(t -> !t.getIsCompletada() &&
                         (t.getFechaInicio() == null || t.getFechaInicio().isAfter(java.time.LocalDateTime.now())))
                 .count();
         long enProgreso = tareas.stream()
-                .filter(t -> !t.getIsCompletada() && 
-                        t.getFechaInicio() != null && 
+                .filter(t -> !t.getIsCompletada() &&
+                        t.getFechaInicio() != null &&
                         !t.getFechaInicio().isAfter(java.time.LocalDateTime.now()))
                 .count();
-        
+
         // Obtener próximas entregas (tareas no completadas ordenadas por fecha)
         List<Tarea> proximasEntregas = tareas.stream()
                 .filter(t -> !t.getIsCompletada() && t.getFechaFinal() != null)
                 .sorted((t1, t2) -> t1.getFechaFinal().compareTo(t2.getFechaFinal()))
                 .limit(5)
                 .toList();
-        
+
         model.addAttribute("trabajo", trabajo);
         model.addAttribute("tareas", tareas);
         model.addAttribute("progreso", customTareaDetailsService.calcularProgreso(id));
@@ -88,7 +88,7 @@ public class TrabajoController {
         model.addAttribute("enProgreso", enProgreso);
         model.addAttribute("proximasEntregas", proximasEntregas);
         model.addAttribute("invitaciones", customInvitacionDetailsService.porTrabajo(id));
-        
+
         return "trabajos/detalle";
     }
     @PostMapping("/{id}/eliminar")
