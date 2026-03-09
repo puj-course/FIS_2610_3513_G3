@@ -175,6 +175,12 @@
             border-top: 1px solid #ecf0f1;
             padding-top: 10px;
         }
+        .trabajo-info a{
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .trabajo-info a:hover{color: #2980b9;}
 
         .estado {
             padding: 4px 8px;
@@ -196,6 +202,26 @@
         .estado-completado {
             background-color: #d4edda;
             color: #155724;
+        }
+        /* Barra de progreso */
+        .progress-wrap { margin: 8px 0 12px; }
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #95a5a6;
+            margin-bottom: 4px;
+        }
+        .progress-bar {
+            height: 6px;
+            background: #ecf0f1;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #3498db;
+            border-radius: 3px;
         }
 
         /* Equipos */
@@ -248,13 +274,6 @@
         }
 
         /* Reportes */
-        .reportes-container {
-            background: white;
-            padding: 30px;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -279,6 +298,26 @@
             color: #7f8c8d;
             font-size: 14px;
         }
+        /* Vacío */
+        .empty {
+            text-align: center;
+            padding: 50px;
+            color: #95a5a6;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .empty a {
+            display: inline-block;
+            margin-top: 14px;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .empty a:hover { background-color: #2980b9; }
     </style>
 </head>
 <body>
@@ -286,7 +325,7 @@
     <div class="sidebar">
         <h2>ENTREGA YA</h2>
         <ul>
-            <li><a href="#trabajos">📋 Trabajos</a></li>
+            <li><a th:href="@{/trabajos}">📋 Trabajos</a></li>
             <li><a href="#equipos">👥 Equipos</a></li>
             <li><a href="#reportes">📊 Reportes</a></li>
         </ul>
@@ -312,81 +351,52 @@
             <div id="trabajos" class="section">
                 <div class="section-header">
                     <h2>Mis Trabajos</h2>
-                    <button class="btn-nuevo">+ Nuevo Trabajo</button>
+                    <a th:href="@{/trabajos/nuevo}" class="btn-nuevo">+ Nuevo Trabajo</a>
                 </div>
 
-                <div class="trabajos-container">
-                    <div class="trabajo-card">
-                        <span class="estado estado-progreso">EN PROGRESO</span>
-                        <div class="trabajo-titulo">Diseño de Landing Page</div>
-                        <div class="trabajo-descripcion">
-                            Crear el diseño responsivo de la landing page para el nuevo producto.
-                        </div>
-                        <div class="trabajo-info">
-                            <span>Vence: 10 Mar 2026</span>
-                            <span>Equipo Frontend</span>
-                        </div>
-                    </div>
+                <!-- Con trabajos -->
 
-                    <div class="trabajo-card">
-                        <span class="estado estado-pendiente">PENDIENTE</span>
-                        <div class="trabajo-titulo">API de Autenticación</div>
-                        <div class="trabajo-descripcion">
-                            Implementar sistema de autenticación con JWT.
-                        </div>
-                        <div class="trabajo-info">
-                            <span>Vence: 15 Mar 2026</span>
-                            <span>Equipo Backend</span>
-                        </div>
-                    </div>
+                <div class="trabajos-container" th:if="${not #lists.isEmpty(trabajos)}">
+                    <div class="trabajo-card" th:each="trabajo : ${trabajos}">
 
-                    <div class="trabajo-card">
-                        <span class="estado estado-completado">COMPLETADO</span>
-                        <div class="trabajo-titulo">Testing E2E</div>
-                        <div class="trabajo-descripcion">
-                            Escribir pruebas end-to-end para los flujos principales.
+                        <span class="estado"
+                              th:classappend="${progresos[trabajo.id] == 100} ? 'estado-completado' : (${progresos[trabajo.id] == 0} ? 'estado-pendiente' : 'estado-progreso')"
+                              th:text="${progresos[trabajo.id] == 100} ? 'COMPLETADO' : (${progresos[trabajo.id] == 0} ? 'PENDIENTE' : 'EN PROGRESO')">
+                            Estado
+                        </span>
+                        <div class="trabajo-titulo" th:text="${trabajo.nombreTrabajo}">Nombre</div>
+                        <div class="trabajo-descripcion"
+                             th:if="${trabajo.descripcion}"
+                             th:text="${trabajo.descripcion}">
+                            Descripción
                         </div>
-                        <div class="trabajo-info">
-                            <span>Completado: 1 Mar 2026</span>
-                            <span>Equipo QA</span>
-                        </div>
-                    </div>
 
-                    <div class="trabajo-card">
-                        <span class="estado estado-progreso">EN PROGRESO</span>
-                        <div class="trabajo-titulo">Dashboard Analytics</div>
-                        <div class="trabajo-descripcion">
-                            Desarrollar panel de analíticas con gráficos interactivos.
+                        <div class="progress-wrap">
+                            <div class="progress-header">
+                                <span>Progreso</span>
+                                <span th:text="${progresos[trabajo.id]} + '%'">0%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill"
+                                     th:style="'width:' + ${progresos[trabajo.id]} + '%'">
+                                </div>
+                            </div>
                         </div>
-                        <div class="trabajo-info">
-                            <span>Vence: 20 Mar 2026</span>
-                            <span>Equipo Data</span>
-                        </div>
-                    </div>
 
-                    <div class="trabajo-card">
-                        <span class="estado estado-pendiente">PENDIENTE</span>
-                        <div class="trabajo-titulo">Optimización BD</div>
-                        <div class="trabajo-descripcion">
-                            Analizar y optimizar consultas SQL lentas.
-                        </div>
                         <div class="trabajo-info">
-                            <span>Vence: 25 Mar 2026</span>
-                            <span>Equipo Backend</span>
+                            <span th:if="${trabajo.fechaEntrega}">
+                                Vence: <span th:text="${#temporals.format(trabajo.fechaEntrega, 'dd/MM/yyyy')}">--/--/----</span>
+                            </span>
+                            <span th:unless="${trabajo.fechaEntrega}">Sin fecha límite</span>
+                            <a th:href="@{/trabajos/{id}/detalle(id=${trabajo.id})}">Ver detalle</a>
                         </div>
                     </div>
+                </div>
 
-                    <div class="trabajo-card">
-                        <span class="estado estado-completado">COMPLETADO</span>
-                        <div class="trabajo-titulo">Documentación API</div>
-                        <div class="trabajo-descripcion">
-                            Crear documentación completa de la API REST.
-                        </div>
-                        <div class="trabajo-info">
-                            <span>Completado: 28 Feb 2026</span>
-                            <span>Equipo Backend</span>
-                        </div>
-                    </div>
+                <!-- Sin trabajos -->
+                <div class="empty" th:if="${#lists.isEmpty(trabajos)}">
+                    <p>No tienes trabajos aún.</p>
+                    <a th:href="@{/trabajos/nuevo}">+ Crear tu primer trabajo</a>
                 </div>
             </div>
 
@@ -470,40 +480,20 @@
                     <h3>Resumen General</h3>
                     <div class="stats-grid">
                         <div class="stat-box">
-                            <h3>30</h3>
+                            <h3 th:text="${totalTrabajos}">0</h3>
                             <p>Total de Trabajos</p>
                         </div>
                         <div class="stat-box">
-                            <h3>10</h3>
-                            <p>En Progreso</p>
+                            <h3 th:text="${trabajos.size()}">0</h3>
+                            <p>Activos</p>
                         </div>
                         <div class="stat-box">
-                            <h3>12</h3>
+                            <h3 th:text="${completados}">0</h3>
                             <p>Completados</p>
                         </div>
                         <div class="stat-box">
-                            <h3>8</h3>
+                            <h3 th:text="${totalTrabajos - trabajos.size() - completados}">0</h3>
                             <p>Pendientes</p>
-                        </div>
-                    </div>
-
-                    <h3 style="margin-top: 30px;">Por Equipo</h3>
-                    <div class="stats-grid">
-                        <div class="stat-box">
-                            <h3>8</h3>
-                            <p>Equipo Frontend</p>
-                        </div>
-                        <div class="stat-box">
-                            <h3>12</h3>
-                            <p>Equipo Backend</p>
-                        </div>
-                        <div class="stat-box">
-                            <h3>6</h3>
-                            <p>Equipo QA</p>
-                        </div>
-                        <div class="stat-box">
-                            <h3>4</h3>
-                            <p>Equipo Data</p>
                         </div>
                     </div>
                 </div>

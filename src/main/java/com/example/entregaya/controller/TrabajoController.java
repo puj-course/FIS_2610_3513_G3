@@ -1,6 +1,7 @@
 package com.example.entregaya.controller;
 
 
+import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
 import com.example.entregaya.service.CustomTrabajoDetailsService;
 import com.example.entregaya.service.CustomTareaDetailsService;
@@ -36,12 +37,12 @@ public class TrabajoController {
 
         model.addAttribute("trabajos", trabajos);
         model.addAttribute("progresos", progresos);
-        return "trabajo/lista";
+        return "trabajos/lista";
     }
     @GetMapping("/nuevo")
     public String formulario(Model model) {
         model.addAttribute("trabajo", new Trabajo());
-        return "trabajo/formulario";
+        return "trabajos/formulario";
     }
     @PostMapping("/nuevo")
     public String guardar(@ModelAttribute Trabajo trabajo, @AuthenticationPrincipal UserDetails user) {
@@ -51,13 +52,57 @@ public class TrabajoController {
 
     @GetMapping("/{id}")
     public String detalle(@PathVariable long id, Model model) {
-        model.addAttribute("trabajo", customTrabajoDetailsService.obtenerPorId(id));
+        Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
+        List<Tarea> tareas = customTareaDetailsService.tareas(id);
+        
+        // Calcular estadísticas
+        long completadas = tareas.stream().filter(Tarea::getIsCompletada).count();
+        long pendientes = tareas.stream()
+                .filter(t -> !t.getIsCompletada() && 
+                        (t.getFechaInicio() == null || t.getFechaInicio().isAfter(java.time.LocalDateTime.now())))
+                .count();
+        long enProgreso = tareas.stream()
+                .filter(t -> !t.getIsCompletada() && 
+                        t.getFechaInicio() != null && 
+                        !t.getFechaInicio().isAfter(java.time.LocalDateTime.now()))
+                .count();
+        
+        // Obtener próximas entregas (tareas no completadas ordenadas por fecha)
+        List<Tarea> proximasEntregas = tareas.stream()
+                .filter(t -> !t.getIsCompletada() && t.getFechaFinal() != null)
+                .sorted((t1, t2) -> t1.getFechaFinal().compareTo(t2.getFechaFinal()))
+                .limit(5)
+                .toList();
+        
+        model.addAttribute("trabajo", trabajo);
+        model.addAttribute("tareas", tareas);
         model.addAttribute("progreso", customTareaDetailsService.calcularProgreso(id));
-        return "trabajo/detalle";
+        model.addAttribute("completadas", completadas);
+        model.addAttribute("pendientes", pendientes);
+        model.addAttribute("enProgreso", enProgreso);
+        model.addAttribute("proximasEntregas", proximasEntregas);
+        
+        return "trabajos/detalle";
     }
     @PostMapping("/{id}/eliminar")
     public String eliminar (@PathVariable long id) {
         customTrabajoDetailsService.eliminar(id);
         return "redirect:/trabajos";
+    }
+    @GetMapping("/CrearTarea")
+    public String CrearTarea(Model model) {
+        model.addAttribute("tarea", new Tarea());
+        return "trabajos/CrearTarea";
+    }
+
+    @GetMapping("/trabajos-especificos")
+    public String TrabajosEspecificos(Model model) {
+        model.addAttribute("trabajo", new Trabajo());
+        return "trabajos-especificos";
+    }
+    @GetMapping("/{id}/detalle")
+    public String DetallesxId(@PathVariable long id, Model model) {
+        model.addAttribute("trabajo", customTrabajoDetailsService.obtenerPorId(id));
+        return "trabajos/detalle";
     }
 }

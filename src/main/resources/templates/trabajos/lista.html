@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EntregaYa - Mis Trabajos</title>
+    <style>
+        .header-brand{
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 22px;
+        }
+
+        .header-brand span{
+            color: #f4a535; /* el color naranja de YA */
+        }
+        body { font-family: Arial, sans-serif; background:#f4f4f4; margin:0; }
+        header { background:#13161e; color:#fff; padding:14px 18px; display:flex; justify-content:space-between; align-items:center; }
+        .header-brand { font-size:1rem; font-weight:800; }
+        .header-brand span { color:#f4a535; }
+        .container { max-width: 980px; margin: 22px auto; padding: 0 14px; }
+        .toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; gap:10px; }
+        .search { padding:8px 12px; border:1px solid #ccc; border-radius:6px; font-size:14px; width:260px; }
+        .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap:16px; }
+        .card { background:#fff; border-radius:10px; padding:18px; box-shadow: 0 0 10px rgba(0,0,0,0.08); }
+        .tag { display:inline-block; font-size:11px; font-weight:600; padding:3px 9px; border-radius:5px; margin-bottom:8px; text-transform:uppercase; }
+        .tag-pendiente  { background:#fff3cd; color:#856404; }
+        .tag-progreso   { background:#cce5ff; color:#004085; }
+        .tag-completado { background:#d4edda; color:#155724; }
+        h3 { margin:0 0 6px; font-size:15px; color:#2c3e50; }
+        .meta { font-size:12px; color:#888; margin-bottom:3px; }
+        .progress-wrap { margin:10px 0 6px; }
+        .progress-label { font-size:11px; color:#888; margin-bottom:3px; display:flex; justify-content:space-between; }
+        .progress-bar { height:5px; background:#eee; border-radius:4px; overflow:hidden; }
+        .progress-fill { height:100%; background:#f4a535; border-radius:4px; }
+        .card-actions { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+        .btn { border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-size:13px; }
+        .btn-primary { background:#f4a535; color:#fff; }
+        .btn-primary:hover { background:#e0932b; }
+        .btn-danger { background:#e74c3c; color:#fff; }
+        .btn-danger:hover { background:#c0392b; }
+        .btn-outline { background:#fff; border:1px solid #ccc; color:#333; }
+        .btn-outline:hover { background:#eee; }
+        .empty { text-align:center; padding:40px; color:#888; }
+    </style>
+</head>
+<body>
+
+<header>
+    <a th:href="@{/dashboard}" class="header-brand">
+        ENTREGA <span>YA</span>
+    </a>
+    <a th:href="@{/trabajos/nuevo}" class="btn btn-primary">+ Nuevo trabajo</a>
+</header>
+
+<div class="container">
+
+    <div class="toolbar">
+        <input class="search" type="text" placeholder="Buscar trabajo..." />
+    </div>
+
+    <!-- Lista de trabajos -->
+    <div class="grid" th:if="${not #lists.isEmpty(trabajos)}">
+        <div class="card" th:each="trabajo : ${trabajos}">
+
+            <!-- Estado basado en progreso -->
+            <span class="tag tag-progreso"
+                  th:classappend="${progresos[trabajo.id] == 100} ? 'tag-completado' : (${progresos[trabajo.id] == 0} ? 'tag-pendiente' : 'tag-progreso')"
+                  th:text="${progresos[trabajo.id] == 100} ? 'Completado' : (${progresos[trabajo.id] == 0} ? 'Pendiente' : 'En progreso')">
+        Estado
+      </span>
+
+            <h3 th:text="${trabajo.nombreTrabajo}">Nombre del trabajo</h3>
+
+            <div class="meta" th:if="${trabajo.descripcion}" th:text="${trabajo.descripcion}">Descripción</div>
+
+            <div class="meta" th:if="${trabajo.fechaEntrega}">
+                ⏰ Entrega: <span th:text="${#temporals.format(trabajo.fechaEntrega, 'dd/MM/yyyy')}">--/--/----</span>
+            </div>
+
+            <div class="meta">
+                👥 Integrantes: <span th:text="${#sets.size(trabajo.colaboradores)}">0</span>
+            </div>
+
+            <!-- Barra de progreso -->
+            <div class="progress-wrap">
+                <div class="progress-label">
+                    <span>Progreso</span>
+                    <span th:text="${progresos[trabajo.id]} + '%'">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" th:style="'width:' + ${progresos[trabajo.id]} + '%'"></div>
+                </div>
+            </div>
+
+            <div class="card-actions">
+                <a th:href="@{/trabajos/{id}/detalle(id=${trabajo.id})}" class="btn btn-outline">Ver detalle</a>
+
+                <form th:action="@{/trabajos/{id}/eliminar(id=${trabajo.id})}" method="post" style="margin:0"
+                      onsubmit="return confirm('¿Eliminar este trabajo?')">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Sin trabajos -->
+    <div class="empty" th:if="${#lists.isEmpty(trabajos)}">
+        <p>No tienes trabajos aún.</p>
+        <a th:href="@{/trabajos/nuevo}" class="btn btn-primary">+ Crear tu primer trabajo</a>
+    </div>
+
+</div>
+</body>
+</html>
