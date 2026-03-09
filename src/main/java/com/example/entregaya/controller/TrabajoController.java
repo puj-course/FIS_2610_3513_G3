@@ -75,6 +75,7 @@ public class TrabajoController {
                 .toList();
         
         model.addAttribute("trabajo", trabajo);
+        model.addAttribute("tareas", tareas);
         model.addAttribute("progreso", customTareaDetailsService.calcularProgreso(id));
         model.addAttribute("completadas", completadas);
         model.addAttribute("pendientes", pendientes);
