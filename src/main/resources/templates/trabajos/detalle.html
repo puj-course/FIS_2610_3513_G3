@@ -37,7 +37,7 @@
         .progress-fill { height: 100%; background: #f4a535; border-radius: 4px; }
 
         .card-actions { display: flex; gap: 10px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid #eee; }
-        .btn-primary { padding: 8px 16px; background: #f4a535; color: #fff; border: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn-primary { padding: 8px 16px; background: #f4a535; color: #1a1a1a; border: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; }
         .btn-primary:hover { background: #e0932b; }
         .btn-danger { padding: 8px 14px; background: none; color: #e74c3c; border: 1px solid rgba(231,76,60,0.25); border-radius: 6px; font-size: 0.85rem; cursor: pointer; }
         .btn-danger:hover { background: #fff1f0; }
@@ -100,16 +100,16 @@
 
         .tarea-actions { display: flex; gap: 6px; flex-wrap: wrap; }
         .btn-sm { padding: 4px 10px; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer; font-family: inherit; }
-        .btn-completar { background: #27ae60; color: #fff; }
+        .btn-completar { background: #1e874b; color: #fff; }
         .btn-completar:hover { background: #219a52; }
-        .btn-deshacer  { background: #bdc3c7; color: #fff; }
+        .btn-deshacer  { background: #bdc3c7; color: #1a1a1a; }
         .btn-deshacer:hover { background: #95a5a6; }
         .btn-eliminar  { background: none; color: #aaa; border: 1px solid #e5e5e5; }
-        .btn-eliminar:hover { color: #e74c3c; border-color: rgba(231,76,60,0.3); background: #fff1f0; }
+        .btn-eliminar:hover { color: #c0392b; border-color: rgba(192,57,43,0.35); background: #fff1f0; }
         .btn-asignar   { background: none; color: #1a6aa0; border: 1px solid #c3daf0; }
         .btn-asignar:hover { background: #e8f4fd; }
 
-        .empty-tareas { text-align: center; padding: 40px; color: #888; background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; }
+        .empty-tareas { text-align: center; padding: 40px; color: #555; background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; }
         .empty-tareas p { margin-bottom: 12px; font-size: 0.88rem; }
     </style>
 </head>
@@ -271,11 +271,11 @@
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
                 <div class="check-list">
-                    <label class="check-item" th:each="col : ${trabajo.colaboradores}">
+                    <span class="check-item" th:each="col : ${trabajo.colaboradores}">
                         <input type="checkbox" name="responsableIds" th:value="${col.id}"
                                th:checked="${tarea.responsables.contains(col)}"/>
                         <span th:text="${col.username}"></span>
-                    </label>
+                    </span>
                 </div>
 
                 <div class="modal-actions">
