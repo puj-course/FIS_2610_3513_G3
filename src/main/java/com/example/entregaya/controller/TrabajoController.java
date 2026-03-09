@@ -3,6 +3,7 @@ package com.example.entregaya.controller;
 
 import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
+import com.example.entregaya.service.CustomInvitacionDetailsService;
 import com.example.entregaya.service.CustomTrabajoDetailsService;
 import com.example.entregaya.service.CustomTareaDetailsService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,11 +22,13 @@ public class TrabajoController {
 
     private final CustomTrabajoDetailsService customTrabajoDetailsService;
     private final CustomTareaDetailsService customTareaDetailsService;
+    private final CustomInvitacionDetailsService customInvitacionDetailsService;
 
     public TrabajoController(CustomTrabajoDetailsService customTrabajoDetailsService,
-                             CustomTareaDetailsService customTareaDetailsService) {
+                             CustomTareaDetailsService customTareaDetailsService, CustomInvitacionDetailsService customInvitacionDetailsService) {
         this.customTrabajoDetailsService = customTrabajoDetailsService;
         this.customTareaDetailsService = customTareaDetailsService;
+        this.customInvitacionDetailsService = customInvitacionDetailsService;
     }
     @GetMapping
     public String trabajo(Model model, @AuthenticationPrincipal UserDetails user) {
@@ -51,29 +54,32 @@ public class TrabajoController {
     }
 
     @GetMapping("/{id}")
-    public String detalle(@PathVariable long id, Model model) {
+    public String detalle(@PathVariable long id, Model model, @AuthenticationPrincipal UserDetails user) {
         Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
         List<Tarea> tareas = customTareaDetailsService.tareas(id);
-        
+
+        trabajo.getColaboradores().size();
+        tareas.forEach(t -> t.getResponsables().size());
+
         // Calcular estadísticas
         long completadas = tareas.stream().filter(Tarea::getIsCompletada).count();
         long pendientes = tareas.stream()
-                .filter(t -> !t.getIsCompletada() && 
+                .filter(t -> !t.getIsCompletada() &&
                         (t.getFechaInicio() == null || t.getFechaInicio().isAfter(java.time.LocalDateTime.now())))
                 .count();
         long enProgreso = tareas.stream()
-                .filter(t -> !t.getIsCompletada() && 
-                        t.getFechaInicio() != null && 
+                .filter(t -> !t.getIsCompletada() &&
+                        t.getFechaInicio() != null &&
                         !t.getFechaInicio().isAfter(java.time.LocalDateTime.now()))
                 .count();
-        
+
         // Obtener próximas entregas (tareas no completadas ordenadas por fecha)
         List<Tarea> proximasEntregas = tareas.stream()
                 .filter(t -> !t.getIsCompletada() && t.getFechaFinal() != null)
                 .sorted((t1, t2) -> t1.getFechaFinal().compareTo(t2.getFechaFinal()))
                 .limit(5)
                 .toList();
-        
+
         model.addAttribute("trabajo", trabajo);
         model.addAttribute("tareas", tareas);
         model.addAttribute("progreso", customTareaDetailsService.calcularProgreso(id));
@@ -81,7 +87,8 @@ public class TrabajoController {
         model.addAttribute("pendientes", pendientes);
         model.addAttribute("enProgreso", enProgreso);
         model.addAttribute("proximasEntregas", proximasEntregas);
-        
+        model.addAttribute("invitaciones", customInvitacionDetailsService.porTrabajo(id));
+
         return "trabajos/detalle";
     }
     @PostMapping("/{id}/eliminar")
