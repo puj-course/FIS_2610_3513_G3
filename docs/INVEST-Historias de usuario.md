@@ -50,7 +50,57 @@ INVEST significa:
 
 ---
 
-### HU-05 – Sugerencias educativas
+### HU-05 – Crear estructura de roles en el grupo
+- **I:** Puede desarrollarse sin depender de otras funcionalidades del sistema.
+- **N:** Los roles pueden ajustarse según las necesidades del grupo o del proyecto.
+- **V:** Permite organizar responsabilidades dentro de los grupos.
+- **E:** Estimable porque implica crear modelo, tabla y roles iniciales.
+- **S:** Tamaño adecuado para un sprint.
+- **T:** Se prueba verificando que los roles se crean y se guardan en la base de datos.
+
+---
+
+### HU-06 – Asignar rol a un miembro del grupo
+- **I:** Depende de que existan roles previamente definidos.
+- **N:** La forma de asignar o validar roles puede ajustarse.
+- **V:** Define responsabilidades claras para cada integrante.
+- **E:** Estimable porque requiere endpoint, validación y guardado.
+- **S:** Tamaño adecuado para una historia individual.
+- **T:** Se prueba asignando un rol a un miembro y verificando que se guarde.
+
+---
+
+### HU-07 – Consultar roles del grupo
+- **I:** Depende de que los roles estén asignados a los miembros.
+- **N:** La forma de presentar la información puede modificarse.
+- **V:** Permite conocer las responsabilidades de cada integrante.
+- **E:** Estimable porque solo implica consulta y endpoint.
+- **S:** Historia pequeña de consulta de datos.
+- **T:** Se prueba verificando que el sistema retorne miembros con su rol.
+
+---
+
+### HU-08 – Modificar rol de un miembro
+- **I:** Depende de que los miembros ya tengan un rol asignado.
+- **N:** Las reglas para cambiar roles pueden ajustarse.
+- **V:** Permite reorganizar responsabilidades dentro del grupo.
+- **E:** Estimable porque implica actualizar un registro existente.
+- **S:** Tamaño adecuado para una funcionalidad de actualización.
+- **T:** Se prueba cambiando el rol de un miembro y verificando el cambio.
+
+---
+
+### HU-09 – Visualizar roles en la interfaz
+- **I:** Depende de la consulta de roles desde el backend.
+- **N:** El diseño de la interfaz puede modificarse.
+- **V:** Facilita identificar las responsabilidades de cada integrante.
+- **E:** Estimable porque consiste en consumir un endpoint y mostrar datos.
+- **S:** Historia pequeña de frontend.
+- **T:** Se prueba verificando que la interfaz muestre correctamente los roles de cada miembro.
+
+---
+
+### HU-10 – Sugerencias educativas
 - **I:** Función independiente.
 - **N:** Puede ajustarse el contenido de las sugerencias.
 - **V:** Ayuda a mejorar las habilidades digitales.
@@ -60,7 +110,7 @@ INVEST significa:
 
 ---
 
-### HU-06 – Panel principal con trabajos
+### HU-11 – Panel principal con trabajos
 - **I:** Independiente de otras funciones.
 - **N:** Puede cambiar el diseño del panel.
 - **V:** Permite ver todos los trabajos rápidamente.
@@ -70,7 +120,7 @@ INVEST significa:
 
 ---
 
-### HU-07 – Reemplazar archivo
+### HU-12 – Reemplazar archivo
 - **I:** Depende solo del trabajo existente.
 - **N:** Puede modificarse el método de subida.
 - **V:** Permite corregir errores antes de la entrega.
@@ -80,7 +130,7 @@ INVEST significa:
 
 ---
 
-### HU-08 – Notificaciones de cambios
+### HU-13 – Notificaciones de cambios
 - **I:** Funciona independientemente de otras funciones.
 - **N:** Puede modificarse el tipo de notificación.
 - **V:** Mantiene informados a los integrantes.
@@ -90,7 +140,7 @@ INVEST significa:
 
 ---
 
-### HU-09 – Recordatorios de entrega
+### HU-14 – Recordatorios de entrega
 - **I:** Independiente de otras historias.
 - **N:** Se puede ajustar la frecuencia de recordatorios.
 - **V:** Ayuda a organizar mejor el tiempo.
@@ -100,7 +150,7 @@ INVEST significa:
 
 ---
 
-### HU-10 – Retirar integrante
+### HU-15 – Retirar integrante
 - **I:** Depende solo del trabajo grupal.
 - **N:** Se puede negociar quién tiene permisos para hacerlo.
 - **V:** Permite mantener actualizado el equipo.
@@ -110,7 +160,7 @@ INVEST significa:
 
 ---
 
-### HU-11 – Asignar roles
+### HU-16 – Asignar roles
 - **I:** Independiente de otras funciones.
 - **N:** Puede ajustarse la cantidad de roles disponibles.
 - **V:** Define responsabilidades dentro del grupo.
@@ -120,7 +170,7 @@ INVEST significa:
 
 ---
 
-### HU-12 – Historial de cambios
+### HU-17 – Historial de cambios
 - **I:** Independiente del resto.
 - **N:** Puede ajustarse la información mostrada.
 - **V:** Permite ver modificaciones realizadas.
@@ -130,7 +180,7 @@ INVEST significa:
 
 ---
 
-### HU-13 – Comentarios en el trabajo
+### HU-18 – Comentarios en el trabajo
 - **I:** Función independiente.
 - **N:** Se puede modificar el formato de comentarios.
 - **V:** Facilita la comunicación del grupo.
@@ -140,7 +190,7 @@ INVEST significa:
 
 ---
 
-### HU-14 – Plantillas académicas
+### HU-19 – Plantillas académicas
 - **I:** Independiente de otras historias.
 - **N:** Se pueden agregar o modificar plantillas.
 - **V:** Facilita cumplir formatos académicos.
@@ -149,7 +199,7 @@ INVEST significa:
 - **T:** Se prueba creando trabajos con plantillas.
 ---
 
-### HU-15 – Sección de ayuda
+### HU-20 – Sección de ayuda
 - **I:** Función independiente.
 - **N:** Puede modificarse el contenido de ayuda.
 - **V:** Ayuda a resolver dudas del usuario.
@@ -158,7 +208,7 @@ INVEST significa:
 - **T:** Se prueba accediendo a la sección de ayuda.
 ---
 
-### HU-16 – Tiempo restante para la entrega
+### HU-21 – Tiempo restante para la entrega
 - **I:** Independiente de otras funciones.
 - **N:** Se puede ajustar la forma de visualización.
 - **V:** Ayuda a planificar mejor el trabajo.
@@ -168,7 +218,7 @@ INVEST significa:
 
 ---
 
-### HU-17 – Configurar notificaciones
+### HU-22 – Configurar notificaciones
 - **I:** Función independiente.
 - **N:** Puede modificarse el tipo de notificaciones.
 - **V:** Permite recibir solo avisos importantes.
@@ -178,7 +228,7 @@ INVEST significa:
 
 ---
 
-### HU-18 – Editar perfil
+### HU-23 – Editar perfil
 - **I:** Independiente de otras funciones.
 - **N:** Se puede modificar la información editable.
 - **V:** Permite mantener actualizada la información del usuario.
@@ -188,7 +238,7 @@ INVEST significa:
 
 ---
 
-### HU-19 – Ver responsable de tareas
+### HU-24 – Ver responsable de tareas
 - **I:** Depende solo de las tareas del trabajo.
 - **N:** Puede ajustarse la forma de asignación.
 - **V:** Evita confusiones dentro del grupo.
