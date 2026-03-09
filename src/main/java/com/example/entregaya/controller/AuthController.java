@@ -1,6 +1,7 @@
 package com.example.entregaya.controller;
 
 import com.example.entregaya.model.Trabajo;
+import com.example.entregaya.service.CustomInvitacionDetailsService;
 import com.example.entregaya.service.CustomTareaDetailsService;
 import com.example.entregaya.service.CustomTrabajoDetailsService;
 import com.example.entregaya.service.CustomUserDetailsService;
@@ -27,14 +28,16 @@ public class AuthController {
     private final CustomUserDetailsService userDetailsService;
     private final CustomTareaDetailsService customTareaDetailsService;
     private final CustomTrabajoDetailsService customTrabajoDetailsService;
+    private final CustomInvitacionDetailsService customInvitacionDetailsService;
 
     public AuthController(CustomUserDetailsService UserDetailsService,
                           CustomTrabajoDetailsService customTrabajoDetailsService,
-                          CustomTareaDetailsService customTareaDetailsService) {
+                          CustomTareaDetailsService customTareaDetailsService, CustomInvitacionDetailsService customInvitacionDetailsService) {
 
         this.userDetailsService = UserDetailsService;
         this.customTareaDetailsService = customTareaDetailsService;
         this.customTrabajoDetailsService = customTrabajoDetailsService;
+        this.customInvitacionDetailsService = customInvitacionDetailsService;
     }
 
     /**
@@ -86,6 +89,7 @@ public class AuthController {
         model.addAttribute("progresos", progresos);
         model.addAttribute("totalTrabajos", todos.size());
         model.addAttribute("completados", todos.size()-activos.size());
+        model.addAttribute("invitaciones", customInvitacionDetailsService.pendientesParaUsuario(userDetails.getUsername()));
         return "dashboard";
     }
 }
