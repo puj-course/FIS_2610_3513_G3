@@ -54,28 +54,28 @@
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
             <div class="field">
-                <label class="field-label">Nombre *</label>
+                <label class="field-label" for="nombre">Nombre *</label>
                 <input type="text" th:field="*{nombre}" placeholder="Ej. Redactar introducción" required/>
             </div>
 
             <div class="field">
-                <label class="field-label">Descripción</label>
+                <label class="field-label" for="descripcion">Descripción</label>
                 <textarea th:field="*{descripcion}" placeholder="Describe brevemente la tarea..."></textarea>
             </div>
 
             <div class="row">
                 <div class="field">
-                    <label class="field-label">Fecha inicio</label>
+                    <label class="field-label" for="fechaInicio">Fecha inicio</label>
                     <input type="datetime-local" th:field="*{fechaInicio}"/>
                 </div>
                 <div class="field">
-                    <label class="field-label">Fecha límite</label>
+                    <label class="field-label" for="fechaFinal">Fecha límite</label>
                     <input type="datetime-local" th:field="*{fechaFinal}"/>
                 </div>
             </div>
 
             <div class="field">
-                <label class="field-label">Dificultad</label>
+                <label class="field-label" for="dificultad">Dificultad</label>
                 <select th:field="*{dificultad}">
                     <option th:each="d : ${dificultades}" th:value="${d}" th:text="${d.name()}"></option>
                 </select>
@@ -102,5 +102,7 @@
         </form>
     </div>
 </div>
+</body>
+</html>
 </body>
 </html>
