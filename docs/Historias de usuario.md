@@ -14,48 +14,63 @@ Como estudiante quiero invitar a mis compañeros a un trabajo grupal para colabo
 Como estudiante quiero visualizar el progreso de mi trabajo para saber qué tareas están pendientes o finalizadas.
 
 ### HU-05
-Como estudiante quiero recibir sugerencias y mensajes educativos para mejorar gradualmente mis habilidades digitales.
+Como sistema quiero tener una estructura de roles dentro de los grupos para poder asignar responsabilidades a los estudiantes.
 
 ### HU-06
-Como estudiante quiero ver todos mis trabajos en un panel principal para tener una visión general de mis pendientes académicos.
+Como estudiante quiero asignar un rol a un miembro del grupo para definir su responsabilidad dentro del trabajo.
 
 ### HU-07
-Como estudiante quiero reemplazar un archivo ya subido para corregir errores antes de la entrega final.
+Como estudiante quiero consultar los roles de los miembros del grupo para entender las responsabilidades de cada integrante
 
 ### HU-08
-Como estudiante quiero recibir notificaciones cuando un compañero haga cambios para estar al tanto del avance del trabajo grupal.
+Como estudiante quiero modificar el rol de un miembro del grupo para ajustar las responsabilidades cuando sea necesario.
 
 ### HU-09
-Como estudiante quiero recibir recordatorios antes de la fecha de entrega para organizar mejor mi tiempo.
+Como estudiante quiero visualizar los roles de cada integrante del grupo en la interfaz para identificar sus responsabilidades.
 
 ### HU-10
-Como estudiante quiero retirar a un integrante de un trabajo grupal para mantener actualizado el equipo de trabajo.
+Como estudiante quiero recibir sugerencias y mensajes educativos para mejorar gradualmente mis habilidades digitales.
 
 ### HU-11
-Como estudiante quiero asignar roles dentro del grupo para definir responsabilidades en el trabajo.
+Como estudiante quiero ver todos mis trabajos en un panel principal para tener una visión general de mis pendientes académicos.
 
 ### HU-12
-Como estudiante quiero ver un historial simple de cambios para saber qué se ha modificado en el trabajo.
+Como estudiante quiero reemplazar un archivo ya subido para corregir errores antes de la entrega final.
 
 ### HU-13
-Como estudiante quiero dejar comentarios dentro del trabajo para coordinar tareas con mi grupo.
+Como estudiante quiero recibir notificaciones cuando un compañero haga cambios para estar al tanto del avance del trabajo grupal.
 
 ### HU-14
-Como estudiante quiero usar plantillas para trabajos académicos para cumplir con formatos solicitados por el docente.
+Como estudiante quiero recibir recordatorios antes de la fecha de entrega para organizar mejor mi tiempo.
 
 ### HU-15
-Como estudiante quiero acceder a una sección de ayuda para resolver dudas sobre el uso de la plataforma.
+Como estudiante quiero retirar a un integrante de un trabajo grupal para mantener actualizado el equipo de trabajo.
 
 ### HU-16
-Como estudiante quiero ver cuánto tiempo falta para la entrega para planificar mejor mi trabajo.
+Como estudiante quiero asignar roles dentro del grupo para definir responsabilidades en el trabajo.
 
 ### HU-17
-Como estudiante quiero configurar mis notificaciones para recibir solo avisos importantes.
+Como estudiante quiero ver un historial simple de cambios para saber qué se ha modificado en el trabajo.
 
 ### HU-18
-Como estudiante quiero editar mi perfil para mantener mi información actualizada.
+Como estudiante quiero dejar comentarios dentro del trabajo para coordinar tareas con mi grupo.
 
 ### HU-19
+Como estudiante quiero usar plantillas para trabajos académicos para cumplir con formatos solicitados por el docente.
+
+### HU-20
+Como estudiante quiero acceder a una sección de ayuda para resolver dudas sobre el uso de la plataforma.
+
+### HU-21
+Como estudiante quiero ver cuánto tiempo falta para la entrega para planificar mejor mi trabajo.
+
+### HU-22
+Como estudiante quiero configurar mis notificaciones para recibir solo avisos importantes.
+
+### HU-23
+Como estudiante quiero editar mi perfil para mantener mi información actualizada.
+
+### HU-24
 Como estudiante quiero ver quién es responsable de cada tarea para evitar confusiones en el trabajo grupal.
 
 ### HU-NF-01
