@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Entrega Ya — Detalle Trabajo</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, sans-serif; background: #f7f7f5; color: #222; }
+
+        header { background: #1a1a1a; color: #fff; padding: 0 24px; height: 52px; display: flex; align-items: center; justify-content: space-between; }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .brand { font-size: 1rem; font-weight: 800; color: #fff; text-decoration: none; }
+        .brand span { color: #f4a535; }
+        .btn-back { font-size: 0.8rem; color: #aaa; text-decoration: none; padding: 5px 10px; border: 1px solid rgba(255,255,255,0.1); border-radius: 5px; }
+        .btn-back:hover { color: #fff; border-color: rgba(255,255,255,0.25); }
+
+        .container { max-width: 900px; margin: 24px auto; padding: 0 20px; }
+
+        /* Alertas flash */
+        .alert { padding: 11px 16px; border-radius: 7px; font-size: 0.85rem; margin-bottom: 14px; }
+        .alert-success { background: #eafaf1; color: #1a7a3a; border: 1px solid #b7e4c7; }
+        .alert-error   { background: #fff1f0; color: #c0392b; border: 1px solid #f5c6cb; }
+
+        .card { background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; padding: 22px; margin-bottom: 20px; }
+        .work-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 6px; }
+        .work-desc { font-size: 0.85rem; color: #666; margin-bottom: 14px; line-height: 1.5; }
+        .info-row { display: flex; gap: 18px; flex-wrap: wrap; font-size: 0.82rem; color: #888; margin-bottom: 14px; }
+        .info-row strong { color: #333; }
+
+        .colabs-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #aaa; margin-bottom: 6px; }
+        .colabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+        .colab-tag { background: #e8f4fd; color: #1a6aa0; border-radius: 20px; padding: 3px 10px; font-size: 0.78rem; font-weight: 500; }
+
+        .progress-header { display: flex; justify-content: space-between; font-size: 0.8rem; color: #888; margin-bottom: 5px; }
+        .progress-bar { height: 5px; background: #eee; border-radius: 4px; overflow: hidden; margin-bottom: 18px; }
+        .progress-fill { height: 100%; background: #f4a535; border-radius: 4px; }
+
+        .card-actions { display: flex; gap: 10px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid #eee; }
+        .btn-primary { padding: 8px 16px; background: #f4a535; color: #1a1a1a; border: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn-primary:hover { background: #e0932b; }
+        .btn-danger { padding: 8px 14px; background: none; color: #e74c3c; border: 1px solid rgba(231,76,60,0.25); border-radius: 6px; font-size: 0.85rem; cursor: pointer; }
+        .btn-danger:hover { background: #fff1f0; }
+
+        /* Panel invitar */
+        .invite-panel { background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+        .invite-panel-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+        .invite-panel-title span { color: #f4a535; }
+        .invite-form { display: flex; gap: 10px; flex-wrap: wrap; }
+        .invite-input { flex: 1; min-width: 180px; padding: 9px 12px; border: 1px solid #e5e5e5; border-radius: 6px; font-size: 0.88rem; font-family: inherit; outline: none; }
+        .invite-input:focus { border-color: #f4a535; }
+        .btn-invite { padding: 9px 18px; background: #1a1a1a; color: #fff; border: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+        .btn-invite:hover { background: #333; }
+
+        /* Historial invitaciones enviadas */
+        .inv-list { margin-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+        .inv-item { display: flex; align-items: center; justify-content: space-between; background: #fafafa; border: 1px solid #eee; border-radius: 6px; padding: 8px 12px; font-size: 0.82rem; }
+        .inv-item .inv-user { font-weight: 600; color: #222; }
+        .inv-badge { padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 600; }
+        .inv-badge-pendiente  { background: #e8f4fd; color: #1a6aa0; }
+        .inv-badge-aceptada   { background: #eafaf1; color: #1a7a3a; }
+        .inv-badge-rechazada  { background: #fff1f0; color: #c0392b; }
+
+        .section-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; }
+
+        .table-wrap { background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #1a1a1a; }
+        th { padding: 10px 14px; text-align: left; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #aaa; }
+        td { padding: 11px 14px; font-size: 0.85rem; border-bottom: 1px solid #eee; vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tbody tr:hover td { background: #fafafa; }
+
+        .tarea-name { font-weight: 500; }
+        .tarea-sub { font-size: 0.75rem; color: #aaa; margin-top: 2px; }
+
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 600; }
+        .badge-simple    { background: #eafaf1; color: #1a7a3a; }
+        .badge-media     { background: #fef9e7; color: #a16207; }
+        .badge-alta      { background: #fff1f0; color: #c0392b; }
+        .badge-pendiente { background: #e8f4fd; color: #1a6aa0; }
+        .badge-completada{ background: #eafaf1; color: #1a7a3a; }
+
+        .responsables-cell { display: flex; flex-wrap: wrap; gap: 4px; }
+        .resp-tag { background: #f0f0f0; color: #555; border-radius: 20px; padding: 2px 8px; font-size: 0.72rem; }
+
+        /* Modal asignar responsables */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; align-items: center; justify-content: center; }
+        .modal-overlay.open { display: flex; }
+        .modal { background: #fff; border-radius: 12px; padding: 24px; max-width: 420px; width: 100%; box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
+        .modal-title { font-size: 1rem; font-weight: 700; margin-bottom: 16px; }
+        .check-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+        .check-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #eee; border-radius: 6px; cursor: pointer; }
+        .check-item:hover { background: #fafafa; }
+        .check-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: #f4a535; }
+        .check-item label { font-size: 0.88rem; cursor: pointer; }
+        .modal-actions { display: flex; gap: 10px; }
+        .btn-modal-cancel { padding: 8px 16px; background: none; border: 1px solid #e5e5e5; border-radius: 6px; font-size: 0.85rem; cursor: pointer; }
+        .btn-modal-cancel:hover { background: #f7f7f5; }
+
+        .tarea-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+        .btn-sm { padding: 4px 10px; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer; font-family: inherit; }
+        .btn-completar { background: #1e874b; color: #fff; }
+        .btn-completar:hover { background: #219a52; }
+        .btn-deshacer  { background: #bdc3c7; color: #1a1a1a; }
+        .btn-deshacer:hover { background: #95a5a6; }
+        .btn-eliminar  { background: none; color: #aaa; border: 1px solid #e5e5e5; }
+        .btn-eliminar:hover { color: #c0392b; border-color: rgba(192,57,43,0.35); background: #fff1f0; }
+        .btn-asignar   { background: none; color: #1a6aa0; border: 1px solid #c3daf0; }
+        .btn-asignar:hover { background: #e8f4fd; }
+
+        .empty-tareas { text-align: center; padding: 40px; color: #555; background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; }
+        .empty-tareas p { margin-bottom: 12px; font-size: 0.88rem; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-left">
+        <a th:href="@{/trabajos}" class="brand">ENTREGA <span>YA</span></a>
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- Flash messages -->
+    <div th:if="${successInv}" class="alert alert-success" th:text="${successInv}"></div>
+    <div th:if="${errorInv}"   class="alert alert-error"   th:text="${errorInv}"></div>
+
+    <!-- Tarjeta principal del trabajo -->
+    <div class="card">
+        <div class="work-title" th:text="${trabajo.nombreTrabajo}">Nombre</div>
+        <div class="work-desc" th:if="${trabajo.descripcion}" th:text="${trabajo.descripcion}"></div>
+
+        <div class="info-row">
+            <span th:if="${trabajo.fechaInicio}">📅 Inicio: <strong th:text="${#temporals.format(trabajo.fechaInicio, 'dd/MM/yyyy')}"></strong></span>
+            <span th:if="${trabajo.fechaEntrega}">⏰ Entrega: <strong th:text="${#temporals.format(trabajo.fechaEntrega, 'dd/MM/yyyy')}"></strong></span>
+            <span>👥 <strong th:text="${#sets.size(trabajo.colaboradores)}"></strong> integrante(s)</span>
+            <span>📋 <strong th:text="${#lists.size(tareas)}"></strong> tarea(s)</span>
+        </div>
+
+        <div th:if="${not #sets.isEmpty(trabajo.colaboradores)}">
+            <div class="colabs-label">Colaboradores</div>
+            <div class="colabs">
+                <span class="colab-tag" th:each="col : ${trabajo.colaboradores}" th:text="${col.username}"></span>
+            </div>
+        </div>
+
+        <div class="progress-header">
+            <span>Progreso</span>
+            <span th:text="${(progreso ?: 0)} + '%'">0%</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" th:style="'width:' + (${progreso} ?: 0) + '%'"></div>
+        </div>
+
+        <div class="card-actions">
+            <a th:href="@{/trabajos/{id}/tareas/CrearTarea(id=${trabajo.id})}" class="btn-primary">+ Nueva tarea</a>
+            <form th:action="@{/trabajos/{id}/eliminar(id=${trabajo.id})}" method="post" style="margin:0"
+                  onsubmit="return confirm('¿Eliminar este trabajo y todas sus tareas?')">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" class="btn-danger">Eliminar trabajo</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ── Panel de Invitaciones ── -->
+    <div class="invite-panel">
+        <div class="invite-panel-title">👥 Invitar colaborador <span>·</span></div>
+
+        <form th:action="@{/trabajos/{id}/invitar(id=${trabajo.id})}" method="post" class="invite-form">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <input class="invite-input" type="text" name="destinatario"
+                   placeholder="Username del usuario a invitar" required autocomplete="off"/>
+            <button type="submit" class="btn-invite">Enviar invitación</button>
+
+        </form>
+
+        <!-- Historial de invitaciones enviadas a este trabajo -->
+        <div th:if="${succesInv}" style="margin-top:10px; padding:8px 12px; background:#eafaf1; border:1px solid #a8d8b0; color:#1a7a3a; border-radius:5px; font-size:0.85rem;"
+             th:text="${succesInv}"></div>
+        <div th:if="${errorInv}" style="margin-top:10px; padding:8px 12px; background:#fdf0f0; border:1px solid #f0a8a8; color:#a82a2a; border-radius:5px; font-size:0.85rem;"
+             th:text="${errorInv}"></div>
+    </div>
+
+    <!-- ── Tabla de Tareas ── -->
+    <div class="section-title">Tareas</div>
+
+    <div class="table-wrap" th:if="${not #lists.isEmpty(tareas)}">
+        <table>
+            <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Dificultad</th>
+                <th>Fecha límite</th>
+                <th>Responsables</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="tarea : ${tareas}">
+                <td>
+                    <div class="tarea-name" th:text="${tarea.nombre}"></div>
+                    <div class="tarea-sub" th:if="${tarea.descripcion}" th:text="${tarea.descripcion}"></div>
+                </td>
+                <td>
+                    <span class="badge"
+                          th:classappend="${tarea.dificultad.name() == 'SIMPLE'} ? 'badge-simple' :
+                                          (${tarea.dificultad.name() == 'MEDIA'} ? 'badge-media' : 'badge-alta')"
+                          th:text="${tarea.dificultad.name()}"></span>
+                </td>
+                <td th:text="${tarea.fechaFinal != null} ? ${#temporals.format(tarea.fechaFinal, 'dd/MM/yyyy')} : '—'"></td>
+                <td>
+                    <div class="responsables-cell" th:if="${not #sets.isEmpty(tarea.responsables)}">
+                        <span class="resp-tag" th:each="r : ${tarea.responsables}" th:text="${r.username}"></span>
+                    </div>
+                    <span th:if="${#sets.isEmpty(tarea.responsables)}" style="color:#ccc; font-size:0.78rem;">Sin asignar</span>
+                </td>
+                <td>
+                    <span class="badge"
+                          th:classappend="${tarea.isCompletada} ? 'badge-completada' : 'badge-pendiente'"
+                          th:text="${tarea.isCompletada} ? 'Completada' : 'Pendiente'"></span>
+                </td>
+                <td>
+                    <div class="tarea-actions">
+                        <!-- Completar / Deshacer -->
+                        <form th:action="@{/trabajos/{wId}/tareas/{tId}/completar(wId=${trabajo.id}, tId=${tarea.id})}" method="post" style="margin:0">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button type="submit" class="btn-sm"
+                                    th:classappend="${tarea.isCompletada} ? 'btn-deshacer' : 'btn-completar'"
+                                    th:text="${tarea.isCompletada} ? 'Deshacer' : 'Completar'"></button>
+                        </form>
+
+                        <!-- Asignar responsables (abre modal) -->
+                        <button type="button" class="btn-sm btn-asignar"
+                                th:if="${not #sets.isEmpty(trabajo.colaboradores)}"
+                                th:onclick="'openModal(' + ${tarea.id} + ')'">
+                            👤 Asignar
+                        </button>
+
+                        <!-- Eliminar -->
+                        <form th:action="@{/trabajos/{wId}/tareas/{tId}/eliminar(wId=${trabajo.id}, tId=${tarea.id})}" method="post" style="margin:0"
+                              onsubmit="return confirm('¿Eliminar esta tarea?')">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button type="submit" class="btn-sm btn-eliminar">Eliminar</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="empty-tareas" th:if="${#lists.isEmpty(tareas)}">
+        <p>No hay tareas aún.</p>
+        <a th:href="@{/trabajos/{id}/tareas/CrearTarea(id=${trabajo.id})}" class="btn-primary" style="display:inline-block; text-decoration:none;">
+            + Agregar primera tarea
+        </a>
+    </div>
+
+</div>
+
+<!-- ── Modales de asignación de responsables (uno por tarea) ── -->
+<div th:each="tarea : ${tareas}">
+    <div class="modal-overlay" th:id="'modal-' + ${tarea.id}">
+        <div class="modal">
+            <div class="modal-title">Asignar responsables — <span th:text="${tarea.nombre}" style="color:#f4a535;"></span></div>
+
+            <form th:action="@{/trabajos/{wId}/tareas/{tId}/asignar(wId=${trabajo.id}, tId=${tarea.id})}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                <div class="check-list">
+                    <span class="check-item" th:each="col : ${trabajo.colaboradores}">
+                        <input type="checkbox" name="responsableIds" th:value="${col.id}"
+                               th:checked="${tarea.responsables.contains(col)}"/>
+                        <span th:text="${col.username}"></span>
+                    </span>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-modal-cancel" th:onclick="'closeModal(' + ${tarea.id} + ')'">Cancelar</button>
+                    <button type="submit" class="btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openModal(tareaId) {
+        document.getElementById('modal-' + tareaId).classList.add('open');
+    }
+    function closeModal(tareaId) {
+        document.getElementById('modal-' + tareaId).classList.remove('open');
+    }
+    // Cerrar modal al hacer click fuera
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', e => {
+            if (e.target === overlay) overlay.classList.remove('open');
+        });
+    });
+</script>
+
+</body>
+</html>

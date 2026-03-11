@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Entrega Ya — Mis Trabajos</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, sans-serif; background: #f7f7f5; color: #222; }
+
+        header { background: #1a1a1a; color: #fff; padding: 0 24px; height: 52px; display: flex; align-items: center; justify-content: space-between; }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .brand { font-size: 1rem; font-weight: 800; color: #fff; text-decoration: none; }
+        .brand span { color: #f4a535; }
+        .btn-back { font-size: 0.8rem; color: #aaa; text-decoration: none; padding: 5px 10px; border: 1px solid rgba(255,255,255,0.1); border-radius: 5px; }
+        .btn-back:hover { color: #fff; border-color: rgba(255,255,255,0.25); }
+        .btn-primary { padding: 7px 14px; background: #f4a535; color: #fff; border: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: none; }
+        .btn-primary:hover { background: #e0932b; }
+
+        .container { max-width: 960px; margin: 24px auto; padding: 0 20px; }
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; gap: 10px; flex-wrap: wrap; }
+        .page-title { font-size: 1.15rem; font-weight: 700; }
+        .search { padding: 8px 12px; border: 1px solid #e5e5e5; border-radius: 6px; font-size: 0.85rem; width: 220px; outline: none; background: #fff; }
+        .search:focus { border-color: #f4a535; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+        .card { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 18px; }
+        .card:hover { border-color: #ccc; }
+
+        .tag { display: inline-block; font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; margin-bottom: 8px; }
+        .tag-pendiente  { background: #fff3cd; color: #92600a; }
+        .tag-progreso   { background: #e8f4fd; color: #1a6aa0; }
+        .tag-completado { background: #eafaf1; color: #1a7a3a; }
+
+        .card-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; }
+        .card-meta { font-size: 0.8rem; color: #888; margin-bottom: 3px; }
+
+        .progress-wrap { margin: 10px 0 12px; }
+        .progress-top { display: flex; justify-content: space-between; font-size: 0.75rem; color: #888; margin-bottom: 4px; }
+        .progress-bar { height: 4px; background: #eee; border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #f4a535; border-radius: 4px; }
+
+        .card-actions { display: flex; justify-content: space-between; align-items: center; }
+        .btn-detail { font-size: 0.8rem; color: #f4a535; text-decoration: none; font-weight: 600; }
+        .btn-detail:hover { text-decoration: underline; }
+        .btn-danger { background: none; border: none; font-size: 0.8rem; color: #aaa; cursor: pointer; padding: 0; }
+        .btn-danger:hover { color: #e74c3c; }
+
+        .empty { text-align: center; padding: 50px; color: #888; background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; }
+        .empty p { margin-bottom: 14px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-left">
+        <a th:href="@{/dashboard}" class="brand">ENTREGA <span>YA</span></a>
+    </div>
+    <a th:href="@{/trabajos/nuevo}" class="btn-primary">+ Nuevo trabajo</a>
+</header>
+
+<div class="container">
+    <div class="toolbar">
+        <div class="page-title">Mis Trabajos</div>
+        <input class="search" type="text" placeholder="Buscar..." id="searchInput" oninput="filterCards()"/>
+    </div>
+
+    <div class="grid" th:if="${not #lists.isEmpty(trabajos)}" id="cardGrid">
+        <div class="card" th:each="trabajo : ${trabajos}">
+            <span class="tag"
+                  th:classappend="${progresos[trabajo.id] == 100} ? 'tag-completado' : (${progresos[trabajo.id] == 0} ? 'tag-pendiente' : 'tag-progreso')"
+                  th:text="${progresos[trabajo.id] == 100} ? 'Completado' : (${progresos[trabajo.id] == 0} ? 'Pendiente' : 'En progreso')">
+            </span>
+            <div class="card-title" th:text="${trabajo.nombreTrabajo}"></div>
+            <div class="card-meta" th:if="${trabajo.descripcion}" th:text="${trabajo.descripcion}"></div>
+            <div class="card-meta" th:if="${trabajo.fechaEntrega}">
+                ⏰ <span th:text="${#temporals.format(trabajo.fechaEntrega, 'dd/MM/yyyy')}"></span>
+            </div>
+            <div class="card-meta">
+                👥 <span th:text="${#sets.size(trabajo.colaboradores)}"></span> integrante(s)
+            </div>
+            <div class="progress-wrap">
+                <div class="progress-top">
+                    <span>Progreso</span>
+                    <span th:text="${progresos[trabajo.id]} + '%'">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" th:style="'width:' + ${progresos[trabajo.id]} + '%'"></div>
+                </div>
+            </div>
+            <div class="card-actions">
+                <a th:href="@{/trabajos/{id}(id=${trabajo.id})}" class="btn-detail">Ver detalle →</a>
+                <form th:action="@{/trabajos/{id}/eliminar(id=${trabajo.id})}" method="post" style="margin:0"
+                      onsubmit="return confirm('¿Eliminar este trabajo?')">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button type="submit" class="btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="empty" th:if="${#lists.isEmpty(trabajos)}">
+        <p>No tienes trabajos aún.</p>
+        <a th:href="@{/trabajos/nuevo}" class="btn-primary">+ Crear primer trabajo</a>
+    </div>
+</div>
+
+<script>
+    function filterCards() {
+        const q = document.getElementById('searchInput').value.toLowerCase();
+        document.querySelectorAll('#cardGrid .card').forEach(c => {
+            c.style.display = c.querySelector('.card-title')?.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+    }
+</script>
+</body>
+</html>
