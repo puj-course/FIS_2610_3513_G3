@@ -16,7 +16,7 @@ CREATE TABLE users (
 --Creacion de la tabla trabajo, representa un proyecto
 CREATE TABLE trabajo (
     id BIGSERIAL PRIMARY KEY,
-    nombreTrabajo VARCHAR(255) UNIQUE NOT NULL,
+    nombreTrabajo VARCHAR(255) NOT NULL,
     descripcion VARCHAR(255),
     fechaInicio TIMESTAMP,
     fechaEntrega TIMESTAMP
@@ -26,9 +26,11 @@ CREATE TABLE trabajo (
 CREATE TABLE colaboradores (
     usersid BIGINT NOT NULL,
     trabajoid BIGINT NOT NULL,
+    rol_id BIGINT NOT NULL,
     PRIMARY KEY (usersid, trabajoid),
     FOREIGN KEY (usersid) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (trabajoid) REFERENCES trabajo(id) ON DELETE CASCADE
+    FOREIGN KEY (trabajoid) REFERENCES trabajo(id) ON DELETE CASCADE,
+    FOREIGN KEY (rol_id) REFERENCES roles(id)
 );
 
 --Creacion de la tabla tarea, representa actividades del proyecto
@@ -63,4 +65,11 @@ CREATE TABLE invitacion (
     FOREIGN KEY (trabajo_id) REFERENCES trabajo(id) ON DELETE CASCADE,
     FOREIGN KEY (destinatario_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (remitente_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+--Creacion de la tabla roles
+CREATE TABLE roles (
+    id BIGSERIAL PRIMARY KEY,
+    nombre_rol VARCHAR(50) UNIQUE NOT NULL,
+    descripcion VARCHAR(255)
 );
