@@ -37,12 +37,12 @@ public class TrabajoController {
 
         model.addAttribute("trabajos", trabajos);
         model.addAttribute("progresos", progresos);
-        return "trabajo/lista";
+        return "trabajos/lista";
     }
     @GetMapping("/nuevo")
     public String formulario(Model model) {
         model.addAttribute("trabajo", new Trabajo());
-        return "trabajo/formulario";
+        return "trabajos/formulario";
     }
     @PostMapping("/nuevo")
     public String guardar(@ModelAttribute Trabajo trabajo, @AuthenticationPrincipal UserDetails user) {
@@ -98,5 +98,19 @@ public class TrabajoController {
     public String TrabajosEspecificos(Model model) {
         model.addAttribute("trabajo", new Trabajo());
         return "trabajos-especificos";
+    }
+    @GetMapping("/{id}/detalle")
+    public String DetallesxId(@PathVariable long id, Model model) {
+        model.addAttribute("trabajo", customTrabajoDetailsService.obtenerPorId(id));
+        return "trabajos/detalle";
+    }
+    
+    @GetMapping("/{id}/miembros")
+    public String mostrarMiembros(@PathVariable long id, Model model) {
+        Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
+        model.addAttribute("trabajo", trabajo);
+        model.addAttribute("miembros", trabajo.getColaboradores());
+        model.addAttribute("totalMiembros", trabajo.getColaboradores().size());
+        return "trabajos/miembros";
     }
 }
