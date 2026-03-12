@@ -1,5 +1,6 @@
 package com.example.entregaya.service;
 
+import com.example.entregaya.model.ColaboradorTrabajo;
 import com.example.entregaya.model.Trabajo;
 import com.example.entregaya.model.User;
 import com.example.entregaya.repository.TrabajoRepository;
@@ -16,13 +17,16 @@ public class CustomTrabajoDetailsService {
         this.userRepository = userRepository;
         this.trabajoRepository = trabajoRepository;
     }
+
  // Crear un nuevo trabajo y agregar al creador como colaborador
+ // El creador del trabajo automaticamente lider
     public Trabajo crearTrabajo(Trabajo trabajo, String username){
         User user= userRepository.findByUsername(username)
-                .orElseThrow(()-> new RuntimeException("User not found"));
-        trabajo.agregarColaborador(user);
+                .orElseThrow(()-> new RuntimeException("Usuario no encontrado"));
+        trabajo.agregarColaborador(user, ColaboradorTrabajo.Rol.LIDER);
         return trabajoRepository.save(trabajo);
     }
+
     // Listar trabajos donde el usuario es colaborador
     public List<Trabajo> listarPorUsuario(String username) {
         return trabajoRepository.findByColaboradoresUsername(username);
@@ -42,6 +46,7 @@ public class CustomTrabajoDetailsService {
         trabajo.agregarColaborador(user);
         return trabajoRepository.save(trabajo);
     }
+
     public void eliminar( long Id){
         trabajoRepository.deleteById(Id);
     }
