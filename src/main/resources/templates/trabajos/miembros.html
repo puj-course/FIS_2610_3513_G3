@@ -228,6 +228,12 @@
             background: #ecf0f1;
             border-radius: 12px;
         }
+        
+        .member-role.role-leader {
+            background: linear-gradient(135deg, #FF6B35 0%, #f39c12 100%);
+            color: white;
+            font-weight: bold;
+        }
 
         .member-stats {
             display: flex;
@@ -414,7 +420,11 @@
                 <div class="member-avatar" th:text="${#strings.substring(miembro.username, 0, 2)}">AB</div>
                 <div class="member-info">
                     <div class="member-name" th:text="${miembro.username}">Nombre Usuario</div>
-                    <span class="member-role">Colaborador</span>
+                    <span class="member-role" 
+                          th:text="${iterStat.index == 0} ? 'Líder del Proyecto' : 'Colaborador'"
+                          th:classappend="${iterStat.index == 0} ? 'role-leader' : ''">
+                        Colaborador
+                    </span>
                     
                     <div class="member-stats">
                         <div class="member-stat-item">
@@ -422,8 +432,8 @@
                             <div class="member-stat-label">Trabajos</div>
                         </div>
                         <div class="member-stat-item">
-                            <div class="member-stat-value" th:text="${iterStat.count}">1</div>
-                            <div class="member-stat-label">Posición</div>
+                            <div class="member-stat-value" th:text="${iterStat.index == 0} ? '★' : (${iterStat.count})">1</div>
+                            <div class="member-stat-label" th:text="${iterStat.index == 0} ? 'Líder' : 'Posición'">Posición</div>
                         </div>
                     </div>
                 </div>

@@ -136,6 +136,15 @@
             font-size: 12px;
             font-weight: bold;
         }
+        
+        .colaborador-tag.leader {
+            background: linear-gradient(135deg, #FF6B35 0%, #f39c12 100%);
+            color: white;
+        }
+        
+        .colaborador-tag.leader::before {
+            content: "★ ";
+        }
 
         /* Sección tareas */
         .section-header {
@@ -268,7 +277,8 @@
             </div>
             <div class="colaboradores">
                 <span class="colaborador-tag"
-                      th:each="col : ${trabajo.colaboradores}"
+                      th:each="col, iterStat : ${trabajo.colaboradores}"
+                      th:classappend="${iterStat.index == 0} ? 'leader' : ''"
                       th:text="${col.username}">
                     Usuario
                 </span>
