@@ -1,11 +1,13 @@
 package com.example.entregaya.controller;
 
 
+import com.example.entregaya.dto.MiembroRolDTO;
 import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
 import com.example.entregaya.service.CustomInvitacionDetailsService;
 import com.example.entregaya.service.CustomTrabajoDetailsService;
 import com.example.entregaya.service.CustomTareaDetailsService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -30,6 +32,7 @@ public class TrabajoController {
         this.customTareaDetailsService = customTareaDetailsService;
         this.customInvitacionDetailsService = customInvitacionDetailsService;
     }
+
     @GetMapping
     public String trabajo(Model model, @AuthenticationPrincipal UserDetails user) {
         List<Trabajo>trabajos= customTrabajoDetailsService.listarPorUsuario(user.getUsername());
@@ -42,11 +45,13 @@ public class TrabajoController {
         model.addAttribute("progresos", progresos);
         return "trabajos/lista";
     }
+
     @GetMapping("/nuevo")
     public String formulario(Model model) {
         model.addAttribute("trabajo", new Trabajo());
         return "trabajos/formulario";
     }
+
     @PostMapping("/nuevo")
     public String guardar(@ModelAttribute Trabajo trabajo, @AuthenticationPrincipal UserDetails user) {
         customTrabajoDetailsService.crearTrabajo(trabajo,user.getUsername());
@@ -80,6 +85,9 @@ public class TrabajoController {
                 .limit(5)
                 .toList();
 
+        // Miembros con roles para mostrar en la vista de detalle
+        List<MiembroRolDTO> miembros = customTrabajoDetailsService.consultarMiembros(id);
+
         model.addAttribute("trabajo", trabajo);
         model.addAttribute("tareas", tareas);
         model.addAttribute("progreso", customTareaDetailsService.calcularProgreso(id));
@@ -88,14 +96,23 @@ public class TrabajoController {
         model.addAttribute("enProgreso", enProgreso);
         model.addAttribute("proximasEntregas", proximasEntregas);
         model.addAttribute("invitaciones", customInvitacionDetailsService.porTrabajo(id));
-
+        model.addAttribute("miembros", miembros);
         return "trabajos/detalle";
     }
+    
+    @GetMapping("/{id}/miembros")
+    @ResponseBody
+    public ResponseEntity<List<MiembroRolDTO>> miembros(@PathVariable long id) {
+        List<MiembroRolDTO> miembros = customTrabajoDetailsService.consultarMiembros(id);
+        return ResponseEntity.ok(miembros);
+    }
+
     @PostMapping("/{id}/eliminar")
     public String eliminar (@PathVariable long id) {
         customTrabajoDetailsService.eliminar(id);
         return "redirect:/trabajos";
     }
+
     @GetMapping("/CrearTarea")
     public String CrearTarea(Model model) {
         model.addAttribute("tarea", new Tarea());
@@ -107,6 +124,7 @@ public class TrabajoController {
         model.addAttribute("trabajo", new Trabajo());
         return "trabajos-especificos";
     }
+
     @GetMapping("/{id}/detalle")
     public String DetallesxId(@PathVariable long id, Model model) {
         model.addAttribute("trabajo", customTrabajoDetailsService.obtenerPorId(id));
