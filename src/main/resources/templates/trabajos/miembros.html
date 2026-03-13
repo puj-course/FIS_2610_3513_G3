@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Miembros del Equipo - Entrega Ya</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ecf0f1;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 16px 24px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand {
+            color: #FF6B35;
+            font-size: 18px;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .separator {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .trabajo-name {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .back-link {
+            color: #95a5a6;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: white;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* Page Header */
+        .page-header {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            margin-bottom: 32px;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-header p {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .member-count {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 12px;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            border-left: 4px solid #3498db;
+        }
+
+        .stat-card.orange {
+            border-left-color: #FF6B35;
+        }
+
+        .stat-card.green {
+            border-left-color: #27ae60;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Members Grid */
+        .members-section h2 {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .members-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .member-card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .member-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .member-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+        }
+
+        .member-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+            margin: 0 auto 16px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .member-info {
+            text-align: center;
+        }
+
+        .member-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 6px;
+        }
+
+        .member-role {
+            font-size: 13px;
+            color: #7f8c8d;
+            margin-bottom: 16px;
+            display: inline-block;
+            padding: 4px 12px;
+            background: #ecf0f1;
+            border-radius: 12px;
+        }
+        
+        .member-role.role-leader {
+            background: linear-gradient(135deg, #FF6B35 0%, #f39c12 100%);
+            color: white;
+            font-weight: bold;
+        }
+
+        .member-stats {
+            display: flex;
+            justify-content: space-around;
+            padding-top: 16px;
+            border-top: 1px solid #ecf0f1;
+            margin-top: 16px;
+        }
+
+        .member-stat-item {
+            text-align: center;
+        }
+
+        .member-stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .member-stat-label {
+            font-size: 11px;
+            color: #95a5a6;
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+
+        /* Empty State */
+        .empty-state {
+            background: white;
+            padding: 60px 24px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #2980b9;
+        }
+
+        /* Actions Bar */
+        .actions-bar {
+            background: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 8px;
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px 16px;
+            border: 1px solid #dfe6e9;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .members-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-bar {
+                grid-template-columns: 1fr;
+            }
+
+            .page-header h1 {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+    <div class="header-content">
+        <div class="header-title">
+            <a th:href="@{/dashboard}" class="brand">ENTREGA YA</a>
+            <span class="separator">›</span>
+            <span class="trabajo-name" th:text="${trabajo.nombreTrabajo}">Nombre del Trabajo</span>
+        </div>
+        <a th:href="@{/trabajos/{id}/detalle(id=${trabajo.id})}" class="back-link">← Volver al trabajo</a>
+    </div>
+</header>
+
+<!-- Main Content -->
+<div class="container">
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1>
+            👥 Miembros del Equipo
+            <span class="member-count" th:text="${totalMiembros}">0</span>
+        </h1>
+        <p th:text="'Equipo colaborando en: ' + ${trabajo.nombreTrabajo}">Equipo colaborando en el proyecto</p>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar" th:if="${not #sets.isEmpty(miembros)}">
+        <div class="stat-card">
+            <div class="stat-value" th:text="${totalMiembros}">0</div>
+            <div class="stat-label">Total Miembros</div>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-value" th:text="${#sets.size(trabajo.tareas)}">0</div>
+            <div class="stat-label">Tareas del Proyecto</div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-value">100%</div>
+            <div class="stat-label">Colaboración</div>
+        </div>
+    </div>
+
+    <!-- Actions Bar -->
+    <div class="actions-bar" th:if="${not #sets.isEmpty(miembros)}">
+        <div class="search-box">
+            <input type="text" class="search-input" id="searchInput" placeholder="🔍 Buscar miembro por nombre..." onkeyup="filtrarMiembros()">
+        </div>
+        <div style="color: #7f8c8d; font-size: 14px;">
+            <span id="visibleCount" th:text="${totalMiembros}">0</span> miembro(s)
+        </div>
+    </div>
+
+    <!-- Members Section -->
+    <div class="members-section">
+        
+        <!-- Members Grid -->
+        <div class="members-grid" th:if="${not #sets.isEmpty(miembros)}">
+            <div class="member-card" th:each="miembro, iterStat : ${miembros}" th:data-username="${miembro.username}">
+                <div class="member-avatar" th:text="${#strings.substring(miembro.username, 0, 2)}">AB</div>
+                <div class="member-info">
+                    <div class="member-name" th:text="${miembro.username}">Nombre Usuario</div>
+                    <span class="member-role" 
+                          th:text="${iterStat.index == 0} ? 'Líder del Proyecto' : 'Colaborador'"
+                          th:classappend="${iterStat.index == 0} ? 'role-leader' : ''">
+                        Colaborador
+                    </span>
+                    
+                    <div class="member-stats">
+                        <div class="member-stat-item">
+                            <div class="member-stat-value" th:text="${#sets.size(miembro.trabajos)}">0</div>
+                            <div class="member-stat-label">Trabajos</div>
+                        </div>
+                        <div class="member-stat-item">
+                            <div class="member-stat-value" th:text="${iterStat.index == 0} ? '★' : (${iterStat.count})">1</div>
+                            <div class="member-stat-label" th:text="${iterStat.index == 0} ? 'Líder' : 'Posición'">Posición</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" th:if="${#sets.isEmpty(miembros)}">
+            <div class="empty-icon">👥</div>
+            <h3>No hay miembros en este equipo</h3>
+            <p>Este trabajo aún no tiene colaboradores asignados.</p>
+            <a th:href="@{/trabajos/{id}/detalle(id=${trabajo.id})}" class="btn">Volver al trabajo</a>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    function filtrarMiembros() {
+        const searchInput = document.getElementById('searchInput');
+        const filter = searchInput.value.toLowerCase();
+        const cards = document.querySelectorAll('.member-card');
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const username = card.getAttribute('data-username').toLowerCase();
+            if (username.includes(filter)) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        document.getElementById('visibleCount').textContent = visibleCount;
+    }
+</script>
+
+</body>
+</html>

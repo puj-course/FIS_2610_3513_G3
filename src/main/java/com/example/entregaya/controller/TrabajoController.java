@@ -51,7 +51,6 @@ public class TrabajoController {
         model.addAttribute("trabajo", new Trabajo());
         return "trabajos/formulario";
     }
-
     @PostMapping("/nuevo")
     public String guardar(@ModelAttribute Trabajo trabajo, @AuthenticationPrincipal UserDetails user) {
         customTrabajoDetailsService.crearTrabajo(trabajo,user.getUsername());
@@ -59,7 +58,7 @@ public class TrabajoController {
     }
 
     @GetMapping("/{id}")
-    public String detalle(@PathVariable long id, Model model, @AuthenticationPrincipal UserDetails user) {
+    public String detalle(@PathVariable long id, Model model) {
         Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
         List<Tarea> tareas = customTareaDetailsService.tareas(id);
 
@@ -99,7 +98,7 @@ public class TrabajoController {
         model.addAttribute("miembros", miembros);
         return "trabajos/detalle";
     }
-    
+
     @GetMapping("/{id}/miembros")
     @ResponseBody
     public ResponseEntity<List<MiembroRolDTO>> miembros(@PathVariable long id) {
@@ -124,10 +123,18 @@ public class TrabajoController {
         model.addAttribute("trabajo", new Trabajo());
         return "trabajos-especificos";
     }
-
     @GetMapping("/{id}/detalle")
     public String DetallesxId(@PathVariable long id, Model model) {
         model.addAttribute("trabajo", customTrabajoDetailsService.obtenerPorId(id));
         return "trabajos/detalle";
+    }
+
+    @GetMapping("/{id}/miembros")
+    public String mostrarMiembros(@PathVariable long id, Model model) {
+        Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
+        model.addAttribute("trabajo", trabajo);
+        model.addAttribute("miembros", trabajo.getColaboradores());
+        model.addAttribute("totalMiembros", trabajo.getColaboradores().size());
+        return "trabajos/miembros";
     }
 }

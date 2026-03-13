@@ -85,10 +85,23 @@ public class AuthController {
         List<Trabajo> activos=todos.stream()
                 .filter(trabajo -> progresos.get(trabajo.getId()) <100)
                 .toList();
+
+        // Calcular trabajos próximos a vencer (en los próximos 7 días)
+        List<Trabajo> proximosVencer = activos.stream()
+                .filter(trabajo -> trabajo.getFechaEntrega() != null)
+                .filter(trabajo -> {
+                    java.time.LocalDate fechaEntrega = trabajo.getFechaEntrega();
+                    java.time.LocalDate ahora = java.time.LocalDate.now();
+                    java.time.LocalDate limite = ahora.plusDays(7);
+                    return !fechaEntrega.isBefore(ahora) && !fechaEntrega.isAfter(limite);
+                })
+                .toList();
+
         model.addAttribute("trabajos", activos);
         model.addAttribute("progresos", progresos);
         model.addAttribute("totalTrabajos", todos.size());
         model.addAttribute("completados", todos.size()-activos.size());
+        model.addAttribute("proximosVencer", proximosVencer);
         model.addAttribute("invitaciones", customInvitacionDetailsService.pendientesParaUsuario(userDetails.getUsername()));
         return "dashboard";
     }
