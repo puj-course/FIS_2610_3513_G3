@@ -2,6 +2,7 @@ package com.example.entregaya.controller;
 
 
 import com.example.entregaya.dto.MiembroRolDTO;
+import com.example.entregaya.model.ColaboradorTrabajo;
 import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
 import com.example.entregaya.service.CustomInvitacionDetailsService;
@@ -136,5 +137,14 @@ public class TrabajoController {
         model.addAttribute("miembros", trabajo.getColaboradores());
         model.addAttribute("totalMiembros", trabajo.getColaboradores().size());
         return "trabajos/miembros";
+    }
+
+    //Rol
+    @PostMapping("/{id}/miembros/{userId}/rol")
+    public String cambiarRol(@PathVariable Long id,
+                             @PathVariable Long userId,
+                             @RequestParam ColaboradorTrabajo.Rol rol) {
+        customTrabajoDetailsService.cambiarRol(id, userId, rol);
+        return "redirect:/trabajos/" + id;
     }
 }
