@@ -266,22 +266,23 @@
             </span>
         </div>
 
-        <!-- Colaboradores -->
-        <div th:if="${not #sets.isEmpty(trabajo.colaboradores)}">
-            <div style="font-size:12px; color:#95a5a6; margin-bottom:6px; display: flex; justify-content: space-between; align-items: center;">
-                <span>COLABORADORES</span>
-                <a th:href="@{/trabajos/{id}/miembros(id=${trabajo.id})}" 
-                   style="color:#3498db; text-decoration:none; font-size:13px; font-weight:bold;">
-                    Ver todos →
-                </a>
-            </div>
-            <div class="colaboradores">
-                <span class="colaborador-tag"
-                      th:each="col, iterStat : ${trabajo.colaboradores}"
-                      th:classappend="${iterStat.index == 0} ? 'leader' : ''"
-                      th:text="${col.username}">
-                    Usuario
-                </span>
+        <!-- Colaboradores con roles -->
+        <div th:if="${not #lists.isEmpty(miembros)}">
+            <div style="font-size:12px; color:#95a5a6; margin-bottom:8px;">COLABORADORES</div>
+            <div th:each="miembro : ${miembros}"
+                 style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+        <span th:text="${miembro.username}"
+              style="font-weight:bold; min-width:120px; font-size:13px;"></span>
+                <form th:action="@{/trabajos/{id}/miembros/{uid}/rol(id=${trabajo.id}, uid=${miembro.userId})}"
+                      method="post" style="display:flex; gap:6px; align-items:center; margin:0;">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <select name="rol" style="padding:4px 8px; border-radius:4px; border:1px solid #ccc; font-size:13px;">
+                        <option value="LIDER"       th:selected="${miembro.rol.name() == 'LIDER'}">★ Líder</option>
+                        <option value="EDITOR"      th:selected="${miembro.rol.name() == 'EDITOR'}">✏️ Editor</option>
+                        <option value="COLABORADOR" th:selected="${miembro.rol.name() == 'COLABORADOR'}">👤 Colaborador</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary" style="padding:4px 12px; font-size:12px;">Guardar</button>
+                </form>
             </div>
         </div>
 
