@@ -24,13 +24,12 @@ CREATE TABLE trabajo (
 
 --Creacion de la tabla Colaboradores, relaciona la tabla usuarios y trabajo
 CREATE TABLE colaboradores (
-    usersid BIGINT NOT NULL,
     trabajoid BIGINT NOT NULL,
+    usersid BIGINT NOT NULL,
     rol VARCHAR(20) NOT NULL DEFAULT 'COLABORADOR',
-    PRIMARY KEY (usersid, trabajoid),
-    FOREIGN KEY (usersid) REFERENCES users(id) ON DELETE CASCADE,
+    PRIMARY KEY (trabajoid, usersid),
     FOREIGN KEY (trabajoid) REFERENCES trabajo(id) ON DELETE CASCADE,
-    CONSTRAINT chk_colaboradores_rol CHECK (rol IN ('LIDER', 'EDITOR', 'COLABORADOR'))
+    FOREIGN KEY (usersid) REFERENCES users(id)ON DELETE CASCADE
 );
 
 --Creacion de la tabla tarea, representa actividades del proyecto
