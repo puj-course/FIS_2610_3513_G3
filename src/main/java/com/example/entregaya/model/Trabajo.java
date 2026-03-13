@@ -91,11 +91,11 @@ public class Trabajo {
         this.fechaEntrega = fechaEntrega;
     }
 
-    public Set<User> getColaboradores() {
+    public Set<ColaboradorTrabajo> getColaboradores() {
         return colaboradores;
     }
 
-    public void setColaboradores(Set<User> colaboradores) {
+    public void setColaboradores(Set<ColaboradorTrabajo> colaboradores) {
         this.colaboradores = colaboradores;
     }
 
