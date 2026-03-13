@@ -55,10 +55,10 @@ public class CustomTrabajoDetailsService {
     public void cambiarRol(Long trabajoId, Long userId, ColaboradorTrabajo.Rol nuevoRol){
 
         ColaboradorTrabajoId id=new ColaboradorTrabajoId(trabajoId,userId );
-        ColaboradorTrabajo colaborador = colaboradorTrabajoRepository.findById(id)
+        ColaboradorTrabajo colb = colaboradorTrabajoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Colaborador no encontrado"));
-        colaborador.setRol(nuevoRol);
-        colaboradorTrabajoRepository.save(colaborador);
+        colb.setRol(nuevoRol);
+        colaboradorTrabajoRepository.save(colb);
     }
 
     // Consultar los miembros de un trabajo con sus roles, desde el DTO
