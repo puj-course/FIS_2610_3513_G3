@@ -28,14 +28,9 @@ public class Trabajo {
     @Column(name = "fechaentrega")
     private LocalDateTime fechaEntrega;
 
-    // Relacion muchos a muchos con User
-    @ManyToMany
-    @JoinTable(
-            name = "colaboradores",
-            joinColumns = @JoinColumn(name = "trabajoid"),
-            inverseJoinColumns = @JoinColumn(name = "usersid")
-    )
-    private Set<User> colaboradores = new HashSet<>();
+    // Cambio del @ManytoMany, usar entidad de ColaboradorTrabajo para almacenar rol
+    @OneToMany(mappedBy = "trabajo", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ColaboradorTrabajo> colaboradores = new HashSet<>();
 
     // Relacion uno a muchos con tareas
     @OneToMany(mappedBy = "trabajo", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -96,17 +91,27 @@ public class Trabajo {
         this.fechaEntrega = fechaEntrega;
     }
 
-    public Set<User> getColaboradores() {
+    public Set<ColaboradorTrabajo> getColaboradores() {
         return colaboradores;
     }
 
-    public void setColaboradores(Set<User> colaboradores) {
+    public void setColaboradores(Set<ColaboradorTrabajo> colaboradores) {
         this.colaboradores = colaboradores;
     }
 
-    // Metodo para agregar colaborador
+    // Agregar un mimebro con un rol
+    // si ya esta en el trabajo no duplicar
+    public void agregarColaborador(User user, ColaboradorTrabajo.Rol rol) {
+        boolean yaExiste = colaboradores.stream().anyMatch(c -> c.getUser().getId().equals(user.getId()));
+
+        if (!yaExiste) {
+            this.colaboradores.add(new ColaboradorTrabajo(this, user, rol));
+        }
+    }
+
+    //sobrecarga para poder seguir usando el mismo metodo, agregar el rol por defecto
     public void agregarColaborador(User user) {
-        this.colaboradores.add(user);
+        agregarColaborador(user, ColaboradorTrabajo.Rol.COLABORADOR);
     }
 
     public Set<Tarea> getTareas() {
