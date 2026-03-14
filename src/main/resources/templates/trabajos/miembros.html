@@ -471,6 +471,57 @@
 
         document.getElementById('visibleCount').textContent = visibleCount;
     }
+    
+    // Consumir endpoint para obtener roles del backend
+    function cargarRolesDesdeBackend() {
+        const trabajoId = window.location.pathname.split('/')[2]; // Obtener ID de la URL
+        
+        fetch(`/trabajos/${trabajoId}/miembros/roles`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error al obtener roles');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Roles obtenidos del backend:', data);
+                actualizarRolesEnVista(data.miembros);
+            })
+            .catch(error => {
+                console.error('Error al cargar roles:', error);
+            });
+    }
+    
+    function actualizarRolesEnVista(miembros) {
+        const cards = document.querySelectorAll('.member-card');
+        
+        cards.forEach((card, index) => {
+            if (miembros[index]) {
+                const miembro = miembros[index];
+                const roleSpan = card.querySelector('.member-role');
+                const statValue = card.querySelectorAll('.member-stat-value')[1];
+                const statLabel = card.querySelectorAll('.member-stat-label')[1];
+                
+                // Actualizar rol
+                if (miembro.rol === 'LIDER') {
+                    roleSpan.textContent = 'Líder del Proyecto';
+                    roleSpan.classList.add('role-leader');
+                    statValue.textContent = '★';
+                    statLabel.textContent = 'Líder';
+                } else {
+                    roleSpan.textContent = 'Colaborador';
+                    roleSpan.classList.remove('role-leader');
+                    statValue.textContent = miembro.posicion;
+                    statLabel.textContent = 'Posición';
+                }
+            }
+        });
+    }
+    
+    // Cargar roles al cargar la página
+    document.addEventListener('DOMContentLoaded', function() {
+        cargarRolesDesdeBackend();
+    });
 </script>
 
 </body>
