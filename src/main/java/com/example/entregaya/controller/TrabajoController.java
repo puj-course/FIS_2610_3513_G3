@@ -2,6 +2,7 @@ package com.example.entregaya.controller;
 
 
 import com.example.entregaya.dto.MiembroRolDTO;
+import com.example.entregaya.model.ColaboradorTrabajo;
 import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
 import com.example.entregaya.model.User;
@@ -139,32 +140,32 @@ public class TrabajoController {
         model.addAttribute("totalMiembros", trabajo.getColaboradores().size());
         return "trabajos/miembros";
     }
-    
+
     // Endpoint REST para obtener miembros con roles (JSON)
     @GetMapping("/{id}/miembros/roles")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> obtenerMiembrosConRoles(@PathVariable long id) {
         try {
             Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
-            
+
             if (trabajo == null) {
                 return ResponseEntity.notFound().build();
             }
 
             List<User> colaboradores = new ArrayList<>(trabajo.getColaboradores());
             List<Map<String, Object>> miembros = new ArrayList<>();
-            
+
             for (int i = 0; i < colaboradores.size(); i++) {
                 User user = colaboradores.get(i);
                 String rol = (i == 0) ? "LIDER" : "COLABORADOR";
-                
+
                 Map<String, Object> miembro = new HashMap<>();
                 miembro.put("id", user.getId());
                 miembro.put("username", user.getUsername());
                 miembro.put("rol", rol);
                 miembro.put("trabajosCount", user.getTrabajos().size());
                 miembro.put("posicion", i + 1);
-                
+
                 miembros.add(miembro);
             }
 
@@ -176,7 +177,7 @@ public class TrabajoController {
             response.put("miembros", miembros);
 
             return ResponseEntity.ok(response);
-            
+
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }

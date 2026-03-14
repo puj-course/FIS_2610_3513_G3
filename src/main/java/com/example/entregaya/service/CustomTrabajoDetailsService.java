@@ -2,6 +2,7 @@ package com.example.entregaya.service;
 
 import com.example.entregaya.dto.MiembroRolDTO;
 import com.example.entregaya.model.ColaboradorTrabajo;
+import com.example.entregaya.model.ColaboradorTrabajoId;
 import com.example.entregaya.model.Trabajo;
 import com.example.entregaya.model.User;
 import com.example.entregaya.repository.ColaboradorTrabajoRepository;
@@ -49,6 +50,15 @@ public class CustomTrabajoDetailsService {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         trabajo.agregarColaborador(user);
         return trabajoRepository.save(trabajo);
+    }
+
+    public void cambiarRol(Long trabajoId, Long userId, ColaboradorTrabajo.Rol nuevoRol){
+
+        ColaboradorTrabajoId id=new ColaboradorTrabajoId(trabajoId,userId );
+        ColaboradorTrabajo colb = colaboradorTrabajoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Colaborador no encontrado"));
+        colb.setRol(nuevoRol);
+        colaboradorTrabajoRepository.save(colb);
     }
 
     // Consultar los miembros de un trabajo con sus roles, desde el DTO
