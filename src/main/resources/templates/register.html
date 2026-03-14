@@ -2,70 +2,44 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Entrega Ya - Crear Cuenta</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Entrega Ya — Registro</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .card {
-            background-color: white;
-            padding: 30px;
-            width: 380px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            box-sizing: border-box;
-        }
-        h2 { text-align: center; margin-bottom: 20px; }
-        input {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            box-sizing: border-box;
-        }
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #f4a535;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-        button:hover { background-color: #e0932b; }
-        .secondary { background-color: #ccc; }
-        .secondary:hover { background-color: #aaa; }
-        .msg-error { color: red; font-size: 13px; margin-bottom: 10px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, sans-serif; background: #f7f7f5; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .card { background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; padding: 32px; width: 100%; max-width: 380px; }
+        .brand { font-size: 1.3rem; font-weight: 800; color: #1a1a1a; margin-bottom: 6px; }
+        .brand span { color: #f4a535; }
+        .subtitle { font-size: 0.82rem; color: #888; margin-bottom: 24px; }
+        label { display: block; font-size: 0.78rem; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+        input { width: 100%; padding: 10px 12px; border: 1px solid #e5e5e5; border-radius: 6px; font-size: 0.9rem; outline: none; margin-bottom: 14px; }
+        input:focus { border-color: #f4a535; }
+        .btn { width: 100%; padding: 11px; border: none; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-bottom: 8px; }
+        .btn-primary { background: #f4a535; color: #fff; }
+        .btn-primary:hover { background: #e0932b; }
+        .btn-secondary { background: #fff; color: #444; border: 1px solid #e5e5e5; }
+        .btn-secondary:hover { background: #f7f7f5; }
+        .msg-error { padding: 9px 12px; border-radius: 6px; font-size: 0.82rem; margin-bottom: 14px; background: #fff1f0; color: #c0392b; border: 1px solid #fdd; }
+        .divider { text-align: center; font-size: 0.8rem; color: #bbb; margin: 10px 0; }
     </style>
 </head>
 <body>
 <div class="card">
-    <h2>Crear Cuenta</h2>
+    <div class="brand">ENTREGA <span>YA</span></div>
+    <div class="subtitle">Crea tu cuenta para comenzar</div>
 
-    <!-- Error desde el servidor (usuario duplicado, etc.) -->
-    <p class="msg-error" th:if="${error}" th:text="${error}"></p>
+    <div class="msg-error" th:if="${error}" th:text="${error}"></div>
 
-    <!--
-        El formulario envía POST /register al AuthController.
-        Spring procesará los datos y llamará a CustomUserDetailsService.register().
-        La contraseña se encriptará con BCrypt antes de guardarse en PostgreSQL.
-    -->
     <form th:action="@{/register}" method="post">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-        <input type="text" name="username" placeholder="Nombre de usuario" required minlength="3">
-        <input type="password" name="password" placeholder="Contraseña" required minlength="6">
-        <button type="submit">Registrarse</button>
+        <label>Usuario</label>
+        <input type="text" name="username" placeholder="mi_usuario" required minlength="3"/>
+        <label>Contraseña</label>
+        <input type="password" name="password" placeholder="Mínimo 6 caracteres" required minlength="6"/>
+        <button type="submit" class="btn btn-primary">Registrarme</button>
     </form>
-
-    <button class="secondary" onclick="window.location.href='/login'">Volver al Login</button>
+    <div class="divider">¿Ya tienes cuenta?</div>
+    <button class="btn btn-secondary" onclick="location.href='/login'">← Volver al login</button>
 </div>
 </body>
 </html>

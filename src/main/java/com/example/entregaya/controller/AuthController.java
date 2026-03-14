@@ -1,6 +1,7 @@
 package com.example.entregaya.controller;
 
 import com.example.entregaya.model.Trabajo;
+import com.example.entregaya.service.CustomInvitacionDetailsService;
 import com.example.entregaya.service.CustomTareaDetailsService;
 import com.example.entregaya.service.CustomTrabajoDetailsService;
 import com.example.entregaya.service.CustomUserDetailsService;
@@ -27,14 +28,16 @@ public class AuthController {
     private final CustomUserDetailsService userDetailsService;
     private final CustomTareaDetailsService customTareaDetailsService;
     private final CustomTrabajoDetailsService customTrabajoDetailsService;
+    private final CustomInvitacionDetailsService customInvitacionDetailsService;
 
     public AuthController(CustomUserDetailsService UserDetailsService,
                           CustomTrabajoDetailsService customTrabajoDetailsService,
-                          CustomTareaDetailsService customTareaDetailsService) {
+                          CustomTareaDetailsService customTareaDetailsService, CustomInvitacionDetailsService customInvitacionDetailsService) {
 
         this.userDetailsService = UserDetailsService;
         this.customTareaDetailsService = customTareaDetailsService;
         this.customTrabajoDetailsService = customTrabajoDetailsService;
+        this.customInvitacionDetailsService = customInvitacionDetailsService;
     }
 
     /**
@@ -82,7 +85,7 @@ public class AuthController {
         List<Trabajo> activos=todos.stream()
                 .filter(trabajo -> progresos.get(trabajo.getId()) <100)
                 .toList();
-        
+
         // Calcular trabajos próximos a vencer (en los próximos 7 días)
         List<Trabajo> proximosVencer = activos.stream()
                 .filter(trabajo -> trabajo.getFechaEntrega() != null)
@@ -93,12 +96,13 @@ public class AuthController {
                     return !fechaEntrega.isBefore(ahora) && !fechaEntrega.isAfter(limite);
                 })
                 .toList();
-        
+
         model.addAttribute("trabajos", activos);
         model.addAttribute("progresos", progresos);
         model.addAttribute("totalTrabajos", todos.size());
         model.addAttribute("completados", todos.size()-activos.size());
         model.addAttribute("proximosVencer", proximosVencer);
+        model.addAttribute("invitaciones", customInvitacionDetailsService.pendientesParaUsuario(userDetails.getUsername()));
         return "dashboard";
     }
 }
