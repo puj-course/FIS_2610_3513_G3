@@ -278,8 +278,8 @@
             <div class="colaboradores">
                 <span class="colaborador-tag"
                       th:each="col, iterStat : ${trabajo.colaboradores}"
-                      th:classappend="${iterStat.index == 0} ? 'leader' : ''"
-                      th:text="${col.username}">
+                      th:classappend="${col.rol.name() == 'LIDER'} ? 'leader' : ''"
+                      th:text="${col.user.username}">
                     Usuario
                 </span>
             </div>

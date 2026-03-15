@@ -2,6 +2,7 @@ package com.example.entregaya.controller;
 
 
 import com.example.entregaya.dto.MiembroRolDTO;
+import com.example.entregaya.model.ColaboradorTrabajo;
 import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
 import com.example.entregaya.model.User;
@@ -101,13 +102,6 @@ public class TrabajoController {
         return "trabajos/detalle";
     }
 
-    @GetMapping("/{id}/miembros")
-    @ResponseBody
-    public ResponseEntity<List<MiembroRolDTO>> miembros(@PathVariable long id) {
-        List<MiembroRolDTO> miembros = customTrabajoDetailsService.consultarMiembros(id);
-        return ResponseEntity.ok(miembros);
-    }
-
     @PostMapping("/{id}/eliminar")
     public String eliminar (@PathVariable long id) {
         customTrabajoDetailsService.eliminar(id);
@@ -125,6 +119,7 @@ public class TrabajoController {
         model.addAttribute("trabajo", new Trabajo());
         return "trabajos-especificos";
     }
+    
     @GetMapping("/{id}/detalle")
     public String DetallesxId(@PathVariable long id, Model model) {
         model.addAttribute("trabajo", customTrabajoDetailsService.obtenerPorId(id));
@@ -151,12 +146,15 @@ public class TrabajoController {
                 return ResponseEntity.notFound().build();
             }
 
-            List<User> colaboradores = new ArrayList<>(trabajo.getColaboradores());
+            List<ColaboradorTrabajo> colaboradores = new ArrayList<>(trabajo.getColaboradores());
             List<Map<String, Object>> miembros = new ArrayList<>();
             
             for (int i = 0; i < colaboradores.size(); i++) {
-                User user = colaboradores.get(i);
-                String rol = (i == 0) ? "LIDER" : "COLABORADOR";
+                ColaboradorTrabajo colaborador = colaboradores.get(i);
+                User user = colaborador.getUser();
+                
+                // Obtener el rol real desde la entidad ColaboradorTrabajo
+                String rol = colaborador.getRol().name(); // LIDER, EDITOR, o COLABORADOR
                 
                 Map<String, Object> miembro = new HashMap<>();
                 miembro.put("id", user.getId());

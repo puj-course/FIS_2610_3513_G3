@@ -31,7 +31,7 @@ public class CustomInvitacionDetailsService {
                 .orElseThrow(() -> new RuntimeException("Destinatario no encontrado"));
 
         boolean colabora = trabajo.getColaboradores().stream()
-                .anyMatch(c -> c.getUsername().equals(destinatarioUsername));
+                .anyMatch(c -> c.getUser().getUsername().equals(destinatarioUsername));
         if (colabora) {
             throw new RuntimeException("El usuario ya colabora en este trabajo");
         }
