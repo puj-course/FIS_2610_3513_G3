@@ -129,9 +129,20 @@ public class TrabajoController {
     @GetMapping("/{id}/miembros")
     public String mostrarMiembros(@PathVariable long id, Model model) {
         Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
+        
+        // Convertir Set a List y ordenar: LIDER primero, luego por username
+        List<ColaboradorTrabajo> miembrosOrdenados = new ArrayList<>(trabajo.getColaboradores());
+        miembrosOrdenados.sort((m1, m2) -> {
+            // LIDER siempre primero
+            if (m1.getRol() == ColaboradorTrabajo.Rol.LIDER) return -1;
+            if (m2.getRol() == ColaboradorTrabajo.Rol.LIDER) return 1;
+            // Si ambos son COLABORADOR, ordenar por username
+            return m1.getUser().getUsername().compareTo(m2.getUser().getUsername());
+        });
+        
         model.addAttribute("trabajo", trabajo);
-        model.addAttribute("miembros", trabajo.getColaboradores());
-        model.addAttribute("totalMiembros", trabajo.getColaboradores().size());
+        model.addAttribute("miembros", miembrosOrdenados);
+        model.addAttribute("totalMiembros", miembrosOrdenados.size());
         return "trabajos/miembros";
     }
     

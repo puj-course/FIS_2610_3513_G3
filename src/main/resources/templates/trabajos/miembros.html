@@ -416,24 +416,24 @@
         
         <!-- Members Grid -->
         <div class="members-grid" th:if="${not #sets.isEmpty(miembros)}">
-            <div class="member-card" th:each="miembro, iterStat : ${miembros}" th:data-username="${miembro.username}">
-                <div class="member-avatar" th:text="${#strings.substring(miembro.username, 0, 2)}">AB</div>
+            <div class="member-card" th:each="miembro, iterStat : ${miembros}" th:data-username="${miembro.user.username}">
+                <div class="member-avatar" th:text="${#strings.substring(miembro.user.username, 0, 2)}">AB</div>
                 <div class="member-info">
-                    <div class="member-name" th:text="${miembro.username}">Nombre Usuario</div>
+                    <div class="member-name" th:text="${miembro.user.username}">Nombre Usuario</div>
                     <span class="member-role" 
-                          th:text="${iterStat.index == 0} ? 'Líder del Proyecto' : 'Colaborador'"
-                          th:classappend="${iterStat.index == 0} ? 'role-leader' : ''">
+                          th:text="${miembro.rol.name() == 'LIDER'} ? 'Líder del Proyecto' : (${miembro.rol.name() == 'EDITOR'} ? 'Editor' : 'Colaborador')"
+                          th:classappend="${miembro.rol.name() == 'LIDER'} ? 'role-leader' : ''">
                         Colaborador
                     </span>
                     
                     <div class="member-stats">
                         <div class="member-stat-item">
-                            <div class="member-stat-value" th:text="${#sets.size(miembro.trabajos)}">0</div>
+                            <div class="member-stat-value" th:text="${#sets.size(miembro.user.trabajos)}">0</div>
                             <div class="member-stat-label">Trabajos</div>
                         </div>
                         <div class="member-stat-item">
-                            <div class="member-stat-value" th:text="${iterStat.index == 0} ? '★' : (${iterStat.count})">1</div>
-                            <div class="member-stat-label" th:text="${iterStat.index == 0} ? 'Líder' : 'Posición'">Posición</div>
+                            <div class="member-stat-value" th:text="${miembro.rol.name() == 'LIDER'} ? '★' : (${iterStat.count})">1</div>
+                            <div class="member-stat-label" th:text="${miembro.rol.name() == 'LIDER'} ? 'Líder' : 'Posición'">Posición</div>
                         </div>
                     </div>
                 </div>
