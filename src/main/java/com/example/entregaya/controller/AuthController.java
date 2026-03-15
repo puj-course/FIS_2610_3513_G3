@@ -90,7 +90,7 @@ public class AuthController {
         List<Trabajo> proximosVencer = activos.stream()
                 .filter(trabajo -> trabajo.getFechaEntrega() != null)
                 .filter(trabajo -> {
-                    java.time.LocalDate fechaEntrega = trabajo.getFechaEntrega();
+                    java.time.LocalDate fechaEntrega = trabajo.getFechaEntrega().toLocalDate();
                     java.time.LocalDate ahora = java.time.LocalDate.now();
                     java.time.LocalDate limite = ahora.plusDays(7);
                     return !fechaEntrega.isBefore(ahora) && !fechaEntrega.isAfter(limite);

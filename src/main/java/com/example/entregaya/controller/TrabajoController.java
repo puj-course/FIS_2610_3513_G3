@@ -65,9 +65,6 @@ public class TrabajoController {
         Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
         List<Tarea> tareas = customTareaDetailsService.tareas(id);
 
-        trabajo.getColaboradores().size();
-        tareas.forEach(t -> t.getResponsables().size());
-
         // Calcular estadísticas
         long completadas = tareas.stream().filter(Tarea::getIsCompletada).count();
         long pendientes = tareas.stream()
@@ -100,13 +97,6 @@ public class TrabajoController {
         model.addAttribute("invitaciones", customInvitacionDetailsService.porTrabajo(id));
         model.addAttribute("miembros", miembros);
         return "trabajos/detalle";
-    }
-
-    @GetMapping("/{id}/miembros")
-    @ResponseBody
-    public ResponseEntity<List<MiembroRolDTO>> miembros(@PathVariable long id) {
-        List<MiembroRolDTO> miembros = customTrabajoDetailsService.consultarMiembros(id);
-        return ResponseEntity.ok(miembros);
     }
 
     @PostMapping("/{id}/eliminar")
@@ -152,12 +142,13 @@ public class TrabajoController {
                 return ResponseEntity.notFound().build();
             }
 
-            List<User> colaboradores = new ArrayList<>(trabajo.getColaboradores());
+            List<ColaboradorTrabajo> colaboradores = new ArrayList<>(trabajo.getColaboradores());
             List<Map<String, Object>> miembros = new ArrayList<>();
 
             for (int i = 0; i < colaboradores.size(); i++) {
-                User user = colaboradores.get(i);
-                String rol = (i == 0) ? "LIDER" : "COLABORADOR";
+                ColaboradorTrabajo colaborador = colaboradores.get(i);
+                User user = colaborador.getUser();
+                String rol = colaborador.getRol().name();
 
                 Map<String, Object> miembro = new HashMap<>();
                 miembro.put("id", user.getId());
@@ -180,6 +171,59 @@ public class TrabajoController {
 
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // Endpoint REST para actualizar el rol de un miembro
+    @PutMapping("/{trabajoId}/miembros/{userId}/rol")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> actualizarRolMiembro(
+            @PathVariable Long trabajoId,
+            @PathVariable Long userId,
+            @RequestBody Map<String, String> request) {
+        try {
+            // Obtener el rol del request
+            String rolStr = request.get("rol");
+            if (rolStr == null || rolStr.trim().isEmpty()) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("error", "El rol es requerido");
+                return ResponseEntity.badRequest().body(errorResponse);
+            }
+
+            // Validar que el rol sea válido
+            ColaboradorTrabajo.Rol nuevoRol;
+            try {
+                nuevoRol = ColaboradorTrabajo.Rol.valueOf(rolStr.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("error", "Rol inválido. Los roles válidos son: LIDER, EDITOR, COLABORADOR");
+                return ResponseEntity.badRequest().body(errorResponse);
+            }
+
+            // Actualizar el rol (incluye validaciones de existencia y pertenencia)
+            customTrabajoDetailsService.cambiarRol(trabajoId, userId, nuevoRol);
+
+            // Retornar respuesta exitosa
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Rol actualizado correctamente");
+            response.put("trabajoId", trabajoId);
+            response.put("userId", userId);
+            response.put("nuevoRol", nuevoRol.name());
+
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException e) {
+            // Errores de validación (trabajo no existe, usuario no pertenece, etc.)
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+
+        } catch (Exception e) {
+            // Otros errores
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Error al actualizar el rol");
+            return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
 }
