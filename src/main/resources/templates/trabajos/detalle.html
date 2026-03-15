@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <title>Entrega Ya - Detalle Trabajo</title>
     <style>
         body {
@@ -273,16 +275,21 @@
                  style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
         <span th:text="${miembro.username}"
               style="font-weight:bold; min-width:120px; font-size:13px;"></span>
-                <form th:action="@{/trabajos/{id}/miembros/{uid}/rol(id=${trabajo.id}, uid=${miembro.userId})}"
-                      method="post" style="display:flex; gap:6px; align-items:center; margin:0;">
-                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                    <select name="rol" style="padding:4px 8px; border-radius:4px; border:1px solid #ccc; font-size:13px;">
+                <div style="display:flex; gap:6px; align-items:center; margin:0;">
+                    <select th:id="'rol-' + ${miembro.userId}"
+                            class="cambiar-rol-select"
+                            th:data-usuario-id="${miembro.userId}"
+                            th:data-trabajo-id="${trabajo.id}"
+                            style="padding:4px 8px; border-radius:4px; border:1px solid #ccc; font-size:13px;">
                         <option value="LIDER"       th:selected="${miembro.rol.name() == 'LIDER'}">★ Líder</option>
                         <option value="EDITOR"      th:selected="${miembro.rol.name() == 'EDITOR'}">✏️ Editor</option>
                         <option value="COLABORADOR" th:selected="${miembro.rol.name() == 'COLABORADOR'}">👤 Colaborador</option>
                     </select>
-                    <button type="submit" class="btn btn-primary" style="padding:4px 12px; font-size:12px;">Guardar</button>
-                </form>
+                    <button type="button" class="btn btn-primary" style="padding:4px 12px; font-size:12px;"
+                            th:onclick="'guardarRol(' + ${miembro.userId} + ', ' + ${trabajo.id} + ')'">
+                        Guardar
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -385,5 +392,54 @@
     </div>
 
 </div>
+
+<script>
+    // Obtener el token CSRF de los meta tags o atributos
+    function obtenerTokenCSRF() {
+        const token = document.querySelector('meta[name="_csrf"]');
+        if (token) {
+            return token.getAttribute('content');
+        }
+        // Si no está en meta, intentar obtenerlo de otra forma
+        return document.querySelector('input[name="_csrf"]')?.value || '';
+    }
+
+    function obtenerNombreParametroCSRF() {
+        const token = document.querySelector('meta[name="_csrf_header"]');
+        if (token) {
+            return token.getAttribute('content');
+        }
+        return 'X-CSRF-TOKEN';
+    }
+
+    async function guardarRol(usuarioId, trabajoId) {
+        const selectElement = document.getElementById('rol-' + usuarioId);
+        const nuevoRol = selectElement.value;
+
+        try {
+            const response = await fetch(`/trabajos/${trabajoId}/miembros/${usuarioId}/rol`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [obtenerNombreParametroCSRF()]: obtenerTokenCSRF()
+                },
+                body: JSON.stringify({ rol: nuevoRol })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert('Rol actualizado correctamente');
+                // Opcionalmente, recargar la página
+                // window.location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'No se pudo actualizar el rol'));
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error al actualizar el rol');
+        }
+    }
+</script>
 </body>
 </html>
