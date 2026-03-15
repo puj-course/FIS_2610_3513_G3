@@ -65,6 +65,9 @@ public class TrabajoController {
         Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
         List<Tarea> tareas = customTareaDetailsService.tareas(id);
 
+        trabajo.getColaboradores().size();
+        tareas.forEach(t -> t.getResponsables().size());
+
         // Calcular estadísticas
         long completadas = tareas.stream().filter(Tarea::getIsCompletada).count();
         long pendientes = tareas.stream()
@@ -99,6 +102,13 @@ public class TrabajoController {
         return "trabajos/detalle";
     }
 
+    @GetMapping("/{id}/miembros")
+    @ResponseBody
+    public ResponseEntity<List<MiembroRolDTO>> miembros(@PathVariable long id) {
+        List<MiembroRolDTO> miembros = customTrabajoDetailsService.consultarMiembros(id);
+        return ResponseEntity.ok(miembros);
+    }
+
     @PostMapping("/{id}/eliminar")
     public String eliminar (@PathVariable long id) {
         customTrabajoDetailsService.eliminar(id);
@@ -116,6 +126,7 @@ public class TrabajoController {
         model.addAttribute("trabajo", new Trabajo());
         return "trabajos-especificos";
     }
+
     @GetMapping("/{id}/detalle")
     public String DetallesxId(@PathVariable long id, Model model) {
         model.addAttribute("trabajo", customTrabajoDetailsService.obtenerPorId(id));
@@ -125,9 +136,20 @@ public class TrabajoController {
     @GetMapping("/{id}/miembros")
     public String mostrarMiembros(@PathVariable long id, Model model) {
         Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
+
+        // Convertir Set a List y ordenar: LIDER primero, luego por username
+        List<ColaboradorTrabajo> miembrosOrdenados = new ArrayList<>(trabajo.getColaboradores());
+        miembrosOrdenados.sort((m1, m2) -> {
+            // LIDER siempre primero
+            if (m1.getRol() == ColaboradorTrabajo.Rol.LIDER) return -1;
+            if (m2.getRol() == ColaboradorTrabajo.Rol.LIDER) return 1;
+            // Si ambos son COLABORADOR, ordenar por username
+            return m1.getUser().getUsername().compareTo(m2.getUser().getUsername());
+        });
+
         model.addAttribute("trabajo", trabajo);
-        model.addAttribute("miembros", trabajo.getColaboradores());
-        model.addAttribute("totalMiembros", trabajo.getColaboradores().size());
+        model.addAttribute("miembros", miembrosOrdenados);
+        model.addAttribute("totalMiembros", miembrosOrdenados.size());
         return "trabajos/miembros";
     }
 
@@ -148,8 +170,10 @@ public class TrabajoController {
             for (int i = 0; i < colaboradores.size(); i++) {
                 ColaboradorTrabajo colaborador = colaboradores.get(i);
                 User user = colaborador.getUser();
-                String rol = colaborador.getRol().name();
 
+                // Obtener el rol real desde la entidad ColaboradorTrabajo
+                String rol = colaborador.getRol().name(); // LIDER, EDITOR, o COLABORADOR
+                
                 Map<String, Object> miembro = new HashMap<>();
                 miembro.put("id", user.getId());
                 miembro.put("username", user.getUsername());

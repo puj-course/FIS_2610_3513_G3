@@ -30,6 +30,7 @@ public class Trabajo {
 
     // Cambio del @ManytoMany, usar entidad de ColaboradorTrabajo para almacenar rol
     @OneToMany(mappedBy = "trabajo", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("rol DESC")  // LIDER primero (DESC: LIDER > EDITOR > COLABORADOR)
     private Set<ColaboradorTrabajo> colaboradores = new HashSet<>();
 
     // Relacion uno a muchos con tareas

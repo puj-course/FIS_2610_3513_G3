@@ -20,7 +20,8 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @OneToMany(mappedBy = "user")
+    // Relación a través de ColaboradorTrabajo
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ColaboradorTrabajo> trabajos = new HashSet<>();
 
 
