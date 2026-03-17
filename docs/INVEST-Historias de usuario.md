@@ -100,170 +100,52 @@ INVEST significa:
 
 ---
 
-### HU-10 – Sugerencias educativas
-- **I:** Función independiente.
-- **N:** Puede ajustarse el contenido de las sugerencias.
-- **V:** Ayuda a mejorar las habilidades digitales.
-- **E:** Estimable según el tipo de mensajes.
-- **S:** Alcance moderado.
-- **T:** Se prueba mostrando mensajes educativos.
+### HU-10 – Edición de perfil y cambio de contraseña
+- **I:** Independiente, usa entidades ya existentes (User, PasswordConfig).
+- **N:** El diseño de la vista puede simplificarse; lo esencial es la funcionalidad.
+- **V:** Permite a los usuarios mantener sus cuentas seguras sin intervención externa.
+- **E:** Estimable: 1 vista + 1 endpoint + validaciones conocidas.
+- **S:** Alcance delimitado a username y contraseña, sin datos adicionales.
+- **T:** Se prueba cambiando el username, intentando uno duplicado y cambiando la contraseña.
 
 ---
 
-### HU-11 – Panel principal con trabajos
-- **I:** Independiente de otras funciones.
-- **N:** Puede cambiar el diseño del panel.
-- **V:** Permite ver todos los trabajos rápidamente.
-- **E:** Fácil de estimar.
-- **S:** Historia clara.
-- **T:** Se prueba visualizando el panel con los trabajos.
+### HU-11 – Alertas visuales de tareas vencidas y próximas a vencer
+- **I:** Independiente, usa campos ya existentes (fechaFinal, completada) sin cambiar el modelo.
+- **N:** El umbral de 24 horas puede ajustarse si el equipo lo considera necesario.
+- **V:** Reduce el riesgo de que los colaboradores pierdan fechas de entrega importantes.
+- **E:** Estimable por la lógica de fechas sencilla y los cambios acotados en las vistas.
+- **S:** Solo afecta el controlador y las plantillas detalle.html y dashboard.html.
+- **T:** Se prueba creando tareas con fechas pasadas y verificando que los badges aparecen.
 
 ---
 
-### HU-12 – Reemplazar archivo
-- **I:** Depende solo del trabajo existente.
-- **N:** Puede modificarse el método de subida.
-- **V:** Permite corregir errores antes de la entrega.
-- **E:** Estimable por su alcance.
-- **S:** Historia pequeña.
-- **T:** Se prueba reemplazando un archivo subido.
+### HU-12 – Historial de invitaciones enviadas con opción de cancelar
+- **I:** Independiente, la entidad Invitacion y su enum Estado ya están completos.
+- **N:** La vista puede integrarse en detalle.html o ser una sección separada.
+- **V:** Evita invitaciones duplicadas y da visibilidad al líder sobre el estado del equipo.
+- **E:** Estimable: 1 endpoint nuevo y una sección adicional en la vista existente.
+- **S:** Alcance claro: listar y cancelar invitaciones PENDIENTE, sin reenvío.
+- **T:** Se prueba enviando, cancelando e intentando duplicar una invitación.
+
+--- 
+
+### HU-13 – Edición de tareas existentes
+- **I:** Independiente, la entidad Tarea y sus relaciones ya están completas.
+- **N:** El formulario puede reutilizar CrearTarea.html o ser una vista nueva.
+- **V:** Evita perder el historial de asignaciones que ocurre al borrar y recrear una tarea.
+- **E:** Estimable: 1 vista con pre-carga + 2 endpoints + método update en el servicio.
+- **S:** Limitado a los campos de Tarea, sin cambiar el trabajo al que pertenece.
+- **T:** Se prueba editando campos y verificando que los cambios persisten correctamente.
 
 ---
 
-### HU-13 – Notificaciones de cambios
-- **I:** Funciona independientemente de otras funciones.
-- **N:** Puede modificarse el tipo de notificación.
-- **V:** Mantiene informados a los integrantes.
-- **E:** Estimable.
-- **S:** Tamaño adecuado.
-- **T:** Se prueba enviando notificaciones de cambios.
+### HU-14 – Estructura de roles dentro de los grupos
+- **I:** Independiente, el enum Rol y ColaboradorTrabajo ya existen en el modelo.
+- **N:** Los nombres de los roles y sus permisos pueden ajustarse antes de implementar.
+- **V:** Define claramente qué puede hacer cada estudiante dentro de un grupo.
+- **E:** Estimable por tener la base de datos ya estructurada con la columna de rol.
+- **S:** Acotado a los tres roles existentes sin permisos granulares adicionales.
+- **T:** Se prueba asignando roles y verificando que cada uno accede solo a lo permitido.
 
 ---
-
-### HU-14 – Recordatorios de entrega
-- **I:** Independiente de otras historias.
-- **N:** Se puede ajustar la frecuencia de recordatorios.
-- **V:** Ayuda a organizar mejor el tiempo.
-- **E:** Estimable.
-- **S:** Historia pequeña.
-- **T:** Se prueba generando recordatorios antes de la fecha límite.
-
----
-
-### HU-15 – Retirar integrante
-- **I:** Depende solo del trabajo grupal.
-- **N:** Se puede negociar quién tiene permisos para hacerlo.
-- **V:** Permite mantener actualizado el equipo.
-- **E:** Estimable.
-- **S:** Alcance claro.
-- **T:** Se prueba eliminando un integrante del grupo.
-
----
-
-### HU-16 – Asignar roles
-- **I:** Independiente de otras funciones.
-- **N:** Puede ajustarse la cantidad de roles disponibles.
-- **V:** Define responsabilidades dentro del grupo.
-- **E:** Estimable.
-- **S:** Historia manejable.
-- **T:** Se prueba asignando roles a integrantes.
-
----
-
-### HU-17 – Historial de cambios
-- **I:** Independiente del resto.
-- **N:** Puede ajustarse la información mostrada.
-- **V:** Permite ver modificaciones realizadas.
-- **E:** Estimable.
-- **S:** Tamaño adecuado.
-- **T:** Se prueba registrando cambios en el trabajo.
-
----
-
-### HU-18 – Comentarios en el trabajo
-- **I:** Función independiente.
-- **N:** Se puede modificar el formato de comentarios.
-- **V:** Facilita la comunicación del grupo.
-- **E:** Estimable.
-- **S:** Historia pequeña.
-- **T:** Se prueba agregando comentarios dentro del trabajo.
-
----
-
-### HU-19 – Plantillas académicas
-- **I:** Independiente de otras historias.
-- **N:** Se pueden agregar o modificar plantillas.
-- **V:** Facilita cumplir formatos académicos.
-- **E:** Estimable.
-- **S:** Tamaño moderado.
-- **T:** Se prueba creando trabajos con plantillas.
----
-
-### HU-20 – Sección de ayuda
-- **I:** Función independiente.
-- **N:** Puede modificarse el contenido de ayuda.
-- **V:** Ayuda a resolver dudas del usuario.
-- **E:** Estimable.
-- **S:** Historia pequeña.
-- **T:** Se prueba accediendo a la sección de ayuda.
----
-
-### HU-21 – Tiempo restante para la entrega
-- **I:** Independiente de otras funciones.
-- **N:** Se puede ajustar la forma de visualización.
-- **V:** Ayuda a planificar mejor el trabajo.
-- **E:** Estimable.
-- **S:** Historia pequeña.
-- **T:** Se prueba mostrando el tiempo restante.
-
----
-
-### HU-22 – Configurar notificaciones
-- **I:** Función independiente.
-- **N:** Puede modificarse el tipo de notificaciones.
-- **V:** Permite recibir solo avisos importantes.
-- **E:** Estimable.
-- **S:** Historia pequeña.
-- **T:** Se prueba activando y desactivando notificaciones.
-
----
-
-### HU-23 – Editar perfil
-- **I:** Independiente de otras funciones.
-- **N:** Se puede modificar la información editable.
-- **V:** Permite mantener actualizada la información del usuario.
-- **E:** Estimable.
-- **S:** Historia pequeña.
-- **T:** Se prueba editando los datos del perfil.
-
----
-
-### HU-24 – Ver responsable de tareas
-- **I:** Depende solo de las tareas del trabajo.
-- **N:** Puede ajustarse la forma de asignación.
-- **V:** Evita confusiones dentro del grupo.
-- **E:** Estimable.
-- **S:** Tamaño adecuado.
-- **T:** Se prueba mostrando el responsable de cada tarea.
-
----
-
-## Historias No Funcionales
-
-### HU-NF-01 – Tiempo de carga del panel
-- **I:** Independiente de otras funciones.
-- **N:** El tiempo puede ajustarse según requisitos.
-- **V:** Mejora la experiencia del usuario.
-- **E:** Estimable mediante pruebas de rendimiento.
-- **S:** Alcance claro.
-- **T:** Se prueba midiendo el tiempo de carga del panel.
-
----
-
-### HU-NF-02 – Guardado automático
-- **I:** Independiente de otras funciones.
-- **N:** Puede cambiar el intervalo de guardado.
-- **V:** Evita pérdida de información.
-- **E:** Estimable técnicamente.
-- **S:** Tamaño moderado.
-- **T:** Se prueba verificando el guardado automático cada minuto.

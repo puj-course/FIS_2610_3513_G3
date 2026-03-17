@@ -29,52 +29,16 @@ Como estudiante quiero modificar el rol de un miembro del grupo para ajustar las
 Como estudiante quiero visualizar los roles de cada integrante del grupo en la interfaz para identificar sus responsabilidades.
 
 ### HU-10
-Como estudiante quiero recibir sugerencias y mensajes educativos para mejorar gradualmente mis habilidades digitales.
+Como usuario registrado, quiero poder actualizar mi nombre de usuario y cambiar mi contraseña desde una página de perfil, para mantener mis credenciales seguras y actualizadas sin necesidad de contactar a nadie.
 
 ### HU-11
-Como estudiante quiero ver todos mis trabajos en un panel principal para tener una visión general de mis pendientes académicos.
+Como colaborador de un trabajo, quiero ver indicadores visuales cuando una tarea esté vencida o a menos de 24 horas de su fecha límite, para poder priorizar mi trabajo y no perder entregas importantes.
 
-### HU-12
-Como estudiante quiero reemplazar un archivo ya subido para corregir errores antes de la entrega final.
+### HU-12 
+Como líder o editor de un trabajo, quiero ver la lista de invitaciones que he enviado junto a su estado actual y poder cancelar las pendientes, para hacer seguimiento a quiénes se han unido o rechazado mi invitación.
 
-### HU-13
-Como estudiante quiero recibir notificaciones cuando un compañero haga cambios para estar al tanto del avance del trabajo grupal.
+### HU-13 
+Como editor o líder de un trabajo, quiero poder editar el nombre, descripción, dificultad, fechas y responsables de una tarea ya creada, para corregir errores o ajustar el alcance sin tener que borrar la tarea y crearla de nuevo.
 
-### HU-14
-Como estudiante quiero recibir recordatorios antes de la fecha de entrega para organizar mejor mi tiempo.
-
-### HU-15
-Como estudiante quiero retirar a un integrante de un trabajo grupal para mantener actualizado el equipo de trabajo.
-
-### HU-16
-Como estudiante quiero asignar roles dentro del grupo para definir responsabilidades en el trabajo.
-
-### HU-17
-Como estudiante quiero ver un historial simple de cambios para saber qué se ha modificado en el trabajo.
-
-### HU-18
-Como estudiante quiero dejar comentarios dentro del trabajo para coordinar tareas con mi grupo.
-
-### HU-19
-Como estudiante quiero usar plantillas para trabajos académicos para cumplir con formatos solicitados por el docente.
-
-### HU-20
-Como estudiante quiero acceder a una sección de ayuda para resolver dudas sobre el uso de la plataforma.
-
-### HU-21
-Como estudiante quiero ver cuánto tiempo falta para la entrega para planificar mejor mi trabajo.
-
-### HU-22
-Como estudiante quiero configurar mis notificaciones para recibir solo avisos importantes.
-
-### HU-23
-Como estudiante quiero editar mi perfil para mantener mi información actualizada.
-
-### HU-24
-Como estudiante quiero ver quién es responsable de cada tarea para evitar confusiones en el trabajo grupal.
-
-### HU-NF-01
-Como estudiante quiero que el panel principal cargue en 2 segundos para poder acceder a mis trabajos sin perder tiempo.
-
-### HU-NF-02
-Como estudiante quiero que mis archivos se guarden automáticamente cada minuto para no perder avances del trabajo.
+### HU-14 
+Como sistema, quiero tener una estructura de roles dentro de los grupos, para poder asignar responsabilidades a los estudiantes.
