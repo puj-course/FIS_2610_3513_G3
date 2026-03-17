@@ -87,6 +87,27 @@ public class TrabajoController {
                 .limit(5)
                 .toList();
 
+        // HU-11: Lógica de comparación de fechas para alertas visuales
+        java.time.LocalDateTime ahora = java.time.LocalDateTime.now();
+        java.time.LocalDateTime en24Horas = ahora.plusHours(24);
+        
+        // Identificar tareas vencidas (fechaFinal < ahora && !completada)
+        List<Long> tareasVencidas = tareas.stream()
+                .filter(t -> !t.getIsCompletada() && 
+                           t.getFechaFinal() != null && 
+                           t.getFechaFinal().isBefore(ahora))
+                .map(Tarea::getId)
+                .toList();
+        
+        // Identificar tareas que vencen pronto (fechaFinal entre ahora y ahora+24h && !completada)
+        List<Long> tareasVencenPronto = tareas.stream()
+                .filter(t -> !t.getIsCompletada() && 
+                           t.getFechaFinal() != null && 
+                           t.getFechaFinal().isAfter(ahora) &&
+                           t.getFechaFinal().isBefore(en24Horas))
+                .map(Tarea::getId)
+                .toList();
+
         // Miembros con roles para mostrar en la vista de detalle
         List<MiembroRolDTO> miembros = customTrabajoDetailsService.consultarMiembros(id);
 
@@ -99,6 +120,9 @@ public class TrabajoController {
         model.addAttribute("proximasEntregas", proximasEntregas);
         model.addAttribute("invitaciones", customInvitacionDetailsService.porTrabajo(id));
         model.addAttribute("miembros", miembros);
+        // HU-11: Agregar listas de alertas al modelo
+        model.addAttribute("tareasVencidas", tareasVencidas);
+        model.addAttribute("tareasVencenPronto", tareasVencenPronto);
         return "trabajos/detalle";
     }
 
