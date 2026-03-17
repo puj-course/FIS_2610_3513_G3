@@ -97,12 +97,23 @@ public class AuthController {
                 })
                 .toList();
 
+        // HU-11: Contar tareas vencidas del usuario
+        java.time.LocalDateTime ahora = java.time.LocalDateTime.now();
+        long tareasVencidasCount = todos.stream()
+                .flatMap(trabajo -> customTareaDetailsService.tareas(trabajo.getId()).stream())
+                .filter(tarea -> !tarea.getIsCompletada() && 
+                               tarea.getFechaFinal() != null && 
+                               tarea.getFechaFinal().isBefore(ahora))
+                .count();
+
         model.addAttribute("trabajos", activos);
         model.addAttribute("progresos", progresos);
         model.addAttribute("totalTrabajos", todos.size());
         model.addAttribute("completados", todos.size()-activos.size());
         model.addAttribute("proximosVencer", proximosVencer);
         model.addAttribute("invitaciones", customInvitacionDetailsService.pendientesParaUsuario(userDetails.getUsername()));
+        // HU-11: Agregar contador de tareas vencidas
+        model.addAttribute("tareasVencidas", tareasVencidasCount);
         return "dashboard";
     }
 }
