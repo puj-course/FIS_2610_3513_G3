@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Objects;
 import org.springframework.format.annotation.DateTimeFormat;
 
 @Entity
@@ -73,6 +74,19 @@ public class Tarea {
         this.fechaInicio = fechaInicio;
         this.fechaFinal = fechaFinal;
         this.dificultad = dificultad;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Tarea)) return false;
+        Tarea tarea = (Tarea) o;
+        return id != null && id.equals(tarea.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
     }
 
     // Getters y Setters

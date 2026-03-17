@@ -2,27 +2,41 @@ package com.example.entregaya.service;
 
 import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
+import com.example.entregaya.model.User;
 import com.example.entregaya.repository.TareaRepository;
 import com.example.entregaya.repository.TrabajoRepository;
+import com.example.entregaya.repository.UserRepository;
 import org.springframework.stereotype.Service;
+
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class CustomTareaDetailsService {
     private final TareaRepository tareaRepository;
     private final TrabajoRepository trabajoRepository;
+    private final UserRepository userRepository;
 
-    public CustomTareaDetailsService(TareaRepository tareaRepository, TrabajoRepository trabajoRepository) {
+    public CustomTareaDetailsService(TareaRepository tareaRepository, TrabajoRepository trabajoRepository,  UserRepository userRepository) {
         this.tareaRepository = tareaRepository;
         this.trabajoRepository = trabajoRepository;
+        this.userRepository = userRepository;
     }
 
     //Crear una tarea asociada a un trabajo
-    public Tarea crearTarea(Tarea tarea, Long trabajoId) {
+    public Tarea crearTarea(Tarea tarea, Long trabajoId, List<Long> responsableIds) {
         Trabajo trabajo =  trabajoRepository.findById(trabajoId)
                 .orElseThrow(() -> new RuntimeException("trabajo no encontrado"));
         tarea.setTrabajo(trabajo);
+        if(responsableIds != null && !responsableIds.isEmpty()) {
+            Set<User> responsables = new HashSet<>(userRepository.findAllById(responsableIds));
+            tarea.setResponsables(responsables);
+        }
         return tareaRepository.save(tarea);
+    }
+    public Tarea crearTarea(Tarea tarea, Long trabajoId) {
+        return crearTarea(tarea, trabajoId, null);
     }
 
     //Lista de tareas de un trabajo
@@ -43,6 +57,18 @@ public class CustomTareaDetailsService {
     public void toggleCompletada(Long tareaId) {
         Tarea tarea = findById(tareaId);
         tarea.setCompletada(!tarea.getIsCompletada());
+        tareaRepository.save(tarea);
+    }
+
+    public void actualizarResponsables(Long tareaId, List<Long> responsableIds) {
+        Tarea tarea = findById(tareaId);
+        if(responsableIds != null && !responsableIds.isEmpty()) {
+            Set<User> responsables = new HashSet<>(userRepository.findAllById(responsableIds));
+            tarea.setResponsables(responsables);
+        }
+        else{
+            tarea.setResponsables(new HashSet<>());
+        }
         tareaRepository.save(tarea);
     }
 

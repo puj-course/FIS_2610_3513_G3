@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <title>Entrega Ya - Detalle Trabajo</title>
     <style>
         body {
@@ -33,7 +35,6 @@
             padding: 0 16px;
         }
 
-        /* Tarjeta info trabajo */
         .card {
             background: white;
             border-radius: 8px;
@@ -74,7 +75,6 @@
         }
         .info-row span strong { color: #2c3e50; }
 
-        /* Barra de progreso */
         .progress-section { margin-bottom: 8px; }
         .progress-label {
             display: flex;
@@ -96,7 +96,6 @@
             transition: width 0.5s ease;
         }
 
-        /* Acciones trabajo */
         .card-actions {
             display: flex;
             gap: 10px;
@@ -121,7 +120,6 @@
         .btn-danger { background-color: #e74c3c; color: white; }
         .btn-danger:hover { background-color: #c0392b; }
 
-        /* Colaboradores */
         .colaboradores {
             display: flex;
             flex-wrap: wrap;
@@ -136,8 +134,14 @@
             font-size: 12px;
             font-weight: bold;
         }
+        .colaborador-tag.leader {
+            background: linear-gradient(135deg, #FF6B35 0%, #f39c12 100%);
+            color: white;
+        }
+        .colaborador-tag.leader::before {
+            content: "★ ";
+        }
 
-        /* Sección tareas */
         .section-header {
             display: flex;
             justify-content: space-between;
@@ -150,7 +154,6 @@
             margin: 0;
         }
 
-        /* Tabla tareas */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -210,7 +213,6 @@
         .btn-eliminar   { background-color: #e74c3c; color: white; }
         .btn-eliminar:hover { background-color: #c0392b; }
 
-        /* Sin tareas */
         .empty-tareas {
             text-align: center;
             padding: 40px;
@@ -257,15 +259,48 @@
             </span>
         </div>
 
-        <!-- Colaboradores -->
+        <!-- BLOQUE 1: Tags visuales de colaboradores (solo lectura) -->
         <div th:if="${not #sets.isEmpty(trabajo.colaboradores)}">
-            <div style="font-size:12px; color:#95a5a6; margin-bottom:6px;">COLABORADORES</div>
+            <div style="font-size:12px; color:#95a5a6; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+                <span>COLABORADORES</span>
+                <a th:href="@{/trabajos/{id}/miembros(id=${trabajo.id})}"
+                   style="color:#3498db; text-decoration:none; font-size:13px; font-weight:bold;">
+                    Ver todos →
+                </a>
+            </div>
             <div class="colaboradores">
                 <span class="colaborador-tag"
                       th:each="col : ${trabajo.colaboradores}"
-                      th:text="${col.username}">
+                      th:classappend="${col.rol.name() == 'LIDER'} ? 'leader' : ''"
+                      th:text="${col.user.username}">
                     Usuario
                 </span>
+            </div>
+        </div>
+
+        <!-- BLOQUE 2: Gestión de roles (editable) -->
+        <div th:if="${not #lists.isEmpty(miembros)}" style="margin-top:16px;">
+            <div style="font-size:12px; color:#95a5a6; margin-bottom:8px;">GESTIÓN DE ROLES</div>
+            <div th:each="miembro : ${miembros}"
+                 style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                <span th:text="${miembro.username}"
+                      style="font-weight:bold; min-width:120px; font-size:13px;"></span>
+                <div style="display:flex; gap:6px; align-items:center;">
+                    <select th:id="'rol-' + ${miembro.userId}"
+                            class="cambiar-rol-select"
+                            th:data-usuario-id="${miembro.userId}"
+                            th:data-trabajo-id="${trabajo.id}"
+                            style="padding:4px 8px; border-radius:4px; border:1px solid #ccc; font-size:13px;">
+                        <option value="LIDER"       th:selected="${miembro.rol.name() == 'LIDER'}">★ Líder</option>
+                        <option value="EDITOR"      th:selected="${miembro.rol.name() == 'EDITOR'}">✏️ Editor</option>
+                        <option value="COLABORADOR" th:selected="${miembro.rol.name() == 'COLABORADOR'}">👤 Colaborador</option>
+                    </select>
+                    <button type="button" class="btn btn-primary"
+                            style="padding:4px 12px; font-size:12px;"
+                            th:onclick="'guardarRol(' + ${miembro.userId} + ', ' + ${trabajo.id} + ')'">
+                        Guardar
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -292,6 +327,7 @@
             </form>
         </div>
     </div>
+    <!-- FIN .card -->
 
     <!-- Tareas -->
     <div class="section-header">
@@ -319,19 +355,19 @@
                 </div>
             </td>
             <td>
-                    <span class="badge"
-                          th:classappend="${tarea.dificultad.name() == 'SIMPLE'} ? 'badge-simple' : (${tarea.dificultad.name() == 'MEDIA'} ? 'badge-media' : 'badge-alta')"
-                          th:text="${tarea.dificultad.name()}">
-                        MEDIA
-                    </span>
+                <span class="badge"
+                      th:classappend="${tarea.dificultad.name() == 'SIMPLE'} ? 'badge-simple' : (${tarea.dificultad.name() == 'MEDIA'} ? 'badge-media' : 'badge-alta')"
+                      th:text="${tarea.dificultad.name()}">
+                    MEDIA
+                </span>
             </td>
             <td th:text="${tarea.fechaFinal != null} ? ${#temporals.format(tarea.fechaFinal, 'dd/MM/yyyy')} : '—'">—</td>
             <td>
-                    <span class="badge"
-                          th:classappend="${tarea.isCompletada} ? 'badge-completada' : 'badge-pendiente'"
-                          th:text="${tarea.isCompletada} ? 'Completada' : 'Pendiente'">
-                        Pendiente
-                    </span>
+                <span class="badge"
+                      th:classappend="${tarea.isCompletada} ? 'badge-completada' : 'badge-pendiente'"
+                      th:text="${tarea.isCompletada} ? 'Completada' : 'Pendiente'">
+                    Pendiente
+                </span>
             </td>
             <td>
                 <div class="tarea-actions">
@@ -361,12 +397,53 @@
     <!-- Sin tareas -->
     <div class="empty-tareas" th:if="${#sets.isEmpty(trabajo.tareas)}">
         <p>No hay tareas aún.</p>
-        <a th:href="@{/trabajos/{id}/tareas/CrearTarea(id=${trabajo.id})}"
+        <a th:href="@{/trabajos/{trabajoId}/tareas/CrearTarea(trabajoId=${trabajo.id})}"
            style="display:inline-block; margin-top:12px; padding:8px 18px; background:#f4a535; color:white; border-radius:4px; text-decoration:none; font-size:13px;">
             + Agregar primera tarea
         </a>
     </div>
 
 </div>
+
+<script>
+    function obtenerTokenCSRF() {
+        const token = document.querySelector('meta[name="_csrf"]');
+        if (token) return token.getAttribute('content');
+        return document.querySelector('input[name="_csrf"]')?.value || '';
+    }
+
+    function obtenerNombreParametroCSRF() {
+        const header = document.querySelector('meta[name="_csrf_header"]');
+        if (header) return header.getAttribute('content');
+        return 'X-CSRF-TOKEN';
+    }
+
+    async function guardarRol(usuarioId, trabajoId) {
+        const selectElement = document.getElementById('rol-' + usuarioId);
+        const nuevoRol = selectElement.value;
+
+        try {
+            const response = await fetch(`/trabajos/${trabajoId}/miembros/${usuarioId}/rol`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [obtenerNombreParametroCSRF()]: obtenerTokenCSRF()
+                },
+                body: JSON.stringify({ rol: nuevoRol })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert('Rol actualizado correctamente');
+            } else {
+                alert('Error: ' + (data.error || 'No se pudo actualizar el rol'));
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error al actualizar el rol');
+        }
+    }
+</script>
 </body>
 </html>

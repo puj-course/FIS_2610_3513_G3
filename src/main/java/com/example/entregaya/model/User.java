@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Objects;
 
 @Entity
 @Table(name = "users")
@@ -19,8 +20,9 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @ManyToMany(mappedBy = "colaboradores")
-    private Set<Trabajo> trabajos = new HashSet<>();
+    // Relación a través de ColaboradorTrabajo
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ColaboradorTrabajo> trabajos = new HashSet<>();
 
 
     //Constructores
@@ -32,6 +34,18 @@ public class User {
         this.id = id;
         this.username = username;
         this.password = password;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if(!(o instanceof User)) return false;
+        User user = (User) o;
+        return id != null &&  id.equals(user.id);
+    }
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 
     //getters y setters
@@ -60,11 +74,11 @@ public class User {
         this.password = password;
     }
 
-    public Set<Trabajo> getTrabajos() {
+    public Set<ColaboradorTrabajo> getTrabajos() {
         return trabajos;
     }
 
-    public void setTrabajos(Set<Trabajo> trabajos) {
+    public void setTrabajos(Set<ColaboradorTrabajo> trabajos) {
         this.trabajos = trabajos;
     }
 }
