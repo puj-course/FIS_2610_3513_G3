@@ -199,6 +199,10 @@
         .badge-alta      { background: #f8d7da; color: #721c24; }
         .badge-pendiente { background: #cce5ff; color: #004085; }
         .badge-completada{ background: #d4edda; color: #155724; }
+        
+        /* HU-11: Badges de alerta */
+        .badge-vencida   { background: #dc3545; color: white; }
+        .badge-vence-pronto { background: #ffc107; color: #000; }
 
         .tarea-actions {
             display: flex;
@@ -341,7 +345,18 @@
                         MEDIA
                     </span>
             </td>
-            <td th:text="${tarea.fechaFinal != null} ? ${#temporals.format(tarea.fechaFinal, 'dd/MM/yyyy')} : '—'">—</td>
+            <td>
+                <div th:text="${tarea.fechaFinal != null} ? ${#temporals.format(tarea.fechaFinal, 'dd/MM/yyyy')} : '—'">—</div>
+                <!-- HU-11: Badges de alerta visual -->
+                <span class="badge badge-vencida" 
+                      th:if="${tareasVencidas.contains(tarea.id)}">
+                    🔴 Vencida
+                </span>
+                <span class="badge badge-vence-pronto" 
+                      th:if="${tareasVencenPronto.contains(tarea.id)}">
+                    ⚠️ Vence pronto
+                </span>
+            </td>
             <td>
                     <span class="badge"
                           th:classappend="${tarea.isCompletada} ? 'badge-completada' : 'badge-pendiente'"
@@ -384,5 +399,67 @@
     </div>
 
 </div>
+
+<script>
+// HU-11: Ocultar badges de alerta al completar una tarea sin recargar
+document.addEventListener('DOMContentLoaded', function() {
+    const formsCompletar = document.querySelectorAll('form[action*="/completar"]');
+    
+    formsCompletar.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const boton = form.querySelector('button[type="submit"]');
+            const textoBoton = boton.textContent.trim();
+            
+            // Solo aplicar lógica cuando se está completando (no cuando se deshace)
+            if (textoBoton === 'Completar') {
+                e.preventDefault();
+                
+                // Encontrar la fila de la tarea
+                const fila = form.closest('tr');
+                
+                // Enviar el formulario usando fetch
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams(new FormData(form))
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Actualizar UI sin recargar
+                        // 1. Cambiar badge de estado
+                        const badgeEstado = fila.querySelector('.badge-pendiente, .badge-completada');
+                        if (badgeEstado) {
+                            badgeEstado.className = 'badge badge-completada';
+                            badgeEstado.textContent = 'Completada';
+                        }
+                        
+                        // 2. Ocultar badges de alerta (VENCIDA / VENCE PRONTO)
+                        const badgesAlerta = fila.querySelectorAll('.badge-vencida, .badge-vence-pronto');
+                        badgesAlerta.forEach(badge => {
+                            badge.style.display = 'none';
+                        });
+                        
+                        // 3. Cambiar botón a "Deshacer"
+                        boton.className = 'btn-sm btn-deshacer';
+                        boton.textContent = 'Deshacer';
+                        
+                        // Después de actualizar UI, recargar para actualizar progreso
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 500);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    // Si hay error, recargar normalmente
+                    form.submit();
+                });
+            }
+        });
+    });
+});
+</script>
 </body>
 </html>
