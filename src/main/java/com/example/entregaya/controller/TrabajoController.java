@@ -126,13 +126,6 @@ public class TrabajoController {
         return "trabajos/detalle";
     }
 
-    @GetMapping("/{id}/miembros")
-    @ResponseBody
-    public ResponseEntity<List<MiembroRolDTO>> miembros(@PathVariable long id) {
-        List<MiembroRolDTO> miembros = customTrabajoDetailsService.consultarMiembros(id);
-        return ResponseEntity.ok(miembros);
-    }
-
     @PostMapping("/{id}/eliminar")
     public String eliminar (@PathVariable long id) {
         customTrabajoDetailsService.eliminar(id);
