@@ -143,7 +143,7 @@ public class TrabajoController {
         model.addAttribute("trabajo", new Trabajo());
         return "trabajos-especificos";
     }
-    
+
     @GetMapping("/{id}/detalle")
     public String DetallesxId(@PathVariable long id, Model model) {
         model.addAttribute("trabajo", customTrabajoDetailsService.obtenerPorId(id));
@@ -153,7 +153,7 @@ public class TrabajoController {
     @GetMapping("/{id}/miembros")
     public String mostrarMiembros(@PathVariable long id, Model model) {
         Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
-        
+
         // Convertir Set a List y ordenar: LIDER primero, luego por username
         List<ColaboradorTrabajo> miembrosOrdenados = new ArrayList<>(trabajo.getColaboradores());
         miembrosOrdenados.sort((m1, m2) -> {
@@ -163,31 +163,31 @@ public class TrabajoController {
             // Si ambos son COLABORADOR, ordenar por username
             return m1.getUser().getUsername().compareTo(m2.getUser().getUsername());
         });
-        
+
         model.addAttribute("trabajo", trabajo);
         model.addAttribute("miembros", miembrosOrdenados);
         model.addAttribute("totalMiembros", miembrosOrdenados.size());
         return "trabajos/miembros";
     }
-    
+
     // Endpoint REST para obtener miembros con roles (JSON)
     @GetMapping("/{id}/miembros/roles")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> obtenerMiembrosConRoles(@PathVariable long id) {
         try {
             Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
-            
+
             if (trabajo == null) {
                 return ResponseEntity.notFound().build();
             }
 
             List<ColaboradorTrabajo> colaboradores = new ArrayList<>(trabajo.getColaboradores());
             List<Map<String, Object>> miembros = new ArrayList<>();
-            
+
             for (int i = 0; i < colaboradores.size(); i++) {
                 ColaboradorTrabajo colaborador = colaboradores.get(i);
                 User user = colaborador.getUser();
-                
+
                 // Obtener el rol real desde la entidad ColaboradorTrabajo
                 String rol = colaborador.getRol().name(); // LIDER, EDITOR, o COLABORADOR
                 
@@ -197,7 +197,7 @@ public class TrabajoController {
                 miembro.put("rol", rol);
                 miembro.put("trabajosCount", user.getTrabajos().size());
                 miembro.put("posicion", i + 1);
-                
+
                 miembros.add(miembro);
             }
 
@@ -209,9 +209,62 @@ public class TrabajoController {
             response.put("miembros", miembros);
 
             return ResponseEntity.ok(response);
-            
+
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // Endpoint REST para actualizar el rol de un miembro
+    @PutMapping("/{trabajoId}/miembros/{userId}/rol")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> actualizarRolMiembro(
+            @PathVariable Long trabajoId,
+            @PathVariable Long userId,
+            @RequestBody Map<String, String> request) {
+        try {
+            // Obtener el rol del request
+            String rolStr = request.get("rol");
+            if (rolStr == null || rolStr.trim().isEmpty()) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("error", "El rol es requerido");
+                return ResponseEntity.badRequest().body(errorResponse);
+            }
+
+            // Validar que el rol sea válido
+            ColaboradorTrabajo.Rol nuevoRol;
+            try {
+                nuevoRol = ColaboradorTrabajo.Rol.valueOf(rolStr.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("error", "Rol inválido. Los roles válidos son: LIDER, EDITOR, COLABORADOR");
+                return ResponseEntity.badRequest().body(errorResponse);
+            }
+
+            // Actualizar el rol (incluye validaciones de existencia y pertenencia)
+            customTrabajoDetailsService.cambiarRol(trabajoId, userId, nuevoRol);
+
+            // Retornar respuesta exitosa
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Rol actualizado correctamente");
+            response.put("trabajoId", trabajoId);
+            response.put("userId", userId);
+            response.put("nuevoRol", nuevoRol.name());
+
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException e) {
+            // Errores de validación (trabajo no existe, usuario no pertenece, etc.)
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+
+        } catch (Exception e) {
+            // Otros errores
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Error al actualizar el rol");
+            return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
 }

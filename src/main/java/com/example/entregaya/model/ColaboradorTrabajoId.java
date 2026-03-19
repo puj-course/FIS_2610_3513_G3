@@ -19,6 +19,19 @@ public class ColaboradorTrabajoId implements Serializable {
         this.userId = userId;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if(!(o instanceof ColaboradorTrabajoId)) return false;
+        ColaboradorTrabajoId that = (ColaboradorTrabajoId) o;
+        return Objects.equals(trabajoId, that.trabajoId) &&
+                Objects.equals(userId, that.userId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(trabajoId, userId);
+    }
     public Long getTrabajoId() {
         return trabajoId;
     }

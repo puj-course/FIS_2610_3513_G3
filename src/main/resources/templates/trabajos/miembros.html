@@ -303,6 +303,187 @@
             background-color: #2980b9;
         }
 
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            padding: 24px;
+            background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+            color: white;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            background-color: #f8f9fa;
+            border-radius: 0 0 12px 12px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .close {
+            color: white;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover {
+            opacity: 0.8;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dfe6e9;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+            background-color: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-primary:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background-color: #95a5a6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+
+        .btn-change-role {
+            background-color: #FF6B35;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 12px;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+
+        .btn-change-role:hover {
+            background-color: #e55a2b;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
         /* Actions Bar */
         .actions-bar {
             background: white;
@@ -436,6 +617,47 @@
                             <div class="member-stat-label" th:text="${miembro.rol.name() == 'LIDER'} ? 'Líder' : 'Posición'">Posición</div>
                         </div>
                     </div>
+                    <button class="btn-change-role"
+                            th:attr="data-user-id=${miembro.id}, data-username=${miembro.username}"
+                            onclick="abrirModalCambiarRol(this)">
+                        🔄 Cambiar Rol
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para cambiar rol -->
+        <div id="modalCambiarRol" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="close" onclick="cerrarModal()">&times;</span>
+                    <h2>🔄 Cambiar Rol de Miembro</h2>
+                </div>
+                <div class="modal-body">
+                    <div id="alertContainer"></div>
+
+                    <div class="form-group">
+                        <label class="form-label">Usuario:</label>
+                        <input type="text" id="modalUsername" class="form-select" readonly style="background-color: #ecf0f1;">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Nuevo Rol:</label>
+                        <select id="modalRolSelect" class="form-select">
+                            <option value="">-- Selecciona un rol --</option>
+                            <option value="LIDER">🌟 Líder</option>
+                            <option value="EDITOR">✏️ Editor</option>
+                            <option value="COLABORADOR">👤 Colaborador</option>
+                        </select>
+                    </div>
+
+                    <p style="font-size: 13px; color: #7f8c8d; margin-top: 12px;">
+                        <strong>Nota:</strong> El rol del usuario se actualizará inmediatamente y se reflejará en todas las vistas del proyecto.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
+                    <button class="btn-primary" id="btnGuardarRol" onclick="guardarCambioRol()">Guardar Cambios</button>
                 </div>
             </div>
         </div>
@@ -522,6 +744,101 @@
     document.addEventListener('DOMContentLoaded', function() {
         cargarRolesDesdeBackend();
     });
+
+    // Variables globales para el modal
+    let usuarioSeleccionado = null;
+
+    // Abrir modal para cambiar rol
+    function abrirModalCambiarRol(button) {
+        const userId = button.getAttribute('data-user-id');
+        const username = button.getAttribute('data-username');
+
+        usuarioSeleccionado = {
+            id: userId,
+            username: username
+        };
+
+        document.getElementById('modalUsername').value = username;
+        document.getElementById('modalRolSelect').value = '';
+        document.getElementById('alertContainer').innerHTML = '';
+        document.getElementById('modalCambiarRol').style.display = 'block';
+    }
+
+    // Cerrar modal
+    function cerrarModal() {
+        document.getElementById('modalCambiarRol').style.display = 'none';
+        usuarioSeleccionado = null;
+    }
+
+    // Cerrar modal al hacer clic fuera de él
+    window.onclick = function(event) {
+        const modal = document.getElementById('modalCambiarRol');
+        if (event.target === modal) {
+            cerrarModal();
+        }
+    }
+
+    // Guardar cambio de rol
+    function guardarCambioRol() {
+        const rolSeleccionado = document.getElementById('modalRolSelect').value;
+        const btnGuardar = document.getElementById('btnGuardarRol');
+        const alertContainer = document.getElementById('alertContainer');
+
+        // Validar que se haya seleccionado un rol
+        if (!rolSeleccionado) {
+            alertContainer.innerHTML = '<div class="alert alert-error">⚠️ Por favor, selecciona un rol</div>';
+            return;
+        }
+
+        if (!usuarioSeleccionado) {
+            alertContainer.innerHTML = '<div class="alert alert-error">⚠️ Error: No se ha seleccionado ningún usuario</div>';
+            return;
+        }
+
+        // Deshabilitar botón mientras se procesa
+        btnGuardar.disabled = true;
+        btnGuardar.textContent = 'Guardando...';
+
+        const trabajoId = window.location.pathname.split('/')[2]; // Obtener ID de la URL
+        const userId = usuarioSeleccionado.id;
+
+        // Realizar petición PUT al backend
+        fetch(`/trabajos/${trabajoId}/miembros/${userId}/rol`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                rol: rolSeleccionado
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => {
+                    throw new Error(err.error || 'Error al actualizar el rol');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Mostrar mensaje de éxito
+            alertContainer.innerHTML = '<div class="alert alert-success">✅ ' + data.message + '</div>';
+
+            // Recargar roles para actualizar la vista
+            setTimeout(() => {
+                cargarRolesDesdeBackend();
+                cerrarModal();
+                // Recargar la página para reflejar cambios
+                location.reload();
+            }, 1500);
+        })
+        .catch(error => {
+            // Mostrar mensaje de error
+            alertContainer.innerHTML = '<div class="alert alert-error">❌ ' + error.message + '</div>';
+            btnGuardar.disabled = false;
+            btnGuardar.textContent = 'Guardar Cambios';
+        });
+    }
 </script>
 
 </body>

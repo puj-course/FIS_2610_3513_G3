@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Entrega Ya — Mi Perfil</title>
+    <style>
+        *{ box-sizing:border-box; margin:0; padding:0; }
+        body{ font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto; background:#f6f7f9; color:#222; display:flex; min-height:100vh; }
+        .sidebar{ width:220px; background:#1f1f1f; min-height:100vh; position:fixed; top:0; left:0; display:flex; flex-direction:column; }
+        .sidebar-brand{ font-size:1rem; font-weight:700; color:white; padding:18px; border-bottom:1px solid #333; }
+        .sidebar-brand span{ color:#e67e22; }
+        .sidebar-nav{ list-style:none; padding:10px 0; flex:1; }
+        .sidebar-nav li a{ display:block; padding:10px 18px; color:#aaa; text-decoration:none; font-size:0.9rem; }
+        .sidebar-nav li a:hover, .sidebar-nav li a.active{ background:#2a2a2a; color:white; }
+        .sidebar-footer{ padding:16px; border-top:1px solid #333; }
+        .sidebar-user{ color:#aaa; font-size:0.85rem; margin-bottom:10px; }
+        .btn-logout{ background:none; border:1px solid #444; color:#aaa; font-size:0.85rem; padding:6px 10px; width:100%; cursor:pointer; }
+        .btn-logout:hover{ border-color:#c0392b; color:#c0392b; }
+        .main{ margin-left:220px; flex:1; display:flex; flex-direction:column; }
+        .topbar{ background:white; border-bottom:1px solid #e5e5e5; height:50px; display:flex; align-items:center; justify-content:space-between; padding:0 30px; font-size:0.9rem; }
+        .topbar-title{ font-weight:600; }
+        .content{ padding:32px; max-width:700px; }
+        h1{ font-size:1.4rem; font-weight:700; margin-bottom:28px; }
+        .card{ background:white; border:1px solid #e2e2e2; padding:24px; margin-bottom:24px; }
+        .card h2{ font-size:1rem; font-weight:700; margin-bottom:18px; border-bottom:1px solid #f0f0f0; padding-bottom:10px; }
+        .form-group{ margin-bottom:14px; }
+        .form-group label{ display:block; font-size:0.82rem; color:#555; margin-bottom:5px; }
+        .form-group input{ width:100%; padding:8px 10px; border:1px solid #ddd; font-size:0.9rem; outline:none; }
+        .form-group input:focus{ border-color:#e67e22; }
+        .btn-primary{ padding:8px 18px; background:#e67e22; color:white; border:none; font-size:0.85rem; cursor:pointer; }
+        .btn-primary:hover{ background:#cf6d17; }
+        .alert{ padding:10px 14px; font-size:0.85rem; margin-bottom:18px; border:1px solid; }
+        .alert-success{ background:#eafaf1; color:#1a7a3a; border-color:#a8d8b0; }
+        .alert-error{ background:#fdf0f0; color:#a02020; border-color:#e8b0b0; }
+    </style>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="sidebar-brand">ENTREGA <span>YA</span></div>
+    <ul class="sidebar-nav">
+        <li><a th:href="@{/dashboard}">Dashboard</a></li>
+        <li><a th:href="@{/trabajos}">Mis trabajos</a></li>
+        <li><a th:href="@{/trabajos/nuevo}">Nuevo trabajo</a></li>
+        <li><a th:href="@{/perfil}" class="active">Mi perfil</a></li>
+    </ul>
+    <div class="sidebar-footer">
+        <div class="sidebar-user" th:text="${#authentication.name}">usuario</div>
+        <form th:action="@{/logout}" method="post" style="margin:0">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="btn-logout">Cerrar sesión</button>
+        </form>
+    </div>
+</aside>
+
+<div class="main">
+    <div class="topbar">
+        <span class="topbar-title">Mi Perfil</span>
+        <span th:text="'Hola, ' + ${#authentication.name}">Hola, usuario</span>
+    </div>
+
+    <div class="content">
+        <h1>Mi Perfil</h1>
+
+        <!-- Mensajes de éxito/error -->
+        <div class="alert alert-success" th:if="${successUser}" th:text="${successUser}"></div>
+        <div class="alert alert-error"   th:if="${errorUser}"   th:text="${errorUser}"></div>
+        <div class="alert alert-success" th:if="${successPass}" th:text="${successPass}"></div>
+        <div class="alert alert-error"   th:if="${errorPass}"   th:text="${errorPass}"></div>
+
+        <!-- Formulario: cambiar username -->
+        <div class="card">
+            <h2>Cambiar nombre de usuario</h2>
+            <form th:action="@{/perfil/actualizar-username}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <div class="form-group">
+                    <label>Usuario actual</label>
+                    <input type="text" th:value="${#authentication.name}" disabled/>
+                </div>
+                <div class="form-group">
+                    <label for="nuevoUsername">Nuevo nombre de usuario</label>
+                    <input type="text" id="nuevoUsername" name="nuevoUsername" required/>
+                </div>
+                <button type="submit" class="btn-primary">Actualizar usuario</button>
+            </form>
+        </div>
+
+        <!-- Formulario: cambiar contraseña -->
+        <div class="card">
+            <h2>Cambiar contraseña</h2>
+            <form th:action="@{/perfil/actualizar-password}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <div class="form-group">
+                    <label for="passwordActual">Contraseña actual</label>
+                    <input type="password" id="passwordActual" name="passwordActual" required/>
+                </div>
+                <div class="form-group">
+                    <label for="passwordNueva">Nueva contraseña</label>
+                    <input type="password" id="passwordNueva" name="passwordNueva" required/>
+                </div>
+                <div class="form-group">
+                    <label for="passwordConfirm">Confirmar nueva contraseña</label>
+                    <input type="password" id="passwordConfirm" name="passwordConfirm" required/>
+                </div>
+                <button type="submit" class="btn-primary">Cambiar contraseña</button>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>
