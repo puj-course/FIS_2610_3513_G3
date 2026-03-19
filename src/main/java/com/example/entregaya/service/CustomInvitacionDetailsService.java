@@ -28,10 +28,10 @@ public class CustomInvitacionDetailsService {
         User remitente = userRepository.findByUsername(remitenteUsername)
                 .orElseThrow(() -> new RuntimeException("Remitente no encontrado"));
         User destinatario = userRepository.findByUsername(destinatarioUsername)
-                .orElseThrow(() -> new RuntimeException("Destinatario no encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Usuario " + destinatarioUsername +" no encontrado"));
 
         boolean colabora = trabajo.getColaboradores().stream()
-                .anyMatch(c -> c.getUsername().equals(destinatarioUsername));
+                .anyMatch(c -> c.getUser().getUsername().equals(destinatarioUsername));
         if (colabora) {
             throw new RuntimeException("El usuario ya colabora en este trabajo");
         }

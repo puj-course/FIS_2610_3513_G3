@@ -21,7 +21,7 @@ public class InvitacionController {
         try {
             customInvitacionDetailsService.enviarInvitacion(trabajoId, user.getUsername(), destinatario);
             redirectAttributes.addFlashAttribute("succesInv", "Invitacion enviada a "+ destinatario);
-        }catch (IllegalArgumentException e){
+        }catch (Exception e){
             redirectAttributes.addFlashAttribute("errorInv",e.getMessage());
         }
         return "redirect:/trabajos/"+trabajoId;

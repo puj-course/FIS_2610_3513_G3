@@ -58,4 +58,21 @@ public class CustomUserDetailsService implements UserDetailsService {
         user.setPassword(passwordEncoder.encode(password));
         return userRepository.save(user);
     }
+
+    // Actualizar el nombre de usuario
+    public void actualizarUsername(String usernameActual, String nuevoUsername) {
+        User user = userRepository.findByUsername(usernameActual)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        user.setUsername(nuevoUsername);
+        userRepository.save(user);
+    }
+
+    // Actualizar contraseña
+    public void actualizarPassword(String username, String passwordActual, String passwordNueva, String passwordConfirm) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        user.setPassword(passwordEncoder.encode(passwordNueva));
+        userRepository.save(user);
+    }
+
 }

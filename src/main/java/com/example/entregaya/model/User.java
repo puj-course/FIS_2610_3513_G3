@@ -20,8 +20,9 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @ManyToMany(mappedBy = "colaboradores")
-    private Set<Trabajo> trabajos = new HashSet<>();
+    // Relación a través de ColaboradorTrabajo
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ColaboradorTrabajo> trabajos = new HashSet<>();
 
 
     //Constructores
@@ -73,11 +74,11 @@ public class User {
         this.password = password;
     }
 
-    public Set<Trabajo> getTrabajos() {
+    public Set<ColaboradorTrabajo> getTrabajos() {
         return trabajos;
     }
 
-    public void setTrabajos(Set<Trabajo> trabajos) {
+    public void setTrabajos(Set<ColaboradorTrabajo> trabajos) {
         this.trabajos = trabajos;
     }
 }

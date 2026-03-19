@@ -7,355 +7,88 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Entrega Ya — Dashboard</title>
-
     <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto; background: #f6f7f9; color: #222; display: flex; min-height: 100vh; }
 
-        *{
-            box-sizing:border-box;
-            margin:0;
-            padding:0;
-        }
+        .sidebar { width: 220px; background: #1f1f1f; min-height: 100vh; position: fixed; top: 0; left: 0; display: flex; flex-direction: column; }
+        .sidebar-brand { font-size: 1rem; font-weight: 700; color: white; padding: 18px; border-bottom: 1px solid #333; }
+        .sidebar-brand span { color: #e67e22; }
+        .sidebar-nav { list-style: none; padding: 10px 0; flex: 1; }
+        .sidebar-nav li a { display: block; padding: 10px 18px; color: #aaa; text-decoration: none; font-size: 0.9rem; }
+        .sidebar-nav li a:hover, .sidebar-nav li a.active { background: #2a2a2a; color: white; }
+        .sidebar-footer { padding: 16px; border-top: 1px solid #333; }
+        .sidebar-user { color: #aaa; font-size: 0.85rem; margin-bottom: 10px; }
+        .btn-logout { background: none; border: 1px solid #444; color: #aaa; font-size: 0.85rem; padding: 6px 10px; width: 100%; cursor: pointer; }
+        .btn-logout:hover { border-color: #c0392b; color: #c0392b; }
 
-        body{
-            font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto;
-            background:#f6f7f9;
-            color:#222;
-            display:flex;
-            min-height:100vh;
-        }
+        .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; }
+        .topbar { background: white; border-bottom: 1px solid #e5e5e5; height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; font-size: 0.9rem; }
+        .topbar-title { font-weight: 600; }
+        .content { padding: 32px; width: 100%; }
 
-        /* SIDEBAR */
+        .page-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+        h1 { font-size: 1.4rem; font-weight: 700; }
+        .btn-primary { padding: 8px 16px; background: #e67e22; color: white; border: none; font-size: 0.85rem; cursor: pointer; text-decoration: none; border-radius: 4px; }
+        .btn-primary:hover { background: #cf6d17; }
 
-        .sidebar{
-            width:220px;
-            background:#1f1f1f;
-            min-height:100vh;
-            position:fixed;
-            top:0;
-            left:0;
-            display:flex;
-            flex-direction:column;
-        }
+        .stats { display: flex; gap: 18px; margin-bottom: 28px; flex-wrap: wrap; }
+        .stat { background: white; border: 1px solid #e2e2e2; padding: 18px; flex: 1; min-width: 120px; border-radius: 4px; }
+        .stat-num { font-size: 1.8rem; font-weight: 700; }
+        .stat-label { font-size: 0.8rem; color: #777; }
+        .stat-num.orange { color: #e67e22; }
+        .stat-num.red { color: #e74c3c; }
+        .stat-num.green { color: #27ae60; }
 
-        .sidebar-brand{
-            font-size:1rem;
-            font-weight:700;
-            color:white;
-            padding:18px;
-            border-bottom:1px solid #333;
-        }
+        .section-label { font-size: 0.75rem; text-transform: uppercase; color: #888; margin-bottom: 12px; font-weight: 600; }
 
-        .sidebar-brand span{
-            color:#e67e22;
-        }
-
-        .sidebar-nav{
-            list-style:none;
-            padding:10px 0;
-            flex:1;
-        }
-
-        .sidebar-nav li a{
-            display:block;
-            padding:10px 18px;
-            color:#aaa;
-            text-decoration:none;
-            font-size:0.9rem;
-        }
-
-        .sidebar-nav li a:hover,
-        .sidebar-nav li a.active{
-            background:#2a2a2a;
-            color:white;
-        }
-
-        .sidebar-footer{
-            padding:16px;
-            border-top:1px solid #333;
-        }
-
-        .sidebar-user{
-            color:#aaa;
-            font-size:0.85rem;
-            margin-bottom:10px;
-        }
-
-        .btn-logout{
-            background:none;
-            border:1px solid #444;
-            color:#aaa;
-            font-size:0.85rem;
-            padding:6px 10px;
-            width:100%;
-            cursor:pointer;
-        }
-
-        .btn-logout:hover{
-            border-color:#c0392b;
-            color:#c0392b;
-        }
-
-        /* MAIN */
-
-        .main{
-            margin-left:220px;
-            flex:1;
-            display:flex;
-            flex-direction:column;
-        }
-
-        /* TOPBAR */
-
-        .topbar{
-            background:white;
-            border-bottom:1px solid #e5e5e5;
-            height:50px;
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            padding:0 30px;
-            font-size:0.9rem;
-        }
-
-        .topbar-title{
-            font-weight:600;
-        }
-
-        /* CONTENT */
-
-        .content{
-            padding:32px;
-            width:100%;
-            max-width:1400px;
-        }
-
-        /* PAGE HEADER */
-
-        .page-top{
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            margin-bottom:28px;
-        }
-
-        h1{
-            font-size:1.4rem;
-            font-weight:700;
-        }
-
-        /* BUTTON */
-
-        .btn-primary{
-            padding:8px 16px;
-            background:#e67e22;
-            color:white;
-            border:none;
-            font-size:0.85rem;
-            cursor:pointer;
-            text-decoration:none;
-        }
-
-        .btn-primary:hover{
-            background:#cf6d17;
-        }
-
-        /* STATS */
-
-        .stats{
-            display:flex;
-            gap:18px;
-            margin-bottom:28px;
-        }
-
-        .stat{
-            background:white;
-            border:1px solid #e2e2e2;
-            padding:18px;
-            flex:1;
-        }
-
-        .stat-num{
-            font-size:1.8rem;
-            font-weight:700;
-        }
-
-        .stat-label{
-            font-size:0.8rem;
-            color:#777;
-        }
-
-        /* SECTION */
-
-        .section-label{
-            font-size:0.75rem;
-            text-transform:uppercase;
-            color:#888;
-            margin-bottom:12px;
-        }
-
-        /* GRID */
-
-        .grid{
-            display:grid;
-            grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
-            gap:18px;
-        }
-
-        /* CARD */
-
-        .card{
-            background:white;
-            border:1px solid #e2e2e2;
-            padding:18px;
-            transition:all 0.15s ease;
-        }
-
-        .card:hover{
-            border-color:#ccc;
-            transform:translateY(-2px);
-        }
-
-        /* TAGS */
-
-        .tag{
-            font-size:0.7rem;
-            font-weight:600;
-            text-transform:uppercase;
-            padding:3px 7px;
-            display:inline-block;
-            margin-bottom:10px;
-            border:1px solid;
-        }
-
-        .tag-pendiente{
-            background:#fef9e7;
-            color:#92600a;
-            border-color:#f0d080;
-        }
-
-        .tag-progreso{
-            background:#eaf4fb;
-            color:#1a6aa0;
-            border-color:#aad4f0;
-        }
-
-        .tag-completado{
-            background:#eafaf1;
-            color:#1a7a3a;
-            border-color:#a8d8b0;
-        }
-
-        /* CARD TEXT */
-
-        .card-title{
-            font-weight:600;
-            font-size:1rem;
-            margin-bottom:5px;
-        }
-
-        .card-meta{
-            font-size:0.8rem;
-            color:#888;
-            margin-bottom:10px;
-        }
-
-        /* PROGRESS */
-
-        .progress-row{
-            display:flex;
-            justify-content:space-between;
-            font-size:0.75rem;
-            color:#888;
-            margin-bottom:4px;
-        }
-
-        .progress-bar{
-            height:5px;
-            background:#eee;
-        }
-
-        .progress-fill{
-            height:100%;
-            background:#e67e22;
-        }
-
-        /* LINK */
-
-        .card-link{
-            font-size:0.8rem;
-            color:#e67e22;
-            text-decoration:none;
-            display:inline-block;
-            margin-top:10px;
-        }
-
-        .card-link:hover{
-            text-decoration:underline;
-        }
-
-        /* EMPTY */
-
-        .empty{
-            padding:50px;
-            text-align:center;
-            color:#888;
-            background:white;
-            border:1px solid #ddd;
-        }
-
-        .empty a{
-            color:#e67e22;
-        }
-
-
-        /* INVITACIONES */
-        .inv-section {
-            margin-bottom: 28px;
-        }
-        .inv-card {
-            background: white;
-            border: 1px solid #f0d080;
-            border-left: 4px solid #e67e22;
-            padding: 14px 18px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 14px;
-            margin-bottom: 10px;
-        }
-        .inv-info {
-            font-size: 0.88rem;
-            color: #444;
-        }
-        .inv-info strong {
-            color: #1a1a1a;
-        }
-        .inv-actions {
-            display: flex;
-            gap: 8px;
-            flex-shrink: 0;
-        }
-        .btn-accept {
-            padding: 6px 14px;
-            background: #27ae60;
-            color: white;
-            border: none;
-            font-size: 0.82rem;
-            font-weight: 600;
-            cursor: pointer;
-        }
+        .inv-section { margin-bottom: 28px; }
+        .inv-card { background: white; border: 1px solid #f0d080; border-left: 4px solid #e67e22; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 10px; border-radius: 4px; }
+        .inv-info { font-size: 0.88rem; color: #444; }
+        .inv-info strong { color: #1a1a1a; }
+        .inv-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .btn-accept { padding: 6px 14px; background: #27ae60; color: white; border: none; font-size: 0.82rem; font-weight: 600; cursor: pointer; border-radius: 4px; }
         .btn-accept:hover { background: #1e8449; }
-        .btn-reject {
-            padding: 6px 14px;
-            background: none;
-            border: 1px solid #ccc;
-            color: #888;
-            font-size: 0.82rem;
-            cursor: pointer;
-        }
-        .btn-reject:hover { border-color: #c0392b; color: #c0392b; }
-        .flash-success { background: #eafaf1; border: 1px solid #a8d8b0; color: #1a7a3a; padding: 10px 16px; margin-bottom: 18px; font-size: 0.88rem; }
-        .flash-error   { background: #fdf0f0; border: 1px solid #f0a8a8; color: #a82a2a; padding: 10px 16px; margin-bottom: 18px; font-size: 0.88rem; }
+        .btn-reject { padding: 6px 14px; background: none; color: #e74c3c; border: 1px solid #e74c3c; font-size: 0.82rem; font-weight: 600; cursor: pointer; border-radius: 4px; }
+        .btn-reject:hover { background: #fdecea; }
+
+        .suggestions-panel { background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%); border-radius: 8px; padding: 20px; margin-bottom: 28px; }
+        .suggestions-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .suggestions-header h3 { color: white; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+        .toggle-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
+        .toggle-btn:hover { background: rgba(255,255,255,0.3); }
+        .suggestions-content { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
+        .suggestions-content.collapsed { display: none; }
+        .suggestion-card { background: rgba(255,255,255,0.95); border-radius: 6px; padding: 16px; border-left: 4px solid #e67e22; }
+        .suggestion-icon { font-size: 1.4rem; margin-bottom: 6px; }
+        .suggestion-title { font-weight: 700; color: #2c3e50; margin-bottom: 5px; font-size: 0.9rem; }
+        .suggestion-description { color: #7f8c8d; font-size: 0.82rem; line-height: 1.4; }
+        .suggestion-action { margin-top: 10px; padding: 5px 12px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.78rem; text-decoration: none; display: inline-block; }
+        .suggestion-action:hover { background: #2980b9; }
+        .badge { background: #e67e22; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; margin-bottom: 32px; }
+        .card { background: white; border: 1px solid #e2e2e2; padding: 18px; border-radius: 6px; transition: all 0.15s ease; }
+        .card:hover { border-color: #ccc; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+
+        .tag { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; padding: 3px 7px; display: inline-block; margin-bottom: 10px; border: 1px solid; border-radius: 3px; }
+        .tag-pendiente { background: #fef9e7; color: #92600a; border-color: #f0d080; }
+        .tag-progreso { background: #eaf4fb; color: #1a6aa0; border-color: #aad4f0; }
+        .tag-vence-pronto { background: #fdf2e9; color: #a04000; border-color: #f0a060; }
+
+        .card-title { font-weight: 600; font-size: 1rem; margin-bottom: 5px; }
+        .card-meta { font-size: 0.8rem; color: #888; margin-bottom: 4px; }
+        .card-meta.vence-pronto { color: #e67e22; font-weight: 600; }
+
+        .progress-row { display: flex; justify-content: space-between; font-size: 0.75rem; color: #888; margin: 10px 0 4px; }
+        .progress-bar { height: 5px; background: #eee; border-radius: 3px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #e67e22; border-radius: 3px; }
+
+        .card-link { font-size: 0.8rem; color: #e67e22; text-decoration: none; display: inline-block; margin-top: 12px; font-weight: 600; }
+        .card-link:hover { text-decoration: underline; }
+
+        .empty { padding: 50px; text-align: center; color: #888; background: white; border: 1px solid #ddd; border-radius: 6px; }
+        .empty a { color: #e67e22; }
     </style>
 </head>
 
@@ -363,21 +96,17 @@
 
 <aside class="sidebar">
     <div class="sidebar-brand">ENTREGA <span>YA</span></div>
-
     <ul class="sidebar-nav">
         <li><a th:href="@{/dashboard}" class="active">Dashboard</a></li>
         <li><a th:href="@{/trabajos}">Mis trabajos</a></li>
         <li><a th:href="@{/trabajos/nuevo}">Nuevo trabajo</a></li>
     </ul>
-
     <div class="sidebar-footer">
         <div class="sidebar-user" th:text="${#authentication.name}">usuario</div>
-
         <form th:action="@{/logout}" method="post" style="margin:0">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
             <button type="submit" class="btn-logout">Cerrar sesión</button>
         </form>
-
     </div>
 </aside>
 
@@ -391,98 +120,156 @@
     <div class="content">
 
         <div class="page-top">
-            <h1>Trabajos activos</h1>
+            <h1>Mis proyectos</h1>
             <a th:href="@{/trabajos/nuevo}" class="btn-primary">+ Nuevo trabajo</a>
         </div>
 
+        <!-- ESTADÍSTICAS -->
         <div class="stats">
-
             <div class="stat">
                 <div class="stat-num" th:text="${totalTrabajos}">0</div>
-                <div class="stat-label">Total</div>
+                <div class="stat-label">Total de trabajos</div>
             </div>
-
             <div class="stat">
-                <div class="stat-num" th:text="${trabajos.size()}">0</div>
-                <div class="stat-label">En progreso</div>
+                <div class="stat-num orange" th:text="${trabajos.size()}">0</div>
+                <div class="stat-label">Activos</div>
             </div>
-
             <div class="stat">
-                <div class="stat-num" th:text="${completados}">0</div>
+                <div class="stat-num green" th:text="${completados}">0</div>
                 <div class="stat-label">Completados</div>
             </div>
-
+            <div class="stat">
+                <div class="stat-num red" th:text="${tareasVencidas}">0</div>
+                <div class="stat-label">Tareas vencidas</div>
+            </div>
         </div>
 
-
-        <!-- Flash messages -->
-        <div class="flash-success" th:if="${success}" th:text="${success}"></div>
-        <div class="flash-error"   th:if="${error}"   th:text="${error}"></div>
-
-        <!-- Invitaciones pendientes -->
-        <div class="inv-section" th:if="${not #lists.isEmpty(invitaciones)}">
+        <!-- INVITACIONES PENDIENTES -->
+        <div class="inv-section" th:if="${invitaciones != null and not #lists.isEmpty(invitaciones)}">
             <div class="section-label">📬 Invitaciones pendientes</div>
             <div th:each="inv : ${invitaciones}" class="inv-card">
                 <div class="inv-info">
-                    <strong th:text="${inv.remitente != null ? inv.remitente.username : 'Alguien'}"></strong>
-                    te invitó a colaborar en
-                    <strong th:text="${inv.trabajo.nombreTrabajo}"></strong>
+                    Te invitaron a colaborar en <strong th:text="${inv.trabajo.nombreTrabajo}">Trabajo</strong>
                 </div>
                 <div class="inv-actions">
                     <form th:action="@{/invitaciones/{id}/aceptar(id=${inv.id})}" method="post" style="margin:0">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                        <button type="submit" class="btn-accept">✓ Aceptar</button>
+                        <button type="submit" class="btn-accept">Aceptar</button>
                     </form>
                     <form th:action="@{/invitaciones/{id}/rechazar(id=${inv.id})}" method="post" style="margin:0">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                        <button type="submit" class="btn-reject">✗ Rechazar</button>
+                        <button type="submit" class="btn-reject">Rechazar</button>
                     </form>
                 </div>
             </div>
         </div>
 
+        <!-- SUGERENCIAS -->
+        <div class="suggestions-panel">
+            <div class="suggestions-header">
+                <h3>
+                    💡 Sugerencias
+                    <span class="badge" th:if="${not #lists.isEmpty(trabajos)}" th:text="${trabajos.size()}">0</span>
+                </h3>
+                <button class="toggle-btn" onclick="toggleSuggestions()">Ocultar</button>
+            </div>
+            <div class="suggestions-content" id="suggestionsContent">
+                <div class="suggestion-card" th:if="${not #lists.isEmpty(trabajos)}">
+                    <div class="suggestion-icon">📋</div>
+                    <div class="suggestion-title">Organiza tus tareas</div>
+                    <div class="suggestion-description">
+                        Tienes <span th:text="${trabajos.size()}">0</span> trabajo(s) activo(s). Revisa las fechas para priorizar.
+                    </div>
+                    <a th:href="@{/trabajos}" class="suggestion-action">Ver todos</a>
+                </div>
+                <div class="suggestion-card" th:if="${proximosVencer != null and not #lists.isEmpty(proximosVencer)}">
+                    <div class="suggestion-icon">⏰</div>
+                    <div class="suggestion-title">¡Trabajos por vencer!</div>
+                    <div class="suggestion-description">
+                        <span th:text="${proximosVencer.size()}">0</span> trabajo(s) vencen en los próximos 7 días.
+                    </div>
+                    <a th:href="@{/trabajos}" class="suggestion-action">Revisar</a>
+                </div>
+                <div class="suggestion-card" th:if="${completados != null and completados > 0}">
+                    <div class="suggestion-icon">🎯</div>
+                    <div class="suggestion-title">¡Excelente progreso!</div>
+                    <div class="suggestion-description">
+                        Has completado <span th:text="${completados}">0</span> trabajo(s). ¡Sigue adelante!
+                    </div>
+                </div>
+                <div class="suggestion-card" th:if="${#lists.isEmpty(trabajos)}">
+                    <div class="suggestion-icon">🚀</div>
+                    <div class="suggestion-title">Comienza tu primer trabajo</div>
+                    <div class="suggestion-description">Crea tu primer trabajo para organizar tus tareas de forma efectiva.</div>
+                    <a th:href="@{/trabajos/nuevo}" class="suggestion-action">Crear trabajo</a>
+                </div>
+                <div class="suggestion-card">
+                    <div class="suggestion-icon">👥</div>
+                    <div class="suggestion-title">Trabaja en equipo</div>
+                    <div class="suggestion-description">Invita colaboradores a tus trabajos para avanzar juntos.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TRABAJOS ACTIVOS -->
         <div class="section-label">Trabajos activos</div>
 
         <div class="grid" th:if="${not #lists.isEmpty(trabajos)}">
-
             <div class="card" th:each="trabajo : ${trabajos}">
 
-<span class="tag"
-      th:classappend="${progresos[trabajo.id] == 100} ? 'tag-completado' : (${progresos[trabajo.id] == 0} ? 'tag-pendiente' : 'tag-progreso')"
-      th:text="${progresos[trabajo.id] == 100} ? 'Completado' : (${progresos[trabajo.id] == 0} ? 'Pendiente' : 'En progreso')">
-</span>
+                <span class="tag"
+                      th:classappend="${proximosVencer != null and #lists.contains(proximosVencer, trabajo)} ? 'tag-vence-pronto' : (${progresos[trabajo.id] == 0} ? 'tag-pendiente' : 'tag-progreso')"
+                      th:text="${proximosVencer != null and #lists.contains(proximosVencer, trabajo)} ? 'Vence pronto' : (${progresos[trabajo.id] == 0} ? 'Pendiente' : 'En progreso')">
+                </span>
 
-                <div class="card-title" th:text="${trabajo.nombreTrabajo}"></div>
+                <div class="card-title" th:text="${trabajo.nombreTrabajo}">Nombre</div>
 
-                <div class="card-meta" th:if="${trabajo.fechaEntrega}">
-                    ⏰ <span th:text="${#temporals.format(trabajo.fechaEntrega, 'dd/MM/yyyy')}"></span>
+                <div class="card-meta" th:if="${trabajo.descripcion}" th:text="${trabajo.descripcion}"></div>
+
+                <div class="card-meta"
+                     th:if="${trabajo.fechaEntrega}"
+                     th:classappend="${proximosVencer != null and #lists.contains(proximosVencer, trabajo)} ? 'vence-pronto' : ''">
+                    ⏰ Vence: <span th:text="${#temporals.format(trabajo.fechaEntrega, 'dd/MM/yyyy')}"></span>
+                </div>
+                <div class="card-meta" th:unless="${trabajo.fechaEntrega}">Sin fecha límite</div>
+
+                <div class="card-meta">
+                    👥 <span th:text="${#sets.size(trabajo.colaboradores)}">0</span> integrante(s)
                 </div>
 
                 <div class="progress-row">
                     <span>Progreso</span>
                     <span th:text="${progresos[trabajo.id]} + '%'">0%</span>
                 </div>
-
                 <div class="progress-bar">
                     <div class="progress-fill" th:style="'width:' + ${progresos[trabajo.id]} + '%'"></div>
                 </div>
 
-                <a th:href="@{/trabajos/{id}(id=${trabajo.id})}" class="card-link">
-                    Ver detalle →
-                </a>
-
+                <a th:href="@{/trabajos/{id}(id=${trabajo.id})}" class="card-link">Ver detalle →</a>
             </div>
-
         </div>
 
         <div class="empty" th:if="${#lists.isEmpty(trabajos)}">
-            No tienes trabajos activos.
-            <a th:href="@{/trabajos/nuevo}">Crear uno</a>
+            <p>No tienes trabajos activos.</p>
+            <a th:href="@{/trabajos/nuevo}">+ Crear tu primer trabajo</a>
         </div>
 
     </div>
 </div>
 
+<script>
+    function toggleSuggestions() {
+        const content = document.getElementById('suggestionsContent');
+        const btn = event.target;
+        if (content.classList.contains('collapsed')) {
+            content.classList.remove('collapsed');
+            btn.textContent = 'Ocultar';
+        } else {
+            content.classList.add('collapsed');
+            btn.textContent = 'Mostrar';
+        }
+    }
+</script>
+
 </body>
 </html>
-
