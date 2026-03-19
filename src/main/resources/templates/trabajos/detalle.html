@@ -78,8 +78,10 @@
         .badge-alta      { background: #f8d7da; color: #721c24; }
         .badge-pendiente { background: #cce5ff; color: #004085; }
         .badge-completada{ background: #d4edda; color: #155724; }
-        .badge-vencida   { background: #f8d7da; color: #721c24; border-radius: 3px; padding: 3px 8px; font-size: 0.7rem; font-weight: 700; }
-        .badge-pronto    { background: #ffeeba; color: #856404; border-radius: 3px; padding: 3px 8px; font-size: 0.7rem; font-weight: 700; }
+        
+        /* HU-11: Badges de alerta visual */
+        .badge-vencida   { background: #dc3545; color: white; margin-top: 4px; display: inline-block; }
+        .badge-pronto    { background: #ffc107; color: #000; margin-top: 4px; display: inline-block; }
 
         .tarea-actions { display: flex; gap: 6px; }
         .btn-completar { padding: 5px 10px; background: #27ae60; color: white; border: none; border-radius: 4px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
@@ -241,11 +243,16 @@
                     </span>
                 </td>
                 <td>
-                    <span th:if="${tarea.fechaFinal != null}"
-                          th:class="${tareasVencidas != null and #lists.contains(tareasVencidas, tarea.id)} ? 'badge badge-vencida' : (${tareasVencenPronto != null and #lists.contains(tareasVencenPronto, tarea.id)} ? 'badge badge-pronto' : '')"
-                          th:text="${#temporals.format(tarea.fechaFinal, 'dd/MM/yyyy')}">
+                    <div th:text="${tarea.fechaFinal != null} ? ${#temporals.format(tarea.fechaFinal, 'dd/MM/yyyy')} : '—'">—</div>
+                    <!-- HU-11: Badges de alerta visual -->
+                    <span class="badge badge-vencida" 
+                          th:if="${tareasVencidas != null and #lists.contains(tareasVencidas, tarea.id)}">
+                        🔴 Vencida
                     </span>
-                    <span th:unless="${tarea.fechaFinal != null}">—</span>
+                    <span class="badge badge-pronto" 
+                          th:if="${tareasVencenPronto != null and #lists.contains(tareasVencenPronto, tarea.id)}">
+                        ⚠️ Vence pronto
+                    </span>
                 </td>
                 <td>
                     <span class="badge"
@@ -316,6 +323,66 @@
             alert('Error al actualizar el rol');
         }
     }
+    
+    // HU-11: Ocultar badges de alerta al completar una tarea sin recargar
+    document.addEventListener('DOMContentLoaded', function() {
+        const formsCompletar = document.querySelectorAll('form[action*="/completar"]');
+        
+        formsCompletar.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const boton = form.querySelector('button[type="submit"]');
+                const textoBoton = boton.textContent.trim();
+                
+                // Solo aplicar lógica cuando se está completando (no cuando se deshace)
+                if (textoBoton === 'Completar') {
+                    e.preventDefault();
+                    
+                    // Encontrar la fila de la tarea
+                    const fila = form.closest('tr');
+                    
+                    // Enviar el formulario usando fetch
+                    fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: new URLSearchParams(new FormData(form))
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            // Actualizar UI sin recargar
+                            // 1. Cambiar badge de estado
+                            const badgeEstado = fila.querySelector('.badge-pendiente, .badge-completada');
+                            if (badgeEstado) {
+                                badgeEstado.className = 'badge badge-completada';
+                                badgeEstado.textContent = 'Completada';
+                            }
+                            
+                            // 2. Ocultar badges de alerta (VENCIDA / VENCE PRONTO)
+                            const badgesAlerta = fila.querySelectorAll('.badge-vencida, .badge-pronto');
+                            badgesAlerta.forEach(badge => {
+                                badge.style.display = 'none';
+                            });
+                            
+                            // 3. Cambiar botón a "Deshacer"
+                            boton.className = 'btn-deshacer';
+                            boton.textContent = 'Deshacer';
+                            
+                            // Después de actualizar UI, recargar para actualizar progreso
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 500);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        // Si hay error, recargar normalmente
+                        form.submit();
+                    });
+                }
+            });
+        });
+    });
 </script>
 </body>
 </html>
