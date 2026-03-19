@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>JAVA</ID>
+  <OriginalElement>/home/silver/Projectos/FIS_2610_3513_G3/src/main/java</OriginalElement>
+  <nodes>
+    <node x="932.5742826666665" y="1949.5">com.example.entregaya.repository.ColaboradorTrabajoRepository</node>
+    <node x="352.14715442136503" y="2387.1862834157596">com.example.entregaya.service.CustomTrabajoDetailsService</node>
+    <node x="-296.5184759297012" y="1885.8010174480714">com.example.entregaya.model.Trabajo</node>
+    <node x="367.5" y="1790.5">com.example.entregaya.model.ColaboradorTrabajo</node>
+    <node x="1280.896513629014" y="2093.4604919369604">com.example.entregaya.dto.MiembroRolDTO</node>
+    <node x="696.25" y="1355.4695958219586">com.example.entregaya.model.ColaboradorTrabajoId</node>
+    <node x="334.0" y="1226.5">com.example.entregaya.model.User</node>
+    <node x="845.2899568110784" y="2449.550954487307">com.example.entregaya.controller.TrabajoController</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="com.example.entregaya.model.ColaboradorTrabajo" target="com.example.entregaya.model.ColaboradorTrabajoId" relationship="CREATE">
+      <point x="73.75" y="-190.5" />
+      <point x="588.75" y="1741.0" />
+      <point x="857.4006160712165" y="1741.0" />
+      <point x="857.4006160712165" y="1640.4695958219586" />
+      <point x="66.25" y="142.5" />
+    </edge>
+    <edge source="com.example.entregaya.model.ColaboradorTrabajo" target="com.example.entregaya.model.ColaboradorTrabajoId" relationship="TO_ONE">
+      <point x="24.02333713066662" y="-187.3116679395555" />
+      <point x="539.0233371306666" y="1701.0" />
+      <point x="762.5" y="1701.0" />
+      <point x="-66.25" y="142.5" />
+    </edge>
+    <edge source="com.example.entregaya.model.ColaboradorTrabajo" target="com.example.entregaya.model.Trabajo" relationship="TO_ONE">
+      <point x="-147.5" y="-15.0" />
+      <point x="213.5" y="-242.30101744807143" />
+    </edge>
+    <edge source="com.example.entregaya.model.Trabajo" target="com.example.entregaya.model.ColaboradorTrabajo" relationship="TO_MANY">
+      <point x="210.31278593147889" y="-148.83370770940473" />
+      <point x="248.62504349292712" y="2059.4673097386667" />
+      <point x="248.62504349292712" y="2058.363741752889" />
+      <point x="-144.92073312711125" y="77.36374175288893" />
+    </edge>
+    <edge source="com.example.entregaya.service.CustomTrabajoDetailsService" target="com.example.entregaya.model.ColaboradorTrabajoId" relationship="CREATE">
+      <point x="-107.5" y="-154.5" />
+      <point x="459.64715442136503" y="2241.0" />
+      <point x="895.0" y="2241.0" />
+      <point x="66.25" y="142.5" />
+    </edge>
+    <edge source="com.example.entregaya.model.ColaboradorTrabajo" target="com.example.entregaya.model.User" relationship="TO_ONE">
+      <point x="-73.75" y="-190.5" />
+      <point x="441.25" y="1721.0" />
+      <point x="495.0" y="1721.0" />
+      <point x="0.0" y="214.5" />
+    </edge>
+    <edge source="com.example.entregaya.service.CustomTrabajoDetailsService" target="com.example.entregaya.dto.MiembroRolDTO" relationship="CREATE">
+      <point x="-107.5" y="-154.5" />
+      <point x="459.64715442136503" y="2241.0" />
+      <point x="895.0" y="2241.0" />
+      <point x="895.0" y="2161.0" />
+      <point x="1413.896513629014" y="2161.0" />
+      <point x="0.0" y="154.5" />
+    </edge>
+    <edge source="com.example.entregaya.service.CustomTrabajoDetailsService" target="com.example.entregaya.repository.ColaboradorTrabajoRepository" relationship="TO_ONE">
+      <point x="107.5" y="-154.5" />
+      <point x="674.647154421365" y="2274.454074311111" />
+      <point x="1125.0742826666665" y="2274.454074311111" />
+      <point x="0.0" y="31.5" />
+    </edge>
+    <edge source="com.example.entregaya.model.User" target="com.example.entregaya.model.ColaboradorTrabajo" relationship="TO_MANY">
+      <point x="-53.090645617777795" y="212.53519786666675" />
+      <point x="441.9093543822222" y="1681.0" />
+      <point x="441.25" y="1681.0" />
+      <point x="-73.75" y="-190.5" />
+    </edge>
+    <edge source="com.example.entregaya.controller.TrabajoController" target="com.example.entregaya.model.Trabajo" relationship="CREATE">
+      <point x="-323.5" y="0.0" />
+      <point x="-83.0184759297012" y="2652.050954487307" />
+      <point x="0.0" y="322.5" />
+    </edge>
+    <edge source="com.example.entregaya.model.Trabajo" target="com.example.entregaya.model.ColaboradorTrabajo" relationship="CREATE">
+      <point x="214.72705787459" y="-82.61962856273794" />
+      <point x="248.62504349292712" y="2125.6813888853335" />
+      <point x="248.62504349292712" y="2126.7849568711113" />
+      <point x="-137.19575722666673" y="145.78495687111126" />
+    </edge>
+    <edge source="com.example.entregaya.controller.TrabajoController" target="com.example.entregaya.service.CustomTrabajoDetailsService" relationship="TO_ONE">
+      <point x="161.75" y="-202.5" />
+      <point x="1112.3246237809776" y="2449.550954487307" />
+      <point x="1112.3246237809776" y="2339.286523733333" />
+      <point x="674.647154421365" y="2339.286523733333" />
+      <point x="107.5" y="-154.5" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Compact" zoom="0.6383083309412242" showDependencies="true" x="685.1521633234418" y="1925.9454949792284" />
+  <SelectedNodes />
+  <Categories>
+    <Category>Constructors</Category>
+    <Category>Fields</Category>
+    <Category>Methods</Category>
+  </Categories>
+  <SCOPE>All</SCOPE>
+  <VISIBILITY>private</VISIBILITY>
+</Diagram>
+
