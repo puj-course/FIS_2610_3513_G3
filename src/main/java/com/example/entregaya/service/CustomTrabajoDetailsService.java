@@ -92,4 +92,23 @@ public class CustomTrabajoDetailsService {
         trabajoRepository.deleteById(Id);
     }
 
+    public boolean puedeEditarTarea(Long trabajoId, String username) {
+        return trabajoRepository.findById(trabajoId)
+                .map(trabajo -> trabajo.getColaboradores().stream()
+                        .anyMatch(col -> col.getUser().getUsername().equals(username) &&
+                                (col.getRol() == ColaboradorTrabajo.Rol.LIDER ||
+                                        col.getRol() == ColaboradorTrabajo.Rol.EDITOR)))
+                .orElse(false);
+    }
+
+    // Verificar si un usuario es LIDER de un trabajo
+    public boolean esLider(Long trabajoId, String username) {
+        return trabajoRepository.findById(trabajoId)
+                .map(trabajo -> trabajo.getColaboradores().stream()
+                        .anyMatch(col -> col.getUser().getUsername().equals(username) &&
+                                col.getRol() == ColaboradorTrabajo.Rol.LIDER))
+                .orElse(false);
+    }
+
+
 }

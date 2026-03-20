@@ -174,9 +174,8 @@
                 </span>
             </div>
         </div>
-
-        <!-- GESTIÓN DE ROLES -->
-        <div th:if="${not #lists.isEmpty(miembros)}" style="margin-bottom:16px;">
+        <!-- GESTIÓN DE ROLES - SOLO PARA LIDER -->
+        <div th:if="${not #lists.isEmpty(miembros) and esLider}" style="margin-bottom:16px;">
             <div class="section-label">Gestión de roles</div>
             <div class="roles-list">
                 <div class="rol-row" th:each="miembro : ${miembros}">
@@ -193,6 +192,14 @@
                 </div>
             </div>
         </div>
+
+        <!-- MENSAJE PARA NO-LIDER -->
+        <div th:if="${not #lists.isEmpty(miembros) and not esLider}" style="margin-bottom:16px; padding:12px; background:#e8f4f8; border-left:4px solid #3498db; border-radius:4px;">
+            <span style="font-size:0.85rem; color:#2c3e50;">
+                ℹ️ Solo los Líderes pueden gestionar los roles de los colaboradores.
+            </span>
+        </div>
+
 
         <!-- INVITAR -->
         <div style="margin-bottom:16px;">
@@ -262,6 +269,10 @@
                 </td>
                 <td>
                     <div class="tarea-actions">
+                        <a th:href="@{/trabajos/{wId}/tareas/{tId}/editar(wId=${trabajo.id}, tId=${tarea.id})}"
+                           class="btn-completar" style="background: #3498db; text-decoration: none; text-align: center;">
+                            ✏ Editar
+                        </a>
                         <form th:action="@{/trabajos/{wId}/tareas/{tId}/completar(wId=${trabajo.id}, tId=${tarea.id})}"
                               method="post" style="margin:0">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
