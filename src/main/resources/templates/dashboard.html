@@ -33,12 +33,23 @@
         .btn-primary:hover { background: #cf6d17; }
 
         .stats { display: flex; gap: 18px; margin-bottom: 28px; flex-wrap: wrap; }
-        .stat { background: white; border: 1px solid #e2e2e2; padding: 18px; flex: 1; min-width: 120px; border-radius: 4px; }
+        .stat { background: white; border: 1px solid #e2e2e2; padding: 18px; flex: 1; min-width: 120px; border-radius: 4px; transition: all 0.2s ease; }
+        .stat:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.08); }
         .stat-num { font-size: 1.8rem; font-weight: 700; }
         .stat-label { font-size: 0.8rem; color: #777; }
         .stat-num.orange { color: #e67e22; }
         .stat-num.red { color: #e74c3c; }
         .stat-num.green { color: #27ae60; }
+        
+        /* HU-11: Tarjeta de alerta para tareas vencidas */
+        .stat-alert {
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
+            border: 2px solid #fc8181;
+        }
+        .stat-alert:hover {
+            border-color: #e53e3e;
+            box-shadow: 0 4px 12px rgba(229, 62, 62, 0.2);
+        }
 
         .section-label { font-size: 0.75rem; text-transform: uppercase; color: #888; margin-bottom: 12px; font-weight: 600; }
 
@@ -139,9 +150,10 @@
                 <div class="stat-num green" th:text="${completados}">0</div>
                 <div class="stat-label">Completados</div>
             </div>
-            <div class="stat">
+            <!-- HU-11: Contador de tareas vencidas con diseño de alerta -->
+            <div class="stat stat-alert">
                 <div class="stat-num red" th:text="${tareasVencidas}">0</div>
-                <div class="stat-label">Tareas vencidas</div>
+                <div class="stat-label">🔴 Tareas vencidas</div>
             </div>
         </div>
 
