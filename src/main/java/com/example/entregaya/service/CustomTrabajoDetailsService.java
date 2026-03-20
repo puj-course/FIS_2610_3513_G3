@@ -24,8 +24,8 @@ public class CustomTrabajoDetailsService {
         this.colaboradorTrabajoRepository = colaboradorTrabajoRepository;
     }
 
- // Crear un nuevo trabajo y agregar al creador como colaborador
- // El creador del trabajo automaticamente lider
+    // Crear un nuevo trabajo y agregar al creador como colaborador
+    // El creador del trabajo automaticamente lider
     public Trabajo crearTrabajo(Trabajo trabajo, String username){
         User user= userRepository.findByUsername(username)
                 .orElseThrow(()-> new RuntimeException("Usuario no encontrado"));
@@ -88,8 +88,53 @@ public class CustomTrabajoDetailsService {
                 .toList();
     }
 
-    public void eliminar( long Id){
+    public void eliminar(long Id){
         trabajoRepository.deleteById(Id);
     }
 
+    /**
+     * Elimina un colaborador de un trabajo.
+     * Solo un LIDER puede realizar esta acción.
+     * No se puede eliminar al único LIDER del trabajo.
+     */
+    @Transactional
+    public void eliminarColaborador(Long trabajoId, Long userId, String usernameQuienEjecuta) {
+        // Validar que el trabajo exista
+        Trabajo trabajo = trabajoRepository.findById(trabajoId)
+                .orElseThrow(() -> new IllegalArgumentException("El trabajo no existe"));
+
+        // Validar que quien ejecuta la acción sea LIDER
+        User ejecutor = userRepository.findByUsername(usernameQuienEjecuta)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario ejecutor no encontrado"));
+
+        ColaboradorTrabajoId ejecutorId = new ColaboradorTrabajoId(trabajoId, ejecutor.getId());
+        ColaboradorTrabajo ejecutorCol = colaboradorTrabajoRepository.findById(ejecutorId)
+                .orElseThrow(() -> new IllegalArgumentException("No perteneces a este trabajo"));
+
+        if (ejecutorCol.getRol() != ColaboradorTrabajo.Rol.LIDER) {
+            throw new IllegalArgumentException("Solo un líder puede eliminar colaboradores");
+        }
+
+        // No permitir que el líder se elimine a sí mismo
+        if (ejecutor.getId().equals(userId)) {
+            throw new IllegalArgumentException("No puedes eliminarte a ti mismo del trabajo");
+        }
+
+        // Validar que el colaborador a eliminar exista en el trabajo
+        ColaboradorTrabajoId targetId = new ColaboradorTrabajoId(trabajoId, userId);
+        ColaboradorTrabajo target = colaboradorTrabajoRepository.findById(targetId)
+                .orElseThrow(() -> new IllegalArgumentException("El colaborador no pertenece a este trabajo"));
+
+        // No permitir eliminar al único LIDER
+        if (target.getRol() == ColaboradorTrabajo.Rol.LIDER) {
+            long cantidadLideres = trabajo.getColaboradores().stream()
+                    .filter(c -> c.getRol() == ColaboradorTrabajo.Rol.LIDER)
+                    .count();
+            if (cantidadLideres <= 1) {
+                throw new IllegalArgumentException("No se puede eliminar al único líder del trabajo");
+            }
+        }
+
+        colaboradorTrabajoRepository.delete(target);
+    }
 }
