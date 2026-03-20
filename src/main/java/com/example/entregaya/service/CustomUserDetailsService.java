@@ -61,6 +61,15 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     // Actualizar el nombre de usuario
     public void actualizarUsername(String usernameActual, String nuevoUsername) {
+        if (nuevoUsername == null || nuevoUsername.trim().isEmpty()) {
+            throw new IllegalArgumentException("El nombre de usuario no puede estar vacío.");
+        }
+        if (nuevoUsername.equals(usernameActual)) {
+            throw new IllegalArgumentException("El nuevo usuario debe ser diferente al actual.");
+        }
+        if (userRepository.findByUsername(nuevoUsername).isPresent()) {
+            throw new IllegalArgumentException("El usuario '" + nuevoUsername + "' ya está en uso.");
+        }
         User user = userRepository.findByUsername(usernameActual)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         user.setUsername(nuevoUsername);
@@ -71,6 +80,18 @@ public class CustomUserDetailsService implements UserDetailsService {
     public void actualizarPassword(String username, String passwordActual, String passwordNueva, String passwordConfirm) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        if (!passwordEncoder.matches(passwordActual, user.getPassword())) {
+            throw new IllegalArgumentException("La contraseña actual es incorrecta.");
+        }
+        if (passwordNueva == null || passwordNueva.length() < 6) {
+            throw new IllegalArgumentException("La nueva contraseña debe tener al menos 6 caracteres.");
+        }
+        if (!passwordNueva.equals(passwordConfirm)) {
+            throw new IllegalArgumentException("La confirmación no coincide con la nueva contraseña.");
+        }
+        if (passwordEncoder.matches(passwordNueva, user.getPassword())) {
+            throw new IllegalArgumentException("La nueva contraseña debe ser diferente a la actual.");
+        }
         user.setPassword(passwordEncoder.encode(passwordNueva));
         userRepository.save(user);
     }
