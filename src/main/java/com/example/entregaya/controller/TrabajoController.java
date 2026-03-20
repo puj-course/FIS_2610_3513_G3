@@ -62,7 +62,10 @@ public class TrabajoController {
     }
 
     @GetMapping("/{id}")
-    public String detalle(@PathVariable long id, Model model) {
+    public String detalle(@PathVariable long id, Model model,  @AuthenticationPrincipal UserDetails user) {
+        // Verificar si el usuario actual es LIDER
+        boolean esLider = customTrabajoDetailsService.esLider(id, user.getUsername());
+        model.addAttribute("esLider", esLider);
         Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
         List<Tarea> tareas = customTareaDetailsService.tareas(id);
 
@@ -243,8 +246,16 @@ public class TrabajoController {
     public ResponseEntity<Map<String, Object>> actualizarRolMiembro(
             @PathVariable Long trabajoId,
             @PathVariable Long userId,
-            @RequestBody Map<String, String> request) {
+            @RequestBody Map<String, String> request,
+            @AuthenticationPrincipal UserDetails user) {
         try {
+            // VALIDACIÓN: Verificar que el usuario autenticado sea LIDER
+            if (!customTrabajoDetailsService.esLider(trabajoId, user.getUsername())) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("error", "Solo los LIDER pueden cambiar los roles de los miembros");
+                return ResponseEntity.status(403).body(errorResponse);
+            }
+
             // Obtener el rol del request
             String rolStr = request.get("rol");
             if (rolStr == null || rolStr.trim().isEmpty()) {
@@ -289,4 +300,5 @@ public class TrabajoController {
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
+
 }

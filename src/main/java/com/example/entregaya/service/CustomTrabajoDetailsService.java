@@ -24,8 +24,8 @@ public class CustomTrabajoDetailsService {
         this.colaboradorTrabajoRepository = colaboradorTrabajoRepository;
     }
 
-    // Crear un nuevo trabajo y agregar al creador como colaborador
-    // El creador del trabajo automaticamente lider
+ // Crear un nuevo trabajo y agregar al creador como colaborador
+ // El creador del trabajo automaticamente lider
     public Trabajo crearTrabajo(Trabajo trabajo, String username){
         User user= userRepository.findByUsername(username)
                 .orElseThrow(()-> new RuntimeException("Usuario no encontrado"));
@@ -137,4 +137,23 @@ public class CustomTrabajoDetailsService {
 
         colaboradorTrabajoRepository.delete(target);
     }
+    public boolean puedeEditarTarea(Long trabajoId, String username) {
+        return trabajoRepository.findById(trabajoId)
+                .map(trabajo -> trabajo.getColaboradores().stream()
+                        .anyMatch(col -> col.getUser().getUsername().equals(username) &&
+                                (col.getRol() == ColaboradorTrabajo.Rol.LIDER ||
+                                        col.getRol() == ColaboradorTrabajo.Rol.EDITOR)))
+                .orElse(false);
+    }
+
+    // Verificar si un usuario es LIDER de un trabajo
+    public boolean esLider(Long trabajoId, String username) {
+        return trabajoRepository.findById(trabajoId)
+                .map(trabajo -> trabajo.getColaboradores().stream()
+                        .anyMatch(col -> col.getUser().getUsername().equals(username) &&
+                                col.getRol() == ColaboradorTrabajo.Rol.LIDER))
+                .orElse(false);
+    }
+
+
 }

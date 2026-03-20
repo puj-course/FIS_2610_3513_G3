@@ -84,4 +84,26 @@ public class CustomTareaDetailsService {
 
         return (int) Math.round((pesoCompletado * 100.0) / pesoTotal);
     }
+
+    public Tarea editarTarea(Long tareaId, Tarea tareaActualizada, List<Long> responsableIds) {
+        Tarea tarea = findById(tareaId);
+
+        // Actualizar campos
+        tarea.setNombre(tareaActualizada.getNombre());
+        tarea.setDescripcion(tareaActualizada.getDescripcion());
+        tarea.setFechaInicio(tareaActualizada.getFechaInicio());
+        tarea.setFechaFinal(tareaActualizada.getFechaFinal());
+        tarea.setDificultad(tareaActualizada.getDificultad());
+
+        // Actualizar responsables
+        if (responsableIds != null && !responsableIds.isEmpty()) {
+            Set<User> responsables = new HashSet<>(userRepository.findAllById(responsableIds));
+            tarea.setResponsables(responsables);
+        } else {
+            tarea.setResponsables(new HashSet<>());
+        }
+
+        return tareaRepository.save(tarea);
+    }
+
 }
