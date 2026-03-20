@@ -228,7 +228,7 @@
             background: #ecf0f1;
             border-radius: 12px;
         }
-        
+
         .member-role.role-leader {
             background: linear-gradient(135deg, #FF6B35 0%, #f39c12 100%);
             color: white;
@@ -447,6 +447,7 @@
             background-color: #7f8c8d;
         }
 
+        /* Botón cambiar rol: solo visible para líder */
         .btn-change-role {
             background-color: #FF6B35;
             color: white;
@@ -557,120 +558,128 @@
 <!-- Main Content -->
 <div class="container">
 
-    <!-- Page Header -->
-    <div class="page-header">
-        <h1>
-            👥 Miembros del Equipo
-            <span class="member-count" th:text="${totalMiembros}">0</span>
-        </h1>
-        <p th:text="'Equipo colaborando en: ' + ${trabajo.nombreTrabajo}">Equipo colaborando en el proyecto</p>
-    </div>
+    <!-- Determinar si el usuario actual es LIDER -->
+    <th:block th:with="esLider=${miembros != null and not #lists.isEmpty(miembros) and not miembros.?[rol.name() == 'LIDER' and user.username == #authentication.name].isEmpty()}">
 
-    <!-- Stats Bar -->
-    <div class="stats-bar" th:if="${not #sets.isEmpty(miembros)}">
-        <div class="stat-card">
-            <div class="stat-value" th:text="${totalMiembros}">0</div>
-            <div class="stat-label">Total Miembros</div>
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>
+                👥 Miembros del Equipo
+                <span class="member-count" th:text="${totalMiembros}">0</span>
+            </h1>
+            <p th:text="'Equipo colaborando en: ' + ${trabajo.nombreTrabajo}">Equipo colaborando en el proyecto</p>
         </div>
-        <div class="stat-card orange">
-            <div class="stat-value" th:text="${#sets.size(trabajo.tareas)}">0</div>
-            <div class="stat-label">Tareas del Proyecto</div>
-        </div>
-        <div class="stat-card green">
-            <div class="stat-value">100%</div>
-            <div class="stat-label">Colaboración</div>
-        </div>
-    </div>
 
-    <!-- Actions Bar -->
-    <div class="actions-bar" th:if="${not #sets.isEmpty(miembros)}">
-        <div class="search-box">
-            <input type="text" class="search-input" id="searchInput" placeholder="🔍 Buscar miembro por nombre..." onkeyup="filtrarMiembros()">
+        <!-- Stats Bar -->
+        <div class="stats-bar" th:if="${not #lists.isEmpty(miembros)}">
+            <div class="stat-card">
+                <div class="stat-value" th:text="${totalMiembros}">0</div>
+                <div class="stat-label">Total Miembros</div>
+            </div>
+            <div class="stat-card orange">
+                <div class="stat-value" th:text="${#sets.size(trabajo.tareas)}">0</div>
+                <div class="stat-label">Tareas del Proyecto</div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-value">100%</div>
+                <div class="stat-label">Colaboración</div>
+            </div>
         </div>
-        <div style="color: #7f8c8d; font-size: 14px;">
-            <span id="visibleCount" th:text="${totalMiembros}">0</span> miembro(s)
-        </div>
-    </div>
 
-    <!-- Members Section -->
-    <div class="members-section">
-        
-        <!-- Members Grid -->
-        <div class="members-grid" th:if="${not #sets.isEmpty(miembros)}">
-            <div class="member-card" th:each="miembro, iterStat : ${miembros}" th:data-username="${miembro.user.username}">
-                <div class="member-avatar" th:text="${#strings.substring(miembro.user.username, 0, 2)}">AB</div>
-                <div class="member-info">
-                    <div class="member-name" th:text="${miembro.user.username}">Nombre Usuario</div>
-                    <span class="member-role" 
-                          th:text="${miembro.rol.name() == 'LIDER'} ? 'Líder del Proyecto' : (${miembro.rol.name() == 'EDITOR'} ? 'Editor' : 'Colaborador')"
-                          th:classappend="${miembro.rol.name() == 'LIDER'} ? 'role-leader' : ''">
+        <!-- Actions Bar -->
+        <div class="actions-bar" th:if="${not #lists.isEmpty(miembros)}">
+            <div class="search-box">
+                <input type="text" class="search-input" id="searchInput" placeholder="🔍 Buscar miembro por nombre..." onkeyup="filtrarMiembros()">
+            </div>
+            <div style="color: #7f8c8d; font-size: 14px;">
+                <span id="visibleCount" th:text="${totalMiembros}">0</span> miembro(s)
+            </div>
+        </div>
+
+        <!-- Members Section -->
+        <div class="members-section">
+
+            <!-- Members Grid -->
+            <div class="members-grid" th:if="${not #lists.isEmpty(miembros)}">
+                <div class="member-card" th:each="miembro, iterStat : ${miembros}" th:data-username="${miembro.user.username}">
+                    <div class="member-avatar" th:text="${#strings.substring(miembro.user.username, 0, 2)}">AB</div>
+                    <div class="member-info">
+                        <div class="member-name" th:text="${miembro.user.username}">Nombre Usuario</div>
+                        <span class="member-role"
+                              th:text="${miembro.rol.name() == 'LIDER'} ? 'Líder del Proyecto' : (${miembro.rol.name() == 'EDITOR'} ? 'Editor' : 'Colaborador')"
+                              th:classappend="${miembro.rol.name() == 'LIDER'} ? 'role-leader' : ''">
                         Colaborador
                     </span>
-                    
-                    <div class="member-stats">
-                        <div class="member-stat-item">
-                            <div class="member-stat-value" th:text="${#sets.size(miembro.user.trabajos)}">0</div>
-                            <div class="member-stat-label">Trabajos</div>
+
+                        <div class="member-stats">
+                            <div class="member-stat-item">
+                                <div class="member-stat-value" th:text="${#sets.size(miembro.user.trabajos)}">0</div>
+                                <div class="member-stat-label">Trabajos</div>
+                            </div>
+                            <div class="member-stat-item">
+                                <div class="member-stat-value" th:text="${miembro.rol.name() == 'LIDER'} ? '★' : (${iterStat.count})">1</div>
+                                <div class="member-stat-label" th:text="${miembro.rol.name() == 'LIDER'} ? 'Líder' : 'Posición'">Posición</div>
+                            </div>
                         </div>
-                        <div class="member-stat-item">
-                            <div class="member-stat-value" th:text="${miembro.rol.name() == 'LIDER'} ? '★' : (${iterStat.count})">1</div>
-                            <div class="member-stat-label" th:text="${miembro.rol.name() == 'LIDER'} ? 'Líder' : 'Posición'">Posición</div>
-                        </div>
+
+                        <!-- Botón cambiar rol: SOLO visible para el líder -->
+                        <button th:if="${esLider}"
+                                class="btn-change-role"
+                                th:attr="data-user-id=${miembro.user.id}, data-username=${miembro.user.username}"
+                                onclick="abrirModalCambiarRol(this)">
+                            🔄 Cambiar Rol
+                        </button>
                     </div>
-                    <button class="btn-change-role"
-                            th:attr="data-user-id=${miembro.id}, data-username=${miembro.username}"
-                            onclick="abrirModalCambiarRol(this)">
-                        🔄 Cambiar Rol
-                    </button>
                 </div>
             </div>
-        </div>
 
-        <!-- Modal para cambiar rol -->
-        <div id="modalCambiarRol" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <span class="close" onclick="cerrarModal()">&times;</span>
-                    <h2>🔄 Cambiar Rol de Miembro</h2>
-                </div>
-                <div class="modal-body">
-                    <div id="alertContainer"></div>
-
-                    <div class="form-group">
-                        <label class="form-label">Usuario:</label>
-                        <input type="text" id="modalUsername" class="form-select" readonly style="background-color: #ecf0f1;">
+            <!-- Modal para cambiar rol (solo líder puede abrirlo) -->
+            <div id="modalCambiarRol" class="modal" th:if="${esLider}">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <span class="close" onclick="cerrarModal()">&times;</span>
+                        <h2>🔄 Cambiar Rol de Miembro</h2>
                     </div>
+                    <div class="modal-body">
+                        <div id="alertContainer"></div>
 
-                    <div class="form-group">
-                        <label class="form-label">Nuevo Rol:</label>
-                        <select id="modalRolSelect" class="form-select">
-                            <option value="">-- Selecciona un rol --</option>
-                            <option value="LIDER">🌟 Líder</option>
-                            <option value="EDITOR">✏️ Editor</option>
-                            <option value="COLABORADOR">👤 Colaborador</option>
-                        </select>
+                        <div class="form-group">
+                            <label class="form-label">Usuario:</label>
+                            <input type="text" id="modalUsername" class="form-select" readonly style="background-color: #ecf0f1;">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Nuevo Rol:</label>
+                            <select id="modalRolSelect" class="form-select">
+                                <option value="">-- Selecciona un rol --</option>
+                                <option value="LIDER">🌟 Líder</option>
+                                <option value="EDITOR">✏️ Editor</option>
+                                <option value="COLABORADOR">👤 Colaborador</option>
+                            </select>
+                        </div>
+
+                        <p style="font-size: 13px; color: #7f8c8d; margin-top: 12px;">
+                            <strong>Nota:</strong> El rol del usuario se actualizará inmediatamente y se reflejará en todas las vistas del proyecto.
+                        </p>
                     </div>
-
-                    <p style="font-size: 13px; color: #7f8c8d; margin-top: 12px;">
-                        <strong>Nota:</strong> El rol del usuario se actualizará inmediatamente y se reflejará en todas las vistas del proyecto.
-                    </p>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
-                    <button class="btn-primary" id="btnGuardarRol" onclick="guardarCambioRol()">Guardar Cambios</button>
+                    <div class="modal-footer">
+                        <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
+                        <button class="btn-primary" id="btnGuardarRol" onclick="guardarCambioRol()">Guardar Cambios</button>
+                    </div>
                 </div>
             </div>
+
+            <!-- Empty State -->
+            <div class="empty-state" th:if="${#lists.isEmpty(miembros)}">
+                <div class="empty-icon">👥</div>
+                <h3>No hay miembros en este equipo</h3>
+                <p>Este trabajo aún no tiene colaboradores asignados.</p>
+                <a th:href="@{/trabajos/{id}/detalle(id=${trabajo.id})}" class="btn">Volver al trabajo</a>
+            </div>
+
         </div>
 
-        <!-- Empty State -->
-        <div class="empty-state" th:if="${#sets.isEmpty(miembros)}">
-            <div class="empty-icon">👥</div>
-            <h3>No hay miembros en este equipo</h3>
-            <p>Este trabajo aún no tiene colaboradores asignados.</p>
-            <a th:href="@{/trabajos/{id}/detalle(id=${trabajo.id})}" class="btn">Volver al trabajo</a>
-        </div>
-
-    </div>
+    </th:block>
 
 </div>
 
@@ -693,11 +702,11 @@
 
         document.getElementById('visibleCount').textContent = visibleCount;
     }
-    
+
     // Consumir endpoint para obtener roles del backend
     function cargarRolesDesdeBackend() {
-        const trabajoId = window.location.pathname.split('/')[2]; // Obtener ID de la URL
-        
+        const trabajoId = window.location.pathname.split('/')[2];
+
         fetch(`/trabajos/${trabajoId}/miembros/roles`)
             .then(response => {
                 if (!response.ok) {
@@ -713,25 +722,24 @@
                 console.error('Error al cargar roles:', error);
             });
     }
-    
+
     function actualizarRolesEnVista(miembros) {
         const cards = document.querySelectorAll('.member-card');
-        
+
         cards.forEach((card, index) => {
             if (miembros[index]) {
                 const miembro = miembros[index];
                 const roleSpan = card.querySelector('.member-role');
                 const statValue = card.querySelectorAll('.member-stat-value')[1];
                 const statLabel = card.querySelectorAll('.member-stat-label')[1];
-                
-                // Actualizar rol
+
                 if (miembro.rol === 'LIDER') {
                     roleSpan.textContent = 'Líder del Proyecto';
                     roleSpan.classList.add('role-leader');
                     statValue.textContent = '★';
                     statLabel.textContent = 'Líder';
                 } else {
-                    roleSpan.textContent = 'Colaborador';
+                    roleSpan.textContent = miembro.rol === 'EDITOR' ? 'Editor' : 'Colaborador';
                     roleSpan.classList.remove('role-leader');
                     statValue.textContent = miembro.posicion;
                     statLabel.textContent = 'Posición';
@@ -739,8 +747,7 @@
             }
         });
     }
-    
-    // Cargar roles al cargar la página
+
     document.addEventListener('DOMContentLoaded', function() {
         cargarRolesDesdeBackend();
     });
@@ -748,7 +755,6 @@
     // Variables globales para el modal
     let usuarioSeleccionado = null;
 
-    // Abrir modal para cambiar rol
     function abrirModalCambiarRol(button) {
         const userId = button.getAttribute('data-user-id');
         const username = button.getAttribute('data-username');
@@ -764,27 +770,23 @@
         document.getElementById('modalCambiarRol').style.display = 'block';
     }
 
-    // Cerrar modal
     function cerrarModal() {
         document.getElementById('modalCambiarRol').style.display = 'none';
         usuarioSeleccionado = null;
     }
 
-    // Cerrar modal al hacer clic fuera de él
     window.onclick = function(event) {
         const modal = document.getElementById('modalCambiarRol');
-        if (event.target === modal) {
+        if (modal && event.target === modal) {
             cerrarModal();
         }
     }
 
-    // Guardar cambio de rol
     function guardarCambioRol() {
         const rolSeleccionado = document.getElementById('modalRolSelect').value;
         const btnGuardar = document.getElementById('btnGuardarRol');
         const alertContainer = document.getElementById('alertContainer');
 
-        // Validar que se haya seleccionado un rol
         if (!rolSeleccionado) {
             alertContainer.innerHTML = '<div class="alert alert-error">⚠️ Por favor, selecciona un rol</div>';
             return;
@@ -795,14 +797,12 @@
             return;
         }
 
-        // Deshabilitar botón mientras se procesa
         btnGuardar.disabled = true;
         btnGuardar.textContent = 'Guardando...';
 
-        const trabajoId = window.location.pathname.split('/')[2]; // Obtener ID de la URL
+        const trabajoId = window.location.pathname.split('/')[2];
         const userId = usuarioSeleccionado.id;
 
-        // Realizar petición PUT al backend
         fetch(`/trabajos/${trabajoId}/miembros/${userId}/rol`, {
             method: 'PUT',
             headers: {
@@ -812,32 +812,28 @@
                 rol: rolSeleccionado
             })
         })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => {
-                    throw new Error(err.error || 'Error al actualizar el rol');
-                });
-            }
-            return response.json();
-        })
-        .then(data => {
-            // Mostrar mensaje de éxito
-            alertContainer.innerHTML = '<div class="alert alert-success">✅ ' + data.message + '</div>';
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.error || 'Error al actualizar el rol');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                alertContainer.innerHTML = '<div class="alert alert-success">✅ ' + data.message + '</div>';
 
-            // Recargar roles para actualizar la vista
-            setTimeout(() => {
-                cargarRolesDesdeBackend();
-                cerrarModal();
-                // Recargar la página para reflejar cambios
-                location.reload();
-            }, 1500);
-        })
-        .catch(error => {
-            // Mostrar mensaje de error
-            alertContainer.innerHTML = '<div class="alert alert-error">❌ ' + error.message + '</div>';
-            btnGuardar.disabled = false;
-            btnGuardar.textContent = 'Guardar Cambios';
-        });
+                setTimeout(() => {
+                    cargarRolesDesdeBackend();
+                    cerrarModal();
+                    location.reload();
+                }, 1500);
+            })
+            .catch(error => {
+                alertContainer.innerHTML = '<div class="alert alert-error">❌ ' + error.message + '</div>';
+                btnGuardar.disabled = false;
+                btnGuardar.textContent = 'Guardar Cambios';
+            });
     }
 </script>
 
