@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -90,21 +91,21 @@ public class TrabajoController {
         // HU-11: Lógica de comparación de fechas para alertas visuales
         java.time.LocalDateTime ahora = java.time.LocalDateTime.now();
         java.time.LocalDateTime en24Horas = ahora.plusHours(24);
-        
+
         // Identificar tareas vencidas (fechaFinal < ahora && !completada)
         List<Long> tareasVencidas = tareas.stream()
-                .filter(t -> !t.getIsCompletada() && 
-                           t.getFechaFinal() != null && 
-                           t.getFechaFinal().isBefore(ahora))
+                .filter(t -> !t.getIsCompletada() &&
+                        t.getFechaFinal() != null &&
+                        t.getFechaFinal().isBefore(ahora))
                 .map(Tarea::getId)
                 .toList();
-        
+
         // Identificar tareas que vencen pronto (fechaFinal entre ahora y ahora+24h && !completada)
         List<Long> tareasVencenPronto = tareas.stream()
-                .filter(t -> !t.getIsCompletada() && 
-                           t.getFechaFinal() != null && 
-                           t.getFechaFinal().isAfter(ahora) &&
-                           t.getFechaFinal().isBefore(en24Horas))
+                .filter(t -> !t.getIsCompletada() &&
+                        t.getFechaFinal() != null &&
+                        t.getFechaFinal().isAfter(ahora) &&
+                        t.getFechaFinal().isBefore(en24Horas))
                 .map(Tarea::getId)
                 .toList();
 
@@ -130,6 +131,27 @@ public class TrabajoController {
     public String eliminar (@PathVariable long id) {
         customTrabajoDetailsService.eliminar(id);
         return "redirect:/trabajos";
+    }
+
+    /**
+     * Eliminar un colaborador de un trabajo.
+     * Solo accesible desde la vista para líderes (la restricción visual está en detalle.html).
+     * Se puede agregar validación de rol en el servicio para mayor seguridad.
+     */
+    @PostMapping("/{id}/eliminarColaborador")
+    public String eliminarColaborador(@PathVariable long id,
+                                      @RequestParam Long userId,
+                                      @AuthenticationPrincipal UserDetails currentUser,
+                                      RedirectAttributes redirectAttributes) {
+        try {
+            customTrabajoDetailsService.eliminarColaborador(id, userId, currentUser.getUsername());
+            redirectAttributes.addFlashAttribute("success", "Colaborador eliminado correctamente.");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "No se pudo eliminar al colaborador.");
+        }
+        return "redirect:/trabajos/" + id;
     }
 
     @GetMapping("/CrearTarea")
@@ -190,7 +212,7 @@ public class TrabajoController {
 
                 // Obtener el rol real desde la entidad ColaboradorTrabajo
                 String rol = colaborador.getRol().name(); // LIDER, EDITOR, o COLABORADOR
-                
+
                 Map<String, Object> miembro = new HashMap<>();
                 miembro.put("id", user.getId());
                 miembro.put("username", user.getUsername());
