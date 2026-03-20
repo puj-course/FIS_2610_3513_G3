@@ -52,6 +52,10 @@
         .rol-row .username { font-weight: 600; font-size: 0.85rem; min-width: 130px; }
         .rol-select { padding: 5px 8px; border: 1px solid #e5e5e5; border-radius: 5px; font-size: 0.82rem; background: #fff; }
         .rol-select:focus { outline: none; border-color: #f4a535; }
+        .rol-badge { padding: 5px 10px; border-radius: 5px; font-size: 0.82rem; font-weight: 600; background: #f0f0f0; color: #555; border: 1px solid #e5e5e5; }
+        .rol-badge.lider { background: linear-gradient(135deg, #f4a535, #e67e22); color: white; border-color: #e67e22; }
+        .rol-badge.editor { background: #eaf4fb; color: #2980b9; border-color: #bde0f5; }
+        .rol-badge.colaborador { background: #f0f0f0; color: #555; }
 
         .btn-primary  { padding: 7px 14px; background: #f4a535; color: #fff; border: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; }
         .btn-primary:hover { background: #e0932b; }
@@ -61,6 +65,8 @@
         .btn-danger:hover { background: #c0392b; }
         .btn-sm-save  { padding: 5px 10px; background: #f4a535; color: white; border: none; border-radius: 4px; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
         .btn-sm-save:hover { background: #e0932b; }
+        .btn-sm-danger { padding: 5px 10px; background: #e74c3c; color: white; border: none; border-radius: 4px; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+        .btn-sm-danger:hover { background: #c0392b; }
 
         .card-actions { display: flex; gap: 10px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid #f0f0f0; margin-top: 4px; }
 
@@ -78,7 +84,7 @@
         .badge-alta      { background: #f8d7da; color: #721c24; }
         .badge-pendiente { background: #cce5ff; color: #004085; }
         .badge-completada{ background: #d4edda; color: #155724; }
-        
+
         /* HU-11: Badges de alerta visual */
         .badge-vencida   { background: #dc3545; color: white; margin-top: 4px; display: inline-block; }
         .badge-pronto    { background: #ffc107; color: #000; margin-top: 4px; display: inline-block; }
@@ -100,6 +106,29 @@
 
         .alert-success { background:#d4edda; color:#155724; border:1px solid #c3e6cb; border-radius:6px; padding:12px 16px; margin-bottom:16px; font-size:0.85rem; }
         .alert-error   { background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; border-radius:6px; padding:12px 16px; margin-bottom:16px; font-size:0.85rem; }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 28px; right: 28px; padding: 12px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; color: #fff; box-shadow: 0 4px 16px rgba(0,0,0,0.15); opacity: 0; transform: translateY(12px); transition: opacity 0.25s, transform 0.25s; z-index: 2000; pointer-events: none; }
+        .toast.show { opacity: 1; transform: none; }
+        .toast.toast-success { background: #27ae60; }
+        .toast.toast-error   { background: #e74c3c; }
+
+        .eliminar-col-form { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .eliminar-col-select { padding: 7px 12px; border: 1px solid #e5e5e5; border-radius: 6px; font-size: 0.85rem; flex: 1; min-width: 180px; outline: none; background: #fff; }
+        .eliminar-col-select:focus { border-color: #e74c3c; }
+
+        /* Modal de confirmación */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: #fff; border-radius: 10px; padding: 28px 28px 22px; max-width: 400px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,0.18); animation: modalIn 0.18s ease; }
+        @keyframes modalIn { from { transform: translateY(-18px); opacity: 0; } to { transform: none; opacity: 1; } }
+        .modal-box h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; color: #222; }
+        .modal-box p { font-size: 0.85rem; color: #666; margin-bottom: 22px; line-height: 1.5; }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+        .btn-modal-cancel { padding: 7px 16px; background: #f0f0f0; color: #555; border: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+        .btn-modal-cancel:hover { background: #e0e0e0; }
+        .btn-modal-confirm { padding: 7px 16px; background: #e74c3c; color: #fff; border: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+        .btn-modal-confirm:hover { background: #c0392b; }
     </style>
 </head>
 <body>
@@ -120,186 +149,275 @@
     <div class="alert-success" th:if="${success}"   th:text="${success}"></div>
     <div class="alert-error"   th:if="${error}"     th:text="${error}"></div>
 
-    <!-- INFO DEL TRABAJO -->
-    <div class="card">
-        <div class="work-title" th:text="${trabajo.nombreTrabajo}">Nombre</div>
-        <div class="work-desc" th:if="${trabajo.descripcion}" th:text="${trabajo.descripcion}"></div>
+    <!-- Determinar si el usuario actual es LIDER (para control de visibilidad) -->
+    <!-- Se usa una variable Thymeleaf: esLider = true si el usuario logueado tiene rol LIDER en este trabajo -->
+    <th:block th:with="esLider=${miembros != null and #lists.contains(miembros.![rol.name()], 'LIDER') and miembros.?[rol.name() == 'LIDER' and username == #authentication.name] != null and not miembros.?[rol.name() == 'LIDER' and username == #authentication.name].isEmpty()}">
 
-        <div class="info-row">
+        <!-- INFO DEL TRABAJO -->
+        <div class="card">
+            <div class="work-title" th:text="${trabajo.nombreTrabajo}">Nombre</div>
+            <div class="work-desc" th:if="${trabajo.descripcion}" th:text="${trabajo.descripcion}"></div>
+
+            <div class="info-row">
             <span th:if="${trabajo.fechaInicio}">
                 📅 Inicio: <strong th:text="${#temporals.format(trabajo.fechaInicio, 'dd/MM/yyyy')}"></strong>
             </span>
-            <span th:if="${trabajo.fechaEntrega}">
+                <span th:if="${trabajo.fechaEntrega}">
                 ⏰ Entrega: <strong th:text="${#temporals.format(trabajo.fechaEntrega, 'dd/MM/yyyy')}"></strong>
             </span>
-            <span>👥 Integrantes: <strong th:text="${#sets.size(trabajo.colaboradores)}">0</strong></span>
-            <span>📋 Tareas: <strong th:text="${#sets.size(trabajo.tareas)}">0</strong></span>
-        </div>
+                <span>👥 Integrantes: <strong th:text="${#sets.size(trabajo.colaboradores)}">0</strong></span>
+                <span>📋 Tareas: <strong th:text="${#sets.size(trabajo.tareas)}">0</strong></span>
+            </div>
 
-        <!-- ESTADÍSTICAS -->
-        <div class="stats-row">
-            <div class="stat-box">
-                <div class="num green" th:text="${completadas}">0</div>
-                <div class="lbl">Completadas</div>
+            <!-- ESTADÍSTICAS -->
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="num green" th:text="${completadas}">0</div>
+                    <div class="lbl">Completadas</div>
+                </div>
+                <div class="stat-box">
+                    <div class="num blue" th:text="${enProgreso}">0</div>
+                    <div class="lbl">En progreso</div>
+                </div>
+                <div class="stat-box">
+                    <div class="num orange" th:text="${pendientes}">0</div>
+                    <div class="lbl">Pendientes</div>
+                </div>
             </div>
-            <div class="stat-box">
-                <div class="num blue" th:text="${enProgreso}">0</div>
-                <div class="lbl">En progreso</div>
-            </div>
-            <div class="stat-box">
-                <div class="num orange" th:text="${pendientes}">0</div>
-                <div class="lbl">Pendientes</div>
-            </div>
-        </div>
 
-        <!-- PROGRESO -->
-        <div class="progress-wrap">
-            <div class="progress-top">
-                <span>Progreso general</span>
-                <span th:text="${progreso} + '%'">0%</span>
+            <!-- PROGRESO -->
+            <div class="progress-wrap">
+                <div class="progress-top">
+                    <span>Progreso general</span>
+                    <span th:text="${progreso} + '%'">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" th:style="'width:' + ${progreso} + '%'"></div>
+                </div>
             </div>
-            <div class="progress-bar">
-                <div class="progress-fill" th:style="'width:' + ${progreso} + '%'"></div>
-            </div>
-        </div>
 
-        <!-- COLABORADORES -->
-        <div th:if="${not #sets.isEmpty(trabajo.colaboradores)}" style="margin-bottom:16px;">
-            <div class="section-label">Colaboradores</div>
-            <div class="colabs">
+            <!-- COLABORADORES -->
+            <div th:if="${not #sets.isEmpty(trabajo.colaboradores)}" style="margin-bottom:16px;">
+                <div class="section-label">Colaboradores</div>
+                <div class="colabs">
                 <span class="colab-tag"
                       th:each="col : ${trabajo.colaboradores}"
                       th:classappend="${col.rol.name() == 'LIDER'} ? 'lider' : ''"
                       th:text="${col.user.username}">
                 </span>
-            </div>
-        </div>
-
-        <!-- GESTIÓN DE ROLES -->
-        <div th:if="${not #lists.isEmpty(miembros)}" style="margin-bottom:16px;">
-            <div class="section-label">Gestión de roles</div>
-            <div class="roles-list">
-                <div class="rol-row" th:each="miembro : ${miembros}">
-                    <span class="username" th:text="${miembro.username}">usuario</span>
-                    <select th:id="'rol-' + ${miembro.userId}" class="rol-select">
-                        <option value="LIDER"       th:selected="${miembro.rol.name() == 'LIDER'}">★ Líder</option>
-                        <option value="EDITOR"      th:selected="${miembro.rol.name() == 'EDITOR'}">✏️ Editor</option>
-                        <option value="COLABORADOR" th:selected="${miembro.rol.name() == 'COLABORADOR'}">👤 Colaborador</option>
-                    </select>
-                    <button type="button" class="btn-sm-save"
-                            th:onclick="'guardarRol(' + ${miembro.userId} + ', ' + ${trabajo.id} + ')'">
-                        Guardar
-                    </button>
                 </div>
             </div>
+
+            <!-- GESTIÓN DE ROLES -->
+            <div th:if="${not #lists.isEmpty(miembros)}" style="margin-bottom:16px;">
+                <div class="section-label">Gestión de roles</div>
+                <div class="roles-list">
+                    <!-- Si es LIDER: puede modificar roles -->
+                    <th:block th:if="${esLider}">
+                        <div class="rol-row" th:each="miembro : ${miembros}">
+                            <span class="username" th:text="${miembro.username}">usuario</span>
+                            <select th:id="'rol-' + ${miembro.userId}" class="rol-select">
+                                <option value="LIDER"       th:selected="${miembro.rol.name() == 'LIDER'}">★ Líder</option>
+                                <option value="EDITOR"      th:selected="${miembro.rol.name() == 'EDITOR'}">✏️ Editor</option>
+                                <option value="COLABORADOR" th:selected="${miembro.rol.name() == 'COLABORADOR'}">👤 Colaborador</option>
+                            </select>
+                            <button type="button" class="btn-sm-save"
+                                    th:onclick="'guardarRol(' + ${miembro.userId} + ', ' + ${trabajo.id} + ')'">
+                                Guardar
+                            </button>
+                        </div>
+                    </th:block>
+                    <!-- Si NO es LIDER: solo visualiza los roles -->
+                    <th:block th:unless="${esLider}">
+                        <div class="rol-row" th:each="miembro : ${miembros}">
+                            <span class="username" th:text="${miembro.username}">usuario</span>
+                            <span class="rol-badge"
+                                  th:classappend="${miembro.rol.name() == 'LIDER'} ? 'lider' : (${miembro.rol.name() == 'EDITOR'} ? 'editor' : 'colaborador')"
+                                  th:text="${miembro.rol.name() == 'LIDER'} ? '★ Líder' : (${miembro.rol.name() == 'EDITOR'} ? '✏️ Editor' : '👤 Colaborador')">
+                        </span>
+                        </div>
+                    </th:block>
+                </div>
+            </div>
+
+            <!-- INVITAR (solo LIDER) -->
+            <div th:if="${esLider}" style="margin-bottom:16px;">
+                <div class="section-label">Invitar colaborador</div>
+                <form th:action="@{/trabajos/{id}/invitar(id=${trabajo.id})}" method="post" class="inv-form">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <input type="text" name="destinatario" class="inv-input" placeholder="Nombre de usuario..."/>
+                    <button type="submit" class="btn-primary">Invitar</button>
+                </form>
+            </div>
+
+            <!-- ELIMINAR COLABORADOR (solo LIDER) -->
+            <div th:if="${esLider and not #sets.isEmpty(trabajo.colaboradores)}" style="margin-bottom:16px;">
+                <div class="section-label">Eliminar colaborador</div>
+                <form id="formEliminarColaborador"
+                      th:action="@{/trabajos/{id}/eliminarColaborador(id=${trabajo.id})}" method="post"
+                      class="eliminar-col-form">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <select name="userId" id="selectEliminarCol" class="eliminar-col-select" required>
+                        <option value="">Seleccionar colaborador...</option>
+                        <option th:each="col : ${trabajo.colaboradores}"
+                                th:unless="${col.user.username == #authentication.name}"
+                                th:value="${col.user.id}"
+                                th:text="${col.user.username} + ' (' + (${col.rol.name() == 'LIDER'} ? 'Líder' : (${col.rol.name() == 'EDITOR'} ? 'Editor' : 'Colaborador')) + ')'">
+                        </option>
+                    </select>
+                    <button type="button" class="btn-sm-danger" onclick="abrirConfirmEliminar()">Eliminar</button>
+                </form>
+            </div>
+
+            <!-- Modal confirmación eliminar colaborador -->
+            <div id="modalConfirmEliminar" class="modal-overlay">
+                <div class="modal-box">
+                    <h3>⚠️ Eliminar colaborador</h3>
+                    <p id="modalConfirmTexto">¿Estás seguro de que deseas eliminar a este colaborador del trabajo? Esta acción no se puede deshacer.</p>
+                    <div class="modal-actions">
+                        <button class="btn-modal-cancel" onclick="cerrarConfirmEliminar()">Cancelar</button>
+                        <button class="btn-modal-confirm" onclick="confirmarEliminar()">Sí, eliminar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACCIONES -->
+            <div class="card-actions">
+                <a th:href="@{/trabajos/{trabajoId}/tareas/CrearTarea(trabajoId=${trabajo.id})}" class="btn-primary">+ Nueva tarea</a>
+                <!-- Eliminar trabajo solo para LIDER -->
+                <form th:if="${esLider}"
+                      th:action="@{/trabajos/{id}/eliminar(id=${trabajo.id})}" method="post" style="margin:0"
+                      onsubmit="return confirm('¿Eliminar este trabajo y todas sus tareas?')">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button type="submit" class="btn-danger">Eliminar trabajo</button>
+                </form>
+            </div>
         </div>
 
-        <!-- INVITAR -->
-        <div style="margin-bottom:16px;">
-            <div class="section-label">Invitar colaborador</div>
-            <form th:action="@{/trabajos/{id}/invitar(id=${trabajo.id})}" method="post" class="inv-form">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                <input type="text" name="destinatario" class="inv-input" placeholder="Nombre de usuario..."/>
-                <button type="submit" class="btn-primary">Invitar</button>
-            </form>
-        </div>
+        <!-- TAREAS -->
+        <div class="section-label">Tareas</div>
 
-        <!-- ACCIONES -->
-        <div class="card-actions">
-            <a th:href="@{/trabajos/{trabajoId}/tareas/CrearTarea(trabajoId=${trabajo.id})}" class="btn-primary">+ Nueva tarea</a>
-            <form th:action="@{/trabajos/{id}/eliminar(id=${trabajo.id})}" method="post" style="margin:0"
-                  onsubmit="return confirm('¿Eliminar este trabajo y todas sus tareas?')">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                <button type="submit" class="btn-danger">Eliminar trabajo</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- TAREAS -->
-    <div class="section-label">Tareas</div>
-
-    <div class="table-wrap" th:if="${not #sets.isEmpty(trabajo.tareas)}">
-        <table>
-            <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Dificultad</th>
-                <th>Fecha límite</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="tarea : ${tareas}">
-                <td>
-                    <div style="font-weight:600;" th:text="${tarea.nombre}">Nombre</div>
-                    <div th:if="${tarea.descripcion}" th:text="${tarea.descripcion}"
-                         style="font-size:0.75rem; color:#888; margin-top:2px;"></div>
-                </td>
-                <td>
+        <div class="table-wrap" th:if="${not #sets.isEmpty(trabajo.tareas)}">
+            <table>
+                <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Dificultad</th>
+                    <th>Fecha límite</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="tarea : ${tareas}">
+                    <td>
+                        <div style="font-weight:600;" th:text="${tarea.nombre}">Nombre</div>
+                        <div th:if="${tarea.descripcion}" th:text="${tarea.descripcion}"
+                             style="font-size:0.75rem; color:#888; margin-top:2px;"></div>
+                    </td>
+                    <td>
                     <span class="badge"
                           th:classappend="${tarea.dificultad != null and tarea.dificultad.name() == 'SIMPLE'} ? 'badge-simple' : (${tarea.dificultad != null and tarea.dificultad.name() == 'ALTA'} ? 'badge-alta' : 'badge-media')"
                           th:text="${tarea.dificultad != null} ? ${tarea.dificultad.name()} : 'MEDIA'">
                     </span>
-                </td>
-                <td>
-                    <div th:text="${tarea.fechaFinal != null} ? ${#temporals.format(tarea.fechaFinal, 'dd/MM/yyyy')} : '—'">—</div>
-                    <!-- HU-11: Badges de alerta visual -->
-                    <span class="badge badge-vencida" 
-                          th:if="${tareasVencidas != null and #lists.contains(tareasVencidas, tarea.id)}">
+                    </td>
+                    <td>
+                        <div th:text="${tarea.fechaFinal != null} ? ${#temporals.format(tarea.fechaFinal, 'dd/MM/yyyy')} : '—'">—</div>
+                        <!-- HU-11: Badges de alerta visual -->
+                        <span class="badge badge-vencida"
+                              th:if="${tareasVencidas != null and #lists.contains(tareasVencidas, tarea.id)}">
                         🔴 Vencida
                     </span>
-                    <span class="badge badge-pronto" 
-                          th:if="${tareasVencenPronto != null and #lists.contains(tareasVencenPronto, tarea.id)}">
+                        <span class="badge badge-pronto"
+                              th:if="${tareasVencenPronto != null and #lists.contains(tareasVencenPronto, tarea.id)}">
                         ⚠️ Vence pronto
                     </span>
-                </td>
-                <td>
+                    </td>
+                    <td>
                     <span class="badge"
                           th:classappend="${tarea.isCompletada} ? 'badge-completada' : 'badge-pendiente'"
                           th:text="${tarea.isCompletada} ? 'Completada' : 'Pendiente'">
                     </span>
-                </td>
-                <td>
-                    <div class="tarea-actions">
-                        <form th:action="@{/trabajos/{wId}/tareas/{tId}/completar(wId=${trabajo.id}, tId=${tarea.id})}"
-                              method="post" style="margin:0">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                            <button type="submit"
-                                    th:class="${tarea.isCompletada} ? 'btn-deshacer' : 'btn-completar'"
-                                    th:text="${tarea.isCompletada} ? 'Deshacer' : 'Completar'">
-                            </button>
-                        </form>
-                        <form th:action="@{/trabajos/{wId}/tareas/{tId}/eliminar(wId=${trabajo.id}, tId=${tarea.id})}"
-                              method="post" style="margin:0"
-                              onsubmit="return confirm('¿Eliminar esta tarea?')">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                            <button type="submit" class="btn-eliminar">Eliminar</button>
-                        </form>
-                    </div>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
+                    </td>
+                    <td>
+                        <div class="tarea-actions">
+                            <form th:action="@{/trabajos/{wId}/tareas/{tId}/completar(wId=${trabajo.id}, tId=${tarea.id})}"
+                                  method="post" style="margin:0">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <button type="submit"
+                                        th:class="${tarea.isCompletada} ? 'btn-deshacer' : 'btn-completar'"
+                                        th:text="${tarea.isCompletada} ? 'Deshacer' : 'Completar'">
+                                </button>
+                            </form>
+                            <form th:action="@{/trabajos/{wId}/tareas/{tId}/eliminar(wId=${trabajo.id}, tId=${tarea.id})}"
+                                  method="post" style="margin:0"
+                                  onsubmit="return confirm('¿Eliminar esta tarea?')">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <button type="submit" class="btn-eliminar">Eliminar</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
 
-    <!-- SIN TAREAS -->
-    <div class="empty" th:if="${#sets.isEmpty(trabajo.tareas)}">
-        <p>No hay tareas aún.</p>
-        <a th:href="@{/trabajos/{trabajoId}/tareas/CrearTarea(trabajoId=${trabajo.id})}" class="btn-primary">
-            + Agregar primera tarea
-        </a>
-    </div>
+        <!-- SIN TAREAS -->
+        <div class="empty" th:if="${#sets.isEmpty(trabajo.tareas)}">
+            <p>No hay tareas aún.</p>
+            <a th:href="@{/trabajos/{trabajoId}/tareas/CrearTarea(trabajoId=${trabajo.id})}" class="btn-primary">
+                + Agregar primera tarea
+            </a>
+        </div>
+
+    </th:block>
 
 </div>
 
+<!-- Toast de notificación -->
+<div id="toast" class="toast"></div>
+
 <script>
+    function abrirConfirmEliminar() {
+        const select = document.getElementById('selectEliminarCol');
+        if (!select.value) {
+            select.focus();
+            return;
+        }
+        const nombre = select.options[select.selectedIndex].text;
+        document.getElementById('modalConfirmTexto').textContent =
+            '¿Estás seguro de que deseas eliminar a ' + nombre + ' del trabajo? Esta acción no se puede deshacer.';
+        document.getElementById('modalConfirmEliminar').classList.add('active');
+    }
+
+    function cerrarConfirmEliminar() {
+        document.getElementById('modalConfirmEliminar').classList.remove('active');
+    }
+
+    function confirmarEliminar() {
+        document.getElementById('formEliminarColaborador').submit();
+    }
+
+    // Cerrar modal al hacer clic fuera
+    document.getElementById('modalConfirmEliminar').addEventListener('click', function(e) {
+        if (e.target === this) cerrarConfirmEliminar();
+    });
+
     function obtenerTokenCSRF() {
         return document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || '';
     }
     function obtenerHeaderCSRF() {
         return document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') || 'X-CSRF-TOKEN';
     }
+
+    function showToast(mensaje, tipo = 'success') {
+        const toast = document.getElementById('toast');
+        toast.textContent = (tipo === 'success' ? '✓ ' : '✕ ') + mensaje;
+        toast.className = 'toast toast-' + tipo + ' show';
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
     async function guardarRol(usuarioId, trabajoId) {
         const select = document.getElementById('rol-' + usuarioId);
         const nuevoRol = select.value;
@@ -314,32 +432,32 @@
             });
             const data = await response.json();
             if (response.ok) {
-                alert('Rol actualizado correctamente');
-                location.reload();
+                showToast('Rol actualizado correctamente', 'success');
+                setTimeout(() => location.reload(), 1200);
             } else {
-                alert('Error: ' + (data.error || 'No se pudo actualizar el rol'));
+                showToast('Error: ' + (data.error || 'No se pudo actualizar el rol'), 'error');
             }
         } catch (e) {
-            alert('Error al actualizar el rol');
+            showToast('Error al actualizar el rol', 'error');
         }
     }
-    
+
     // HU-11: Ocultar badges de alerta al completar una tarea sin recargar
     document.addEventListener('DOMContentLoaded', function() {
         const formsCompletar = document.querySelectorAll('form[action*="/completar"]');
-        
+
         formsCompletar.forEach(form => {
             form.addEventListener('submit', function(e) {
                 const boton = form.querySelector('button[type="submit"]');
                 const textoBoton = boton.textContent.trim();
-                
+
                 // Solo aplicar lógica cuando se está completando (no cuando se deshace)
                 if (textoBoton === 'Completar') {
                     e.preventDefault();
-                    
+
                     // Encontrar la fila de la tarea
                     const fila = form.closest('tr');
-                    
+
                     // Enviar el formulario usando fetch
                     fetch(form.action, {
                         method: 'POST',
@@ -348,37 +466,37 @@
                         },
                         body: new URLSearchParams(new FormData(form))
                     })
-                    .then(response => {
-                        if (response.ok) {
-                            // Actualizar UI sin recargar
-                            // 1. Cambiar badge de estado
-                            const badgeEstado = fila.querySelector('.badge-pendiente, .badge-completada');
-                            if (badgeEstado) {
-                                badgeEstado.className = 'badge badge-completada';
-                                badgeEstado.textContent = 'Completada';
+                        .then(response => {
+                            if (response.ok) {
+                                // Actualizar UI sin recargar
+                                // 1. Cambiar badge de estado
+                                const badgeEstado = fila.querySelector('.badge-pendiente, .badge-completada');
+                                if (badgeEstado) {
+                                    badgeEstado.className = 'badge badge-completada';
+                                    badgeEstado.textContent = 'Completada';
+                                }
+
+                                // 2. Ocultar badges de alerta (VENCIDA / VENCE PRONTO)
+                                const badgesAlerta = fila.querySelectorAll('.badge-vencida, .badge-pronto');
+                                badgesAlerta.forEach(badge => {
+                                    badge.style.display = 'none';
+                                });
+
+                                // 3. Cambiar botón a "Deshacer"
+                                boton.className = 'btn-deshacer';
+                                boton.textContent = 'Deshacer';
+
+                                // Después de actualizar UI, recargar para actualizar progreso
+                                setTimeout(() => {
+                                    window.location.reload();
+                                }, 500);
                             }
-                            
-                            // 2. Ocultar badges de alerta (VENCIDA / VENCE PRONTO)
-                            const badgesAlerta = fila.querySelectorAll('.badge-vencida, .badge-pronto');
-                            badgesAlerta.forEach(badge => {
-                                badge.style.display = 'none';
-                            });
-                            
-                            // 3. Cambiar botón a "Deshacer"
-                            boton.className = 'btn-deshacer';
-                            boton.textContent = 'Deshacer';
-                            
-                            // Después de actualizar UI, recargar para actualizar progreso
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 500);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        // Si hay error, recargar normalmente
-                        form.submit();
-                    });
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            // Si hay error, recargar normalmente
+                            form.submit();
+                        });
                 }
             });
         });
