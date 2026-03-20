@@ -260,6 +260,7 @@
                     <select name="userId" id="selectEliminarCol" class="eliminar-col-select" required>
                         <option value="">Seleccionar colaborador...</option>
                         <option th:each="col : ${trabajo.colaboradores}"
+                                th:unless="${col.user.username == #authentication.name}"
                                 th:value="${col.user.id}"
                                 th:text="${col.user.username} + ' (' + (${col.rol.name() == 'LIDER'} ? 'Líder' : (${col.rol.name() == 'EDITOR'} ? 'Editor' : 'Colaborador')) + ')'">
                         </option>
