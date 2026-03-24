@@ -65,7 +65,9 @@ public class TrabajoController {
     public String detalle(@PathVariable long id, Model model,  @AuthenticationPrincipal UserDetails user) {
         // Verificar si el usuario actual es LIDER
         boolean esLider = customTrabajoDetailsService.esLider(id, user.getUsername());
+        boolean puedeGestionar = customTrabajoDetailsService.puedeEditarTarea(id, user.getUsername());
         model.addAttribute("esLider", esLider);
+        model.addAttribute("puedeGestionar", puedeGestionar);
         Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
         List<Tarea> tareas = customTareaDetailsService.tareas(id);
 
