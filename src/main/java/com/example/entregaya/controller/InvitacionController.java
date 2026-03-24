@@ -21,7 +21,7 @@ public class InvitacionController {
         try {
             customInvitacionDetailsService.enviarInvitacion(trabajoId, user.getUsername(), destinatario);
             redirectAttributes.addFlashAttribute("succesInv", "Invitacion enviada a "+ destinatario);
-        }catch (IllegalArgumentException e){
+        }catch (Exception e){
             redirectAttributes.addFlashAttribute("errorInv",e.getMessage());
         }
         return "redirect:/trabajos/"+trabajoId;
@@ -49,5 +49,21 @@ public class InvitacionController {
             redirectAttributes.addFlashAttribute("error",e.getMessage());
         }
         return "redirect:/dashboard";
+    }
+    @PostMapping("/invitaciones/{id}/cancelar")
+    public String cancelar(@PathVariable Long id,
+                           @AuthenticationPrincipal UserDetails user,
+                           RedirectAttributes redirectAttributes) {
+        try {
+            Long trabajoId = customInvitacionDetailsService.cancelar(id, user.getUsername());
+            redirectAttributes.addFlashAttribute("succesInv", "Invitación cancelada correctamente");
+            return "redirect:/trabajos/" + trabajoId;
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorInv", e.getMessage());
+            return "redirect:/trabajos";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorInv", e.getMessage());
+            return "redirect:/trabajos";
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.entregaya.service;
 
+import com.example.entregaya.model.ColaboradorTrabajo;
 import com.example.entregaya.model.Invitacion;
 import com.example.entregaya.model.Trabajo;
 import com.example.entregaya.model.User;
@@ -28,7 +29,7 @@ public class CustomInvitacionDetailsService {
         User remitente = userRepository.findByUsername(remitenteUsername)
                 .orElseThrow(() -> new RuntimeException("Remitente no encontrado"));
         User destinatario = userRepository.findByUsername(destinatarioUsername)
-                .orElseThrow(() -> new RuntimeException("Destinatario no encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Usuario " + destinatarioUsername +" no encontrado"));
 
         boolean colabora = trabajo.getColaboradores().stream()
                 .anyMatch(c -> c.getUser().getUsername().equals(destinatarioUsername));
@@ -67,6 +68,28 @@ public class CustomInvitacionDetailsService {
         Invitacion inv = findAndValidate(invitacionId, username);
         inv.setEstado(Invitacion.Estado.RECHAZADA);
         invitacionRepository.save(inv);
+    }
+
+    public Long cancelar(Long invitacionId, String username) {
+        Invitacion inv = invitacionRepository.findById(invitacionId)
+                .orElseThrow(() -> new RuntimeException("Invitación no encontrada"));
+
+        if (inv.getEstado() != Invitacion.Estado.PENDIENTE) {
+            throw new IllegalArgumentException("Solo se pueden cancelar invitaciones en estado PENDIENTE");
+        }
+
+        boolean puedeGestionar = inv.getTrabajo().getColaboradores().stream()
+                .anyMatch(col -> col.getUser().getUsername().equals(username) &&
+                        (col.getRol() == ColaboradorTrabajo.Rol.LIDER ||
+                                col.getRol() == ColaboradorTrabajo.Rol.EDITOR));
+
+        if (!puedeGestionar) {
+            throw new RuntimeException("No tienes permiso para cancelar esta invitación");
+        }
+
+        Long trabajoId = inv.getTrabajo().getId();
+        invitacionRepository.delete(inv);
+        return trabajoId;
     }
 
     private Invitacion findAndValidate(Long invitacionId, String username) {

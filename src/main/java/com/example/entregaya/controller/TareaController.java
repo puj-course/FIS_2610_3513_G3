@@ -2,10 +2,13 @@ package com.example.entregaya.controller;
 
 import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
+import com.example.entregaya.model.User;
 import com.example.entregaya.repository.TareaRepository;
 import com.example.entregaya.service.CustomInvitacionDetailsService;
 import com.example.entregaya.service.CustomTareaDetailsService;
 import com.example.entregaya.service.CustomTrabajoDetailsService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -34,9 +37,10 @@ public class TareaController {
         model.addAttribute("colaboradores", trabajo.getColaboradores());
         return "trabajos/tareas/CrearTarea";
     }
+
     @PostMapping("/nueva")
-    public String guardar(@PathVariable long trabajoId, @ModelAttribute Tarea tarea, @RequestParam(value= "responsableIds",required = false) List<Long> responsableIds) {
-        customTareaDetailsService.crearTarea(tarea, trabajoId,responsableIds);
+    public String guardar(@PathVariable long trabajoId, @ModelAttribute Tarea tarea, @RequestParam(value = "responsableIds", required = false) List<Long> responsableIds) {
+        customTareaDetailsService.crearTarea(tarea, trabajoId, responsableIds);
         return "redirect:/trabajos/" + trabajoId;
     }
 
@@ -45,6 +49,7 @@ public class TareaController {
         customTareaDetailsService.eliminar(tareaId);
         return "redirect:/trabajos/" + trabajoId;
     }
+
     @PostMapping("/{tareaId}/completar")
     public String completar(@PathVariable Long trabajoId, @PathVariable Long tareaId) {
         customTareaDetailsService.toggleCompletada(tareaId);
@@ -52,8 +57,44 @@ public class TareaController {
     }
 
     @PostMapping("/{tareaId}/asignar")
-    public String asignarResponsables(@PathVariable Long trabajoId, @PathVariable Long tareaId, @RequestParam(value="responsableIds",required = false) List<Long> responsableIds) {
-        customTareaDetailsService.actualizarResponsables(tareaId,responsableIds);
+    public String asignarResponsables(@PathVariable Long trabajoId, @PathVariable Long tareaId, @RequestParam(value = "responsableIds", required = false) List<Long> responsableIds) {
+        customTareaDetailsService.actualizarResponsables(tareaId, responsableIds);
         return "redirect:/trabajos/" + trabajoId;
     }
+
+    @GetMapping("/{tareaId}/editar")
+    public String formularioEditar(@PathVariable long trabajoId, @PathVariable Long tareaId,
+                                   Model model, @AuthenticationPrincipal UserDetails user) {
+        // Verificar que el usuario tenga permiso (LIDER o EDITOR)
+        if (!customTrabajoDetailsService.puedeEditarTarea(trabajoId, user.getUsername())) {
+            return "redirect:/trabajos/" + trabajoId + "?error=noPermiso";
+        }
+
+        Tarea tarea = customTareaDetailsService.findById(tareaId);
+        Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(trabajoId);
+
+        model.addAttribute("tarea", tarea);
+        model.addAttribute("trabajoId", trabajoId);
+        model.addAttribute("dificultades", Tarea.Dificultad.values());
+        model.addAttribute("colaboradores", trabajo.getColaboradores());
+        model.addAttribute("responsablesSeleccionados", tarea.getResponsables().stream()
+                .map(User::getId).toList());
+
+        return "trabajos/tareas/EditarTarea";
+    }
+    @PostMapping("/{tareaId}/editar")
+    public String guardarEdicion(@PathVariable long trabajoId, @PathVariable Long tareaId,
+                                 @ModelAttribute Tarea tarea,
+                                 @RequestParam(value = "responsableIds", required = false) List<Long> responsableIds,
+                                 @AuthenticationPrincipal UserDetails user) {
+
+        // Verificar permisos
+        if (!customTrabajoDetailsService.puedeEditarTarea(trabajoId, user.getUsername())) {
+            return "redirect:/trabajos/" + trabajoId + "?error=noPermiso";
+        }
+
+        customTareaDetailsService.editarTarea(tareaId, tarea, responsableIds);
+        return "redirect:/trabajos/" + trabajoId;
+    }
+
 }

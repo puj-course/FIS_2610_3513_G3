@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,7 +62,12 @@ public class TrabajoController {
     }
 
     @GetMapping("/{id}")
-    public String detalle(@PathVariable long id, Model model) {
+    public String detalle(@PathVariable long id, Model model,  @AuthenticationPrincipal UserDetails user) {
+        // Verificar si el usuario actual es LIDER
+        boolean esLider = customTrabajoDetailsService.esLider(id, user.getUsername());
+        boolean puedeGestionar = customTrabajoDetailsService.puedeEditarTarea(id, user.getUsername());
+        model.addAttribute("esLider", esLider);
+        model.addAttribute("puedeGestionar", puedeGestionar);
         Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
         List<Tarea> tareas = customTareaDetailsService.tareas(id);
 
@@ -87,6 +93,27 @@ public class TrabajoController {
                 .limit(5)
                 .toList();
 
+        // HU-11: Lógica de comparación de fechas para alertas visuales
+        java.time.LocalDateTime ahora = java.time.LocalDateTime.now();
+        java.time.LocalDateTime en24Horas = ahora.plusHours(24);
+
+        // Identificar tareas vencidas (fechaFinal < ahora && !completada)
+        List<Long> tareasVencidas = tareas.stream()
+                .filter(t -> !t.getIsCompletada() &&
+                        t.getFechaFinal() != null &&
+                        t.getFechaFinal().isBefore(ahora))
+                .map(Tarea::getId)
+                .toList();
+
+        // Identificar tareas que vencen pronto (fechaFinal entre ahora y ahora+24h && !completada)
+        List<Long> tareasVencenPronto = tareas.stream()
+                .filter(t -> !t.getIsCompletada() &&
+                        t.getFechaFinal() != null &&
+                        t.getFechaFinal().isAfter(ahora) &&
+                        t.getFechaFinal().isBefore(en24Horas))
+                .map(Tarea::getId)
+                .toList();
+
         // Miembros con roles para mostrar en la vista de detalle
         List<MiembroRolDTO> miembros = customTrabajoDetailsService.consultarMiembros(id);
 
@@ -99,20 +126,37 @@ public class TrabajoController {
         model.addAttribute("proximasEntregas", proximasEntregas);
         model.addAttribute("invitaciones", customInvitacionDetailsService.porTrabajo(id));
         model.addAttribute("miembros", miembros);
+        // HU-11: Agregar listas de alertas al modelo
+        model.addAttribute("tareasVencidas", tareasVencidas);
+        model.addAttribute("tareasVencenPronto", tareasVencenPronto);
         return "trabajos/detalle";
-    }
-
-    @GetMapping("/{id}/miembros")
-    @ResponseBody
-    public ResponseEntity<List<MiembroRolDTO>> miembros(@PathVariable long id) {
-        List<MiembroRolDTO> miembros = customTrabajoDetailsService.consultarMiembros(id);
-        return ResponseEntity.ok(miembros);
     }
 
     @PostMapping("/{id}/eliminar")
     public String eliminar (@PathVariable long id) {
         customTrabajoDetailsService.eliminar(id);
         return "redirect:/trabajos";
+    }
+
+    /**
+     * Eliminar un colaborador de un trabajo.
+     * Solo accesible desde la vista para líderes (la restricción visual está en detalle.html).
+     * Se puede agregar validación de rol en el servicio para mayor seguridad.
+     */
+    @PostMapping("/{id}/eliminarColaborador")
+    public String eliminarColaborador(@PathVariable long id,
+                                      @RequestParam Long userId,
+                                      @AuthenticationPrincipal UserDetails currentUser,
+                                      RedirectAttributes redirectAttributes) {
+        try {
+            customTrabajoDetailsService.eliminarColaborador(id, userId, currentUser.getUsername());
+            redirectAttributes.addFlashAttribute("success", "Colaborador eliminado correctamente.");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "No se pudo eliminar al colaborador.");
+        }
+        return "redirect:/trabajos/" + id;
     }
 
     @GetMapping("/CrearTarea")
@@ -173,7 +217,7 @@ public class TrabajoController {
 
                 // Obtener el rol real desde la entidad ColaboradorTrabajo
                 String rol = colaborador.getRol().name(); // LIDER, EDITOR, o COLABORADOR
-                
+
                 Map<String, Object> miembro = new HashMap<>();
                 miembro.put("id", user.getId());
                 miembro.put("username", user.getUsername());
@@ -204,8 +248,16 @@ public class TrabajoController {
     public ResponseEntity<Map<String, Object>> actualizarRolMiembro(
             @PathVariable Long trabajoId,
             @PathVariable Long userId,
-            @RequestBody Map<String, String> request) {
+            @RequestBody Map<String, String> request,
+            @AuthenticationPrincipal UserDetails user) {
         try {
+            // VALIDACIÓN: Verificar que el usuario autenticado sea LIDER
+            if (!customTrabajoDetailsService.esLider(trabajoId, user.getUsername())) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("error", "Solo los LIDER pueden cambiar los roles de los miembros");
+                return ResponseEntity.status(403).body(errorResponse);
+            }
+
             // Obtener el rol del request
             String rolStr = request.get("rol");
             if (rolStr == null || rolStr.trim().isEmpty()) {
@@ -250,4 +302,5 @@ public class TrabajoController {
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
+
 }
