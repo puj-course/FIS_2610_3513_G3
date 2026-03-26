@@ -155,5 +155,36 @@ public class CustomTrabajoDetailsService {
                 .orElse(false);
     }
 
+    // HU-15: Actualizar un trabajo existente (solo nombre, descripción y fechas)
+    @Transactional
+    public void actualizarTrabajo(Long id, Trabajo trabajoEditado) {
+        // Obtener el trabajo actual
+        Trabajo trabajoExistente = trabajoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("El trabajo no existe"));
+        
+        // Validar que el nombre no esté vacío
+        if (trabajoEditado.getNombreTrabajo() == null || trabajoEditado.getNombreTrabajo().trim().isEmpty()) {
+            throw new IllegalArgumentException("El nombre del trabajo no puede estar vacío");
+        }
+        
+        // Validar que el nombre no esté duplicado (excepto si es el mismo trabajo)
+        String nuevoNombre = trabajoEditado.getNombreTrabajo().trim();
+        if (!trabajoExistente.getNombreTrabajo().equals(nuevoNombre)) {
+            boolean nombreExiste = trabajoRepository.existsByNombreTrabajo(nuevoNombre);
+            if (nombreExiste) {
+                throw new IllegalArgumentException("Ya existe un trabajo con ese nombre");
+            }
+        }
+        
+        // Actualizar solo los campos editables
+        trabajoExistente.setNombreTrabajo(nuevoNombre);
+        trabajoExistente.setDescripcion(trabajoEditado.getDescripcion());
+        trabajoExistente.setFechaInicio(trabajoEditado.getFechaInicio());
+        trabajoExistente.setFechaEntrega(trabajoEditado.getFechaEntrega());
+        
+        // Guardar cambios
+        trabajoRepository.save(trabajoExistente);
+    }
+
 
 }
