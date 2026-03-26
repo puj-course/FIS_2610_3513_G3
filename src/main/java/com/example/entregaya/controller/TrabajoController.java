@@ -61,6 +61,66 @@ public class TrabajoController {
         return "redirect:/trabajos";
     }
 
+    // HU-15: Mostrar formulario de edición (solo LIDER)
+    @GetMapping("/{id}/editar")
+    public String mostrarFormularioEditar(@PathVariable long id, 
+                                          Model model, 
+                                          @AuthenticationPrincipal UserDetails user,
+                                          RedirectAttributes redirectAttributes) {
+        try {
+            // Validar que el usuario sea LIDER del trabajo
+            if (!customTrabajoDetailsService.esLider(id, user.getUsername())) {
+                redirectAttributes.addFlashAttribute("error", "Solo el líder del trabajo puede editarlo.");
+                return "redirect:/trabajos/" + id;
+            }
+            
+            // Obtener el trabajo actual
+            Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
+            model.addAttribute("trabajo", trabajo);
+            return "trabajos/editar";
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "No se pudo cargar el formulario de edición.");
+            return "redirect:/trabajos";
+        }
+    }
+
+    // HU-15: Procesar edición del trabajo (solo LIDER)
+    @PostMapping("/{id}/editar")
+    public String actualizarTrabajo(@PathVariable long id,
+                                   @ModelAttribute Trabajo trabajoEditado,
+                                   @AuthenticationPrincipal UserDetails user,
+                                   RedirectAttributes redirectAttributes) {
+        try {
+            // Validar que el usuario sea LIDER del trabajo
+            if (!customTrabajoDetailsService.esLider(id, user.getUsername())) {
+                redirectAttributes.addFlashAttribute("error", "Solo el líder del trabajo puede editarlo.");
+                return "redirect:/trabajos/" + id;
+            }
+            
+            // Validar que el nombre no esté vacío
+            if (trabajoEditado.getNombreTrabajo() == null || trabajoEditado.getNombreTrabajo().trim().isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "El nombre del trabajo no puede estar vacío.");
+                return "redirect:/trabajos/" + id + "/editar";
+            }
+            
+            // Actualizar el trabajo (incluye validación de nombre único)
+            customTrabajoDetailsService.actualizarTrabajo(id, trabajoEditado);
+            
+            redirectAttributes.addFlashAttribute("success", "Trabajo actualizado correctamente.");
+            return "redirect:/trabajos/" + id;
+            
+        } catch (IllegalArgumentException e) {
+            // Error de validación (nombre duplicado, etc.)
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/trabajos/" + id + "/editar";
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error al actualizar el trabajo.");
+            return "redirect:/trabajos/" + id + "/editar";
+        }
+    }
+
     @GetMapping("/{id}")
     public String detalle(@PathVariable long id, Model model,  @AuthenticationPrincipal UserDetails user) {
         // Verificar si el usuario actual es LIDER
