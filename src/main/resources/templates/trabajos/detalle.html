@@ -76,6 +76,59 @@
 
         .section-title { font-size: 0.7rem; text-transform: uppercase; color: #bbb; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 10px; }
 
+        /* ── Barra de filtros ── */
+        .filtros-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+        }
+        .filtro-search { flex: 1; min-width: 150px; position: relative; }
+        .filtro-search input {
+            width: 100%;
+            padding: 6px 10px 6px 28px;
+            border: 1px solid #e5e5e5;
+            border-radius: 5px;
+            font-size: 0.82rem;
+            outline: none;
+            background: #f9f9f7;
+            color: #333;
+        }
+        .filtro-search input:focus { border-color: #f4a535; background: #fff; }
+        .filtro-search-icon { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #ccc; display: flex; }
+        .filtro-select {
+            padding: 6px 10px;
+            border: 1px solid #e5e5e5;
+            border-radius: 5px;
+            font-size: 0.82rem;
+            background: #f9f9f7;
+            color: #555;
+            outline: none;
+            cursor: pointer;
+        }
+        .filtro-select:focus { border-color: #f4a535; }
+        .filtro-reset {
+            padding: 6px 10px;
+            background: transparent;
+            border: 1px solid #e5e5e5;
+            border-radius: 5px;
+            font-size: 0.78rem;
+            color: #bbb;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .filtro-reset:hover { border-color: #f4a535; color: #f4a535; }
+        .filtro-count { font-size: 0.75rem; color: #bbb; margin-left: auto; white-space: nowrap; }
+
+        /* Fila vacía cuando no hay coincidencias */
+        .tr-sin-resultados { display: none; }
+        .tr-sin-resultados td { text-align: center; padding: 28px 14px; color: #bbb; font-size: 0.85rem; }
+
         .table-wrap { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; overflow: hidden; margin-bottom: 14px; }
         table { width: 100%; border-collapse: collapse; }
         thead { background: #1a1a1a; color: #fff; }
@@ -118,7 +171,6 @@
         /* ── Sidebar colapsable ── */
         .sidebar-wrap { position: relative; flex-shrink: 0; padding-left: 20px; }
 
-        /* Botón toggle flotante */
         .sb-toggle { position: absolute; top: 12px; left: 2px; width: 36px; height: 36px; background: #1a1a1a; border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.2); transition: background 0.15s, transform 0.2s ease; }
         .sb-toggle:hover { background: #2d2d2d; transform: scale(1.08); }
         .sb-toggle:active { transform: scale(0.94); }
@@ -142,7 +194,6 @@
         }
         .sidebar-wrap.collapsed .sidebar { max-width: 0; opacity: 0; pointer-events: none; transform: scaleX(0.9); }
 
-        /* Tab bar */
         .sb-tabs { display: flex; border-bottom: 1px solid rgba(255,255,255,0.07); }
         .sb-tab  { flex: 1; padding: 12px 8px; background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; border-bottom: 2px solid transparent; transition: all 0.15s; color: rgba(255,255,255,0.4); }
         .sb-tab:hover { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.75); }
@@ -150,18 +201,15 @@
         .sb-tab-icon { font-size: 1rem; line-height: 1; }
         .sb-tab-label { font-size: 0.62rem; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
 
-        /* Panels */
         .sb-panel { display: none; }
         .sb-panel.active { display: block; }
 
-        /* Buscador */
         .sb-search { margin: 12px 14px 4px; position: relative; }
         .sb-search input { width: 100%; padding: 6px 10px 6px 30px; border: 1px solid rgba(255,255,255,0.08); border-radius: 5px; font-size: 0.8rem; background: rgba(255,255,255,0.05); outline: none; color: rgba(255,255,255,0.8); box-sizing: border-box; }
         .sb-search input::placeholder { color: rgba(255,255,255,0.2); }
         .sb-search input:focus { border-color: rgba(244,165,53,0.4); background: rgba(255,255,255,0.07); }
         .sb-search-icon { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; pointer-events: none; }
 
-        /* Lista de miembros */
         .sb-group-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; color: rgba(255,255,255,0.22); letter-spacing: .05em; padding: 10px 14px 4px; }
         .sb-member { display: flex; align-items: center; gap: 10px; padding: 7px 14px; cursor: default; transition: background 0.25s ease, border-left-color 0.25s ease, padding-left 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); border-left: 2px solid transparent; }
         .sb-member:hover { background: rgba(255,255,255,0.04); border-left-color: #f4a535; padding-left: 12px; }
@@ -182,7 +230,6 @@
         .info-note { font-size: 0.73rem; color: rgba(255,255,255,0.2); padding: 6px 14px 12px; }
         .sb-divider { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 4px 0; }
 
-        /* Panel invitaciones */
         .inv-form-wrap { padding: 14px; border-bottom: 1px solid rgba(255,255,255,0.07); }
         .inv-form  { display: flex; flex-direction: column; gap: 7px; }
         .inv-input { width: 100%; padding: 7px 10px; border: 1px solid rgba(255,255,255,0.1); border-radius: 5px; font-size: 0.83rem; outline: none; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.8); }
@@ -227,6 +274,8 @@
 
         @media (max-width: 720px) {
             .page { grid-template-columns: 1fr; }
+            .filtros-bar { flex-direction: column; align-items: stretch; }
+            .filtro-count { margin-left: 0; }
         }
     </style>
 </head>
@@ -350,6 +399,36 @@
         <!-- Tareas -->
         <div class="section-title">Tareas</div>
 
+        <!-- ── BARRA DE FILTROS (solo si hay tareas) ── -->
+        <div class="filtros-bar" th:if="${not #sets.isEmpty(trabajo.tareas)}">
+            <div class="filtro-search">
+                <span class="filtro-search-icon">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                        <circle cx="11" cy="11" r="7" stroke="#ccc" stroke-width="2"/>
+                        <path d="M16.5 16.5L21 21" stroke="#ccc" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <input type="text" id="filtroBusqueda" placeholder="Buscar por nombre..." oninput="aplicarFiltros()"/>
+            </div>
+
+            <select id="filtroEstado" class="filtro-select" onchange="aplicarFiltros()">
+                <option value="">Todos los estados</option>
+                <option value="completada">Completada</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="en-progreso">En progreso</option>
+            </select>
+
+            <select id="filtroDificultad" class="filtro-select" onchange="aplicarFiltros()">
+                <option value="">Todas las dificultades</option>
+                <option value="SIMPLE">Simple</option>
+                <option value="MEDIA">Media</option>
+                <option value="ALTA">Alta</option>
+            </select>
+
+            <button class="filtro-reset" onclick="resetFiltros()">✕ Limpiar</button>
+            <span class="filtro-count" id="filtroCount"></span>
+        </div>
+
         <div class="table-wrap" th:if="${not #sets.isEmpty(trabajo.tareas)}">
             <table>
                 <thead>
@@ -361,8 +440,18 @@
                     <th>Acciones</th>
                 </tr>
                 </thead>
-                <tbody>
-                <tr th:each="tarea : ${tareas}">
+                <tbody id="tablaTareas">
+                <!--
+                    data-nombre      → para filtro por texto
+                    data-dificultad  → para filtro por dificultad (SIMPLE / MEDIA / ALTA)
+                    data-completada  → "true" o "false"
+                    data-inicio      → fechaInicio ISO (puede ser vacío) — determina "en progreso"
+                -->
+                <tr th:each="tarea : ${tareas}"
+                    th:attr="data-nombre=${tarea.nombre},
+                             data-dificultad=${tarea.dificultad != null ? tarea.dificultad.name() : 'MEDIA'},
+                             data-completada=${tarea.isCompletada},
+                             data-inicio=${tarea.fechaInicio}">
                     <td>
                         <div style="font-weight:600;" th:text="${tarea.nombre}">Nombre</div>
                         <div th:if="${tarea.descripcion}" th:text="${tarea.descripcion}"
@@ -410,6 +499,16 @@
                                 <button type="submit" class="btn-eliminar">Eliminar</button>
                             </form>
                         </div>
+                    </td>
+                </tr>
+                <!-- Fila vacía: visible por JS cuando ninguna fila pasa los filtros -->
+                <tr class="tr-sin-resultados" id="trSinResultados">
+                    <td colspan="5">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" style="display:block;margin:0 auto 8px;opacity:.3;">
+                            <circle cx="11" cy="11" r="7" stroke="#888" stroke-width="1.8"/>
+                            <path d="M16.5 16.5L21 21" stroke="#888" stroke-width="1.8" stroke-linecap="round"/>
+                        </svg>
+                        No se encontraron tareas con los filtros aplicados.
                     </td>
                 </tr>
                 </tbody>
@@ -520,7 +619,7 @@
 
                 <!-- Eliminar colaborador (solo LIDER) -->
                 <div th:if="${esLider and not #sets.isEmpty(trabajo.colaboradores)}"
-                     style="padding: 10px 14px 14px; border-top: 1px solid #f5f5f5; margin-top: 6px;">
+                     style="padding: 10px 14px 14px; border-top: 1px solid rgba(255,255,255,0.06); margin-top: 6px;">
                     <div class="sb-group-label" style="padding: 0 0 6px;">Eliminar colaborador</div>
                     <form id="formEliminarColaborador"
                           th:action="@{/trabajos/{id}/eliminarColaborador(id=${trabajo.id})}" method="post">
@@ -613,6 +712,63 @@
 <div id="toast" class="toast"></div>
 
 <script>
+    /* ── FILTROS DE TAREAS ── */
+    function aplicarFiltros() {
+        const busqueda    = document.getElementById('filtroBusqueda').value.toLowerCase().trim();
+        const estado      = document.getElementById('filtroEstado').value;
+        const dificultad  = document.getElementById('filtroDificultad').value;
+        const filas       = document.querySelectorAll('#tablaTareas tr[data-nombre]');
+        const ahora       = new Date();
+        let visibles = 0;
+
+        filas.forEach(fila => {
+            const nombre      = (fila.dataset.nombre || '').toLowerCase();
+            const difFila     = fila.dataset.dificultad || '';
+            const completada  = fila.dataset.completada === 'true';
+            const inicioRaw   = fila.dataset.inicio;
+            const fechaInicio = inicioRaw ? new Date(inicioRaw) : null;
+
+            // Determinar estado de la fila
+            let estadoFila;
+            if (completada) {
+                estadoFila = 'completada';
+            } else if (fechaInicio && fechaInicio <= ahora) {
+                estadoFila = 'en-progreso';
+            } else {
+                estadoFila = 'pendiente';
+            }
+
+            const pasaNombre     = !busqueda     || nombre.includes(busqueda);
+            const pasaEstado     = !estado       || estadoFila === estado;
+            const pasaDificultad = !dificultad   || difFila === dificultad;
+
+            const visible = pasaNombre && pasaEstado && pasaDificultad;
+            fila.style.display = visible ? '' : 'none';
+            if (visible) visibles++;
+        });
+
+        // Fila "sin resultados"
+        const sinResultados = document.getElementById('trSinResultados');
+        sinResultados.style.display = visibles === 0 ? '' : 'none';
+
+        // Contador
+        const total = filas.length;
+        const countEl = document.getElementById('filtroCount');
+        if (busqueda || estado || dificultad) {
+            countEl.textContent = visibles + ' de ' + total;
+        } else {
+            countEl.textContent = '';
+        }
+    }
+
+    function resetFiltros() {
+        document.getElementById('filtroBusqueda').value  = '';
+        document.getElementById('filtroEstado').value    = '';
+        document.getElementById('filtroDificultad').value = '';
+        aplicarFiltros();
+    }
+
+    /* ── MODAL ELIMINAR COLABORADOR ── */
     function abrirConfirmEliminar() {
         const select = document.getElementById('selectEliminarCol');
         if (!select || !select.value) { if (select) select.focus(); return; }
@@ -631,6 +787,7 @@
         if (e.target === this) cerrarConfirmEliminar();
     });
 
+    /* ── CSRF / TOAST / ROL ── */
     function obtenerTokenCSRF()  { return document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || ''; }
     function obtenerHeaderCSRF() { return document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') || 'X-CSRF-TOKEN'; }
 
@@ -656,6 +813,7 @@
         } catch (e) { showToast('Error al actualizar el rol', 'error'); }
     }
 
+    /* ── SIDEBAR ── */
     function toggleSidebar() {
         document.getElementById('sidebarWrap').classList.toggle('collapsed');
     }
@@ -676,6 +834,7 @@
         });
     }
 
+    /* ── DOMContentLoaded ── */
     document.addEventListener('DOMContentLoaded', function() {
         /* Completar tarea con UI optimista */
         document.querySelectorAll('form[action*="/completar"]').forEach(form => {
@@ -695,6 +854,8 @@
                         fila.querySelectorAll('.badge-vencida, .badge-pronto').forEach(b => b.style.display = 'none');
                         boton.className = 'btn-deshacer';
                         boton.textContent = 'Deshacer';
+                        // Actualizar data-completada para que el filtro lo reconozca
+                        fila.dataset.completada = 'true';
                         setTimeout(() => location.reload(), 500);
                     }
                 }).catch(() => form.submit());
