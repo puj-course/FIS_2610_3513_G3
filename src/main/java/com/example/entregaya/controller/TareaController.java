@@ -4,6 +4,8 @@ import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
 import com.example.entregaya.model.User;
 import com.example.entregaya.repository.TareaRepository;
+import com.example.entregaya.repository.UserRepository;
+import com.example.entregaya.service.CustomComentarioDetailsService;
 import com.example.entregaya.service.CustomInvitacionDetailsService;
 import com.example.entregaya.service.CustomTareaDetailsService;
 import com.example.entregaya.service.CustomTrabajoDetailsService;
@@ -21,11 +23,19 @@ public class TareaController {
     private final TareaRepository tareaRepository;
     private final CustomTareaDetailsService customTareaDetailsService;
     private final CustomTrabajoDetailsService customTrabajoDetailsService;
+    private final CustomComentarioDetailsService customComentarioDetailsService;
+    private final UserRepository userRepository;
 
-    public TareaController(TareaRepository tareaRepository, CustomTareaDetailsService customTareaDetailsService, CustomTrabajoDetailsService customTrabajoDetailsService) {
+
+    public TareaController(TareaRepository tareaRepository,
+                           CustomTareaDetailsService customTareaDetailsService,
+                           CustomTrabajoDetailsService customTrabajoDetailsService,
+                           CustomComentarioDetailsService customComentarioDetailsService, UserRepository userRepository) {
         this.tareaRepository = tareaRepository;
         this.customTareaDetailsService = customTareaDetailsService;
         this.customTrabajoDetailsService = customTrabajoDetailsService;
+        this.customComentarioDetailsService = customComentarioDetailsService;
+        this.userRepository = userRepository;
     }
 
     @GetMapping("/CrearTarea")
@@ -96,5 +106,34 @@ public class TareaController {
         customTareaDetailsService.editarTarea(tareaId, tarea, responsableIds);
         return "redirect:/trabajos/" + trabajoId;
     }
+
+    @PostMapping("/{tareaId}/comentario")
+    public String agregarComentario(@PathVariable Long trabajoId,
+                                    @PathVariable Long tareaId,
+                                    @RequestParam String contenido,
+                                    @AuthenticationPrincipal UserDetails userDetails) {
+
+        // Obtener el usuario autenticado
+        User usuario = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // Crear el comentario
+        customComentarioDetailsService.crearComentario(tareaId, usuario.getId(), contenido);
+
+        return "redirect:/trabajos/" + trabajoId + "/tareas/" + tareaId + "/detalle";
+    }
+    @GetMapping("/{tareaId}/detalle")
+    public String verDetalleTarea(@PathVariable Long trabajoId,
+                                  @PathVariable Long tareaId,
+                                  Model model) {
+        Tarea tarea = customTareaDetailsService.findById(tareaId);
+
+        model.addAttribute("tarea", tarea);
+        model.addAttribute("trabajoId", trabajoId);
+
+        return "trabajos/tareas/detalle_tarea";
+    }
+
+
 
 }
