@@ -128,4 +128,9 @@ public class CustomUserDetailsService implements UserDetailsService {
         userRepository.save(user);
     }
 
+    //findByUsername de repository, para ser usado en controlador
+    public java.util.Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
+
 }
