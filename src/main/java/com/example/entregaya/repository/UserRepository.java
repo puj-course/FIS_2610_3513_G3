@@ -16,4 +16,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * Utilizado por el servicio de autenticacion.
      */
     Optional<User> findByUsername(String username);
+
+    Optional<User> findByEmail(String email);
+
 }
