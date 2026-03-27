@@ -20,6 +20,9 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column(unique = true)
+    private String email;
+
     // Relación a través de ColaboradorTrabajo
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ColaboradorTrabajo> trabajos = new HashSet<>();
@@ -80,5 +83,13 @@ public class User {
 
     public void setTrabajos(Set<ColaboradorTrabajo> trabajos) {
         this.trabajos = trabajos;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }
