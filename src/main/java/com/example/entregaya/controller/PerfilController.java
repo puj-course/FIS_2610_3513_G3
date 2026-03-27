@@ -57,4 +57,18 @@ public class PerfilController {
         }
         return "redirect:/perfil";
     }
+
+    @PostMapping("/perfil/actualizar-email")
+    public String actualizarEmail(@RequestParam("nuevoEmail") String nuevoEmail,
+                                  @AuthenticationPrincipal UserDetails userDetails,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            userDetailsService.actualizarEmail(userDetails.getUsername(), nuevoEmail);
+            redirectAttributes.addFlashAttribute("successEmail", "Correo actualizado correctamente.");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorEmail", e.getMessage());
+        }
+        return "redirect:/perfil";
+    }
+
 }
