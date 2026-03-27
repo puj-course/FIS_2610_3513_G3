@@ -29,6 +29,7 @@
     <div class="subtitle">Crea tu cuenta para comenzar</div>
 
     <div class="msg-error" th:if="${error}" th:text="${error}"></div>
+    <div style="padding:9px 12px;border-radius:6px;font-size:0.82rem;margin-bottom:14px;background:#f0fff4;color:#1a7a3a;border:1px solid #a8d8b0;" th:if="${success}" th:text="${success}"></div>
 
     <form th:action="@{/register}" method="post">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
@@ -36,6 +37,8 @@
         <input type="text" name="username" placeholder="mi_usuario" required minlength="3"/>
         <label>Contraseña</label>
         <input type="password" name="password" placeholder="Mínimo 6 caracteres" required minlength="6"/>
+        <label>Correo electrónico</label>
+        <input type="email" name="email" placeholder="ejemplo@correo.com" required/>
         <button type="submit" class="btn btn-primary">Registrarme</button>
     </form>
     <div class="divider">¿Ya tienes cuenta?</div>
