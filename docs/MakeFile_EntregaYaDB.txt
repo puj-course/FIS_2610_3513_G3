@@ -81,3 +81,5 @@ CREATE TABLE comentario (
 CREATE INDEX idx_comentario_tarea_id ON comentario(tarea_id);
 CREATE INDEX idx_comentario_user_id ON comentario(user_id);
 
+-- agregar columna para email en usuarios
+ALTER TABLE users ADD COLUMN email VARCHAR(255) UNIQUE;
