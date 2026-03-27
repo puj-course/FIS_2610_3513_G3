@@ -108,4 +108,24 @@ public class CustomUserDetailsService implements UserDetailsService {
         userRepository.save(user);
     }
 
+    // Actualizar email
+    public void actualizarEmail(String username, String nuevoEmail) {
+        if (nuevoEmail == null || nuevoEmail.trim().isEmpty()) {
+            throw new IllegalArgumentException("El correo electrónico no puede estar vacío.");
+        }
+        if (!nuevoEmail.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")) {
+            throw new IllegalArgumentException("El formato del correo electrónico no es válido.");
+        }
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        if (nuevoEmail.equals(user.getEmail())) {
+            throw new IllegalArgumentException("El nuevo correo debe ser diferente al actual.");
+        }
+        if (userRepository.findByEmail(nuevoEmail).isPresent()) {
+            throw new IllegalArgumentException("El correo '" + nuevoEmail + "' ya está en uso.");
+        }
+        user.setEmail(nuevoEmail);
+        userRepository.save(user);
+    }
+
 }
