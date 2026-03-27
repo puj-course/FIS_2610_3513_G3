@@ -58,9 +58,10 @@ public class AuthController {
     @PostMapping("/register")
     public String register(@RequestParam("username") String username,
                            @RequestParam("password") String password,
+                           @RequestParam("email") String email,
                            RedirectAttributes redirectAttributes) {
         try {
-            userDetailsService.register(username, password);
+            userDetailsService.register(username, password, email);
             redirectAttributes.addFlashAttribute("success", "Registro Completado. Inicia sesión");
             return "redirect:/login";
         }catch(IllegalArgumentException il){
