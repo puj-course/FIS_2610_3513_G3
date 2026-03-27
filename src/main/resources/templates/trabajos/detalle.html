@@ -489,6 +489,10 @@
                     </td>
                     <td>
                         <div class="tarea-actions">
+                            <a th:href="@{/trabajos/{wId}/tareas/{tId}/detalle(wId=${trabajo.id}, tId=${tarea.id})}"
+                               class="btn-editar"
+                               style="background: #1abc9c;">👁 Ver</a>
+
                             <a th:href="@{/trabajos/{wId}/tareas/{tId}/editar(wId=${trabajo.id}, tId=${tarea.id})}"
                                class="btn-editar">Editar</a>
                             <form th:action="@{/trabajos/{wId}/tareas/{tId}/completar(wId=${trabajo.id}, tId=${tarea.id})}"

@@ -65,3 +65,19 @@ CREATE TABLE invitacion (
     FOREIGN KEY (destinatario_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (remitente_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+-- Crear tabla comentario
+CREATE TABLE comentario (
+    id BIGSERIAL PRIMARY KEY,
+    contenido TEXT NOT NULL,
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT NOW(),
+    tarea_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    FOREIGN KEY (tarea_id) REFERENCES tarea(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Crear índice para mejorar búsquedas
+CREATE INDEX idx_comentario_tarea_id ON comentario(tarea_id);
+CREATE INDEX idx_comentario_user_id ON comentario(user_id);
+

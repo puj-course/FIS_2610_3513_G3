@@ -42,7 +42,18 @@
             font-weight: 800;
             color: #fff;
             letter-spacing: 0.5px;
+            text-decoration: none;
+            display: inline-block;
+            cursor: pointer;
+            transition: opacity 0.2s;
         }
+        .header-brand:hover {
+            opacity: 0.9;
+        }
+        .header-brand:visited {
+            color: #fff;
+        }
+
         .header-brand span {
             background: linear-gradient(90deg, var(--accent), var(--accent2));
             -webkit-background-clip: text;
@@ -242,7 +253,7 @@
 <body>
 
 <header>
-    <span class="header-brand">ENTREGA <span>YA</span></span>
+    <a th:href="@{/trabajos}" class="header-brand">ENTREGA <span>YA</span></a>
     <span class="header-sub">Detalles de tarea</span>
 </header>
 
@@ -285,10 +296,55 @@
             </div>
         </div>
 
+        <!-- SECCIÓN DE COMENTARIOS -->
         <div class="section">
-            <label for="comentarios" class="comment-label">Comentarios</label>
-            <textarea id="comentarios" placeholder="Agrega un comentario o nota sobre esta tarea…"></textarea>
+            <div class="comment-label">Comentarios</div>
+
+            <!-- Lista de comentarios existentes -->
+            <div id="comentariosList" style="margin-bottom: 20px;">
+                <div th:if="${tarea.comentarios != null && tarea.comentarios.size() > 0}">
+                    <div th:each="comentario : ${tarea.comentarios}"
+                         style="background: var(--surface2); padding: 12px 14px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--accent);">
+
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                            <div style="font-weight: 600; color: var(--text);" th:text="${comentario.autor.username}">Usuario</div>
+                            <div style="font-size: 0.75rem; color: var(--muted);"
+                                 th:text="${#temporals.format(comentario.fechaCreacion, 'dd/MM/yyyy HH:mm')}">
+                                01/01/2026 10:30
+                            </div>
+                        </div>
+
+                        <div style="color: var(--text); font-size: 0.9rem;" th:text="${comentario.contenido}">
+                            Contenido del comentario
+                        </div>
+                    </div>
+                </div>
+                <div th:if="${tarea.comentarios == null || tarea.comentarios.size() == 0}"
+                     style="text-align: center; color: var(--muted); padding: 20px; font-size: 0.9rem;">
+                    No hay comentarios aún. Sé el primero en comentar.
+                </div>
+            </div>
+
+            <!-- Formulario para nuevo comentario -->
+            <form th:action="@{/trabajos/{id}/tareas/{tareaId}/comentario(id=${trabajoId}, tareaId=${tarea.id})}"
+                  method="post"
+                  style="display: flex; gap: 10px; align-items: flex-end;">
+
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                <textarea name="contenido"
+                          placeholder="Agrega un comentario o nota sobre esta tarea…"
+                          style="flex: 1; min-height: 80px; resize: none;"
+                          required></textarea>
+
+                <button type="submit"
+                        class="btn btn-complete"
+                        style="padding: 10px 16px; white-space: nowrap;">
+                    💬 Comentar
+                </button>
+            </form>
         </div>
+
 
         <div class="action-bar">
             <a th:href="@{/trabajos/{id}(id=${trabajoId})}" class="btn btn-back">← Volver</a>
