@@ -17,6 +17,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -361,6 +363,50 @@ public class TrabajoController {
             errorResponse.put("error", "Error al actualizar el rol");
             return ResponseEntity.internalServerError().body(errorResponse);
         }
+    }
+    @GetMapping("/{id}/tareas/calendario")
+    @ResponseBody
+    public ResponseEntity<List<Map<String, Object>>> calendarioTareas(@PathVariable long id) {
+        try {
+            List<Tarea> tareas = customTareaDetailsService.tareas(id);
+            LocalDateTime ahora = LocalDateTime.now();
+            DateTimeFormatter fmt = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+
+            List<Map<String, Object>> eventos = new ArrayList<>();
+
+            for (Tarea tarea : tareas) {
+                // Solo incluir tareas que tengan al menos una fecha
+                if (tarea.getFechaInicio() == null && tarea.getFechaFinal() == null) continue;
+
+                boolean vencida = !tarea.getIsCompletada()
+                        && tarea.getFechaFinal() != null
+                        && tarea.getFechaFinal().isBefore(ahora);
+
+                Map<String, Object> evento = new HashMap<>();
+                evento.put("id",          tarea.getId().toString());
+                evento.put("title",       tarea.getNombre());
+                evento.put("start",       tarea.getFechaInicio() != null ? tarea.getFechaInicio().format(fmt) : tarea.getFechaFinal().format(fmt));
+                evento.put("end",         tarea.getFechaFinal() != null ? tarea.getFechaFinal().format(fmt) : null);
+                evento.put("completada",  tarea.getIsCompletada());
+                evento.put("vencida",     vencida);
+                evento.put("dificultad",  tarea.getDificultad().name());
+
+                eventos.add(evento);
+            }
+
+            return ResponseEntity.ok(eventos);
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    @GetMapping("/{id}/calendario")
+    public String vistaCalendario(@PathVariable long id, Model model,
+                                  @AuthenticationPrincipal UserDetails user) {
+        Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
+        model.addAttribute("trabajo", trabajo);
+        model.addAttribute("trabajoId", id);
+        return "trabajos/calendario";
     }
 
 }

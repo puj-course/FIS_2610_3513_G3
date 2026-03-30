@@ -162,6 +162,8 @@
 
         .btn-primary  { padding: 7px 14px; background: #f4a535; color: #fff; border: none; border-radius: 6px; font-size: 0.83rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; }
         .btn-primary:hover { background: #e0932b; }
+        .btn-calendar { padding: 7px 14px; background: #fff; color: #444; border: 1px solid #ddd; border-radius: 6px; font-size: 0.83rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn-calendar:hover { background: #f5f5f5; border-color: #bbb; }
         .btn-danger-ghost { padding: 5px 10px; background: transparent; color: #ccc; border: 1px solid #e5e5e5; border-radius: 5px; font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
         .btn-danger-ghost:hover { color: #e74c3c; border-color: #e74c3c; background: #fff5f5; }
         .btn-sm-save  { padding: 3px 8px; background: #f4a535; color: #fff; border: none; border-radius: 4px; font-size: 0.72rem; font-weight: 600; cursor: pointer; }
@@ -394,6 +396,7 @@
 
             <div class="card-actions">
                 <a th:href="@{/trabajos/{id}/tareas/CrearTarea(id=${trabajo.id})}" class="btn-primary">+ Nueva tarea</a>
+                <a th:href="@{/trabajos/{id}/calendario(id=${trabajo.id})}" class="btn-calendar">📅 Calendario</a>
             </div>
         </div>
 

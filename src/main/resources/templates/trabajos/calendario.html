@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Entrega Ya — Calendario</title>
+
+    <!-- FullCalendar 6 (CDN permitido: cdn.jsdelivr.net) -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, sans-serif; background: #f7f7f5; color: #222; }
+
+        /* ── Header ───────────────────────────────────────────── */
+        header {
+            background: #1a1a1a; color: #fff;
+            padding: 0 24px; height: 52px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .header-left  { display: flex; align-items: center; gap: 14px; }
+        .brand        { font-size: 1rem; font-weight: 800; color: #fff; text-decoration: none; }
+        .brand span   { color: #f4a535; }
+        .btn-back     {
+            font-size: 0.8rem; color: #aaa; text-decoration: none;
+            padding: 5px 10px; border: 1px solid rgba(255,255,255,0.1); border-radius: 5px;
+        }
+        .btn-back:hover { color: #fff; border-color: rgba(255,255,255,0.25); }
+        .header-user  { font-size: 0.8rem; color: #aaa; }
+
+        /* ── Layout ───────────────────────────────────────────── */
+        .page    { max-width: 1100px; margin: 24px auto; padding: 0 20px; }
+        .card    {
+            background: #fff; border: 1px solid #e5e5e5;
+            border-radius: 8px; padding: 20px; margin-bottom: 14px;
+        }
+
+        /* ── Leyenda ──────────────────────────────────────────── */
+        .legend {
+            display: flex; flex-wrap: wrap; gap: 12px;
+            margin-bottom: 18px; font-size: 0.8rem; align-items: center;
+        }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .dot {
+            width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0;
+        }
+        .dot-pendiente  { background: #3b82f6; }
+        .dot-completada { background: #22c55e; }
+        .dot-vencida    { background: #ef4444; }
+
+        /* ── FullCalendar overrides ────────────────────────────── */
+        #calendar { font-size: 0.85rem; }
+
+        /* Barra de toolbar */
+        .fc .fc-toolbar-title { font-size: 1rem; font-weight: 700; }
+        .fc .fc-button {
+            background: #1a1a1a; border: none; border-radius: 5px;
+            font-size: 0.75rem; padding: 4px 10px;
+        }
+        .fc .fc-button:hover       { background: #333; }
+        .fc .fc-button-primary:not(.fc-button-active):not(:disabled) { background: #1a1a1a; }
+        .fc .fc-button-active,
+        .fc .fc-button-primary:not(:disabled).fc-button-active { background: #f4a535; border-color: #f4a535; }
+
+        /* Cabecera de días */
+        .fc .fc-col-header-cell { background: #f9f9f7; }
+        .fc .fc-col-header-cell-cushion { font-size: 0.75rem; font-weight: 600; color: #888; text-transform: uppercase; }
+
+        /* Hoy */
+        .fc .fc-daygrid-day.fc-day-today { background: #fffbf0; }
+        .fc .fc-timegrid-col.fc-day-today { background: #fffbf0; }
+
+        /* ── Estilos de eventos (clases aplicadas desde JS) ────── */
+        .fc-event.ev-pendiente  { background: #3b82f6 !important; border-color: #2563eb !important; color: #fff !important; }
+        .fc-event.ev-completada { background: #22c55e !important; border-color: #16a34a !important; color: #fff !important; }
+        .fc-event.ev-vencida    { background: #ef4444 !important; border-color: #dc2626 !important; color: #fff !important; }
+
+        /* Dificultad dot dentro del evento */
+        .ev-dif { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+        .dif-SIMPLE { background: rgba(255,255,255,0.6); }
+        .dif-MEDIA  { background: rgba(255,255,255,0.85); }
+        .dif-ALTA   { background: #fff; }
+
+        /* ── Tooltip ──────────────────────────────────────────── */
+        #tooltip {
+            position: fixed; z-index: 9999;
+            background: #1a1a1a; color: #fff;
+            border-radius: 7px; padding: 10px 14px;
+            font-size: 0.8rem; line-height: 1.6;
+            max-width: 220px; pointer-events: none;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+            display: none;
+        }
+        #tooltip .tt-title { font-weight: 700; margin-bottom: 4px; font-size: 0.85rem; }
+        #tooltip .tt-row   { color: #ccc; }
+        #tooltip .tt-badge {
+            display: inline-block; padding: 1px 7px; border-radius: 10px;
+            font-size: 0.72rem; font-weight: 600; margin-top: 4px;
+        }
+        .badge-pendiente  { background: #3b82f6; }
+        .badge-completada { background: #22c55e; }
+        .badge-vencida    { background: #ef4444; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-left">
+        <a th:href="@{/trabajos}" class="brand">ENTREGA <span>YA</span></a>
+        <a th:href="@{/trabajos/{id}(id=${trabajoId})}" class="btn-back">← Volver al trabajo</a>
+    </div>
+    <span class="header-user" th:text="${trabajo.nombreTrabajo}">Nombre del trabajo</span>
+</header>
+
+<div class="page">
+    <div class="card">
+
+        <!-- Leyenda de colores -->
+        <div class="legend">
+            <span style="font-size:0.75rem;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-right:4px;">Leyenda:</span>
+            <div class="legend-item"><div class="dot dot-pendiente"></div> Pendiente / En progreso</div>
+            <div class="legend-item"><div class="dot dot-completada"></div> Completada</div>
+            <div class="legend-item"><div class="dot dot-vencida"></div> Vencida</div>
+        </div>
+
+        <!-- Calendario -->
+        <div id="calendar"></div>
+
+    </div>
+</div>
+
+<!-- Tooltip flotante -->
+<div id="tooltip">
+    <div class="tt-title" id="tt-title"></div>
+    <div class="tt-row" id="tt-start"></div>
+    <div class="tt-row" id="tt-end"></div>
+    <div class="tt-row" id="tt-dif"></div>
+    <div><span class="tt-badge" id="tt-badge"></span></div>
+</div>
+
+<script th:inline="javascript">
+    /*[# th:if="${trabajoId}"]*/
+    const TRABAJO_ID = /*[[${trabajoId}]]*/ 0;
+    /*[/]*/
+</script>
+
+<script>
+    // ─── Tooltip helpers ──────────────────────────────────────────────────────
+    const tooltip  = document.getElementById('tooltip');
+    const ttTitle  = document.getElementById('tt-title');
+    const ttStart  = document.getElementById('tt-start');
+    const ttEnd    = document.getElementById('tt-end');
+    const ttDif    = document.getElementById('tt-dif');
+    const ttBadge  = document.getElementById('tt-badge');
+
+    const DIF_LABEL = { SIMPLE: 'Simple', MEDIA: 'Media', ALTA: 'Alta' };
+
+    function fmt(isoStr) {
+        if (!isoStr) return '—';
+        const d = new Date(isoStr);
+        return d.toLocaleString('es-CO', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    }
+
+    function showTooltip(info) {
+        const ext = info.event.extendedProps;
+        ttTitle.textContent  = info.event.title;
+        ttStart.textContent  = 'Inicio: '  + fmt(info.event.startStr);
+        ttEnd.textContent    = 'Límite: '  + fmt(info.event.endStr);
+        ttDif.textContent    = 'Dificultad: ' + (DIF_LABEL[ext.dificultad] || ext.dificultad);
+
+        if (ext.completada) {
+            ttBadge.textContent  = 'Completada';
+            ttBadge.className    = 'tt-badge badge-completada';
+        } else if (ext.vencida) {
+            ttBadge.textContent  = 'Vencida';
+            ttBadge.className    = 'tt-badge badge-vencida';
+        } else {
+            ttBadge.textContent  = 'Pendiente';
+            ttBadge.className    = 'tt-badge badge-pendiente';
+        }
+        tooltip.style.display = 'block';
+    }
+
+    document.addEventListener('mousemove', e => {
+        if (tooltip.style.display === 'block') {
+            tooltip.style.left = (e.clientX + 14) + 'px';
+            tooltip.style.top  = (e.clientY + 14) + 'px';
+        }
+    });
+
+    // ─── FullCalendar init ────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', function () {
+        const calEl = document.getElementById('calendar');
+        const calendar = new FullCalendar.Calendar(calEl, {
+            locale:         'es',
+            initialView:    'dayGridMonth',
+            headerToolbar: {
+                left:   'prev,next today',
+                center: 'title',
+                right:  'dayGridMonth,timeGridWeek,listMonth'
+            },
+            buttonText: {
+                today:     'Hoy',
+                month:     'Mes',
+                week:      'Semana',
+                list:      'Lista'
+            },
+            height:         'auto',
+            eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+
+            // ── Carga de eventos desde el endpoint REST (Sub-issue 1) ──────────
+            events: function(fetchInfo, successCallback, failureCallback) {
+                fetch(`/trabajos/${TRABAJO_ID}/tareas/calendario`)
+                    .then(res => {
+                        if (!res.ok) throw new Error('Error al cargar tareas');
+                        return res.json();
+                    })
+                    .then(data => {
+                        // Sub-issue 3: Asignar clase CSS según estado
+                        const eventos = data.map(ev => ({
+                            ...ev,
+                            classNames: ev.completada ? ['ev-completada']
+                                : ev.vencida   ? ['ev-vencida']
+                                    :                ['ev-pendiente'],
+                            extendedProps: {
+                                completada: ev.completada,
+                                vencida:    ev.vencida,
+                                dificultad: ev.dificultad
+                            }
+                        }));
+                        successCallback(eventos);
+                    })
+                    .catch(failureCallback);
+            },
+
+            // ── Render del evento: dot de dificultad + título ─────────────────
+            eventContent: function(arg) {
+                const dif = arg.event.extendedProps.dificultad || 'MEDIA';
+                return {
+                    html: `<div style="padding:2px 5px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">
+                               <span class="ev-dif dif-${dif}"></span>${arg.event.title}
+                           </div>`
+                };
+            },
+
+            // ── Tooltip: mostrar al hacer hover ──────────────────────────────
+            eventMouseEnter: function(info) { showTooltip(info); },
+            eventMouseLeave: function()     { tooltip.style.display = 'none'; }
+        });
+
+        calendar.render();
+    });
+</script>
+
+</body>
+</html>
