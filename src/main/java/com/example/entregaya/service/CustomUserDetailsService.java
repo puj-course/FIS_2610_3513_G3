@@ -46,16 +46,28 @@ public class CustomUserDetailsService implements UserDetailsService {
      * Registra un nuevo usuario en la base de datos.
      * Encripta la contraseña antes de guardarla.
      */
-    public User register(String username, String password) {
+    public User register(String username, String password, String email) {
         if(userRepository.findByUsername(username).isPresent()){
             throw new IllegalArgumentException("El usuario: " +username+ " ya existe\n");
         }
         if(password==null || password.length()<6){
             throw new IllegalArgumentException("la contraseña debe tener mas de 6 carcateres");
         }
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("El correo electrónico es obligatorio.");
+        }
+        if (!email.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")) {
+            throw new IllegalArgumentException("El formato del correo electrónico no es válido.");
+        }
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new IllegalArgumentException("El correo '" + email + "' ya está registrado.");
+        }
+
         User user = new User();
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
+        user.setEmail(email);
+
         return userRepository.save(user);
     }
 
@@ -94,6 +106,31 @@ public class CustomUserDetailsService implements UserDetailsService {
         }
         user.setPassword(passwordEncoder.encode(passwordNueva));
         userRepository.save(user);
+    }
+
+    // Actualizar email
+    public void actualizarEmail(String username, String nuevoEmail) {
+        if (nuevoEmail == null || nuevoEmail.trim().isEmpty()) {
+            throw new IllegalArgumentException("El correo electrónico no puede estar vacío.");
+        }
+        if (!nuevoEmail.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")) {
+            throw new IllegalArgumentException("El formato del correo electrónico no es válido.");
+        }
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        if (nuevoEmail.equals(user.getEmail())) {
+            throw new IllegalArgumentException("El nuevo correo debe ser diferente al actual.");
+        }
+        if (userRepository.findByEmail(nuevoEmail).isPresent()) {
+            throw new IllegalArgumentException("El correo '" + nuevoEmail + "' ya está en uso.");
+        }
+        user.setEmail(nuevoEmail);
+        userRepository.save(user);
+    }
+
+    //findByUsername de repository, para ser usado en controlador
+    public java.util.Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
     }
 
 }

@@ -5,6 +5,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,7 +21,9 @@ public class PerfilController {
     }
 
     @GetMapping("/perfil")
-    public String perfil() {
+    public String perfil(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+        userDetailsService.findByUsername(userDetails.getUsername())
+                .ifPresent(user -> model.addAttribute("emailActual", user.getEmail()));
         return "perfil";
     }
 
@@ -54,4 +57,18 @@ public class PerfilController {
         }
         return "redirect:/perfil";
     }
+
+    @PostMapping("/perfil/actualizar-email")
+    public String actualizarEmail(@RequestParam("nuevoEmail") String nuevoEmail,
+                                  @AuthenticationPrincipal UserDetails userDetails,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            userDetailsService.actualizarEmail(userDetails.getUsername(), nuevoEmail);
+            redirectAttributes.addFlashAttribute("successEmail", "Correo actualizado correctamente.");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorEmail", e.getMessage());
+        }
+        return "redirect:/perfil";
+    }
+
 }
