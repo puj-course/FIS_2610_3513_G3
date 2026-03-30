@@ -17,6 +17,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -59,6 +61,66 @@ public class TrabajoController {
     public String guardar(@ModelAttribute Trabajo trabajo, @AuthenticationPrincipal UserDetails user) {
         customTrabajoDetailsService.crearTrabajo(trabajo,user.getUsername());
         return "redirect:/trabajos";
+    }
+
+    // HU-15: Mostrar formulario de edición (solo LIDER)
+    @GetMapping("/{id}/editar")
+    public String mostrarFormularioEditar(@PathVariable long id, 
+                                          Model model, 
+                                          @AuthenticationPrincipal UserDetails user,
+                                          RedirectAttributes redirectAttributes) {
+        try {
+            // Validar que el usuario sea LIDER del trabajo
+            if (!customTrabajoDetailsService.esLider(id, user.getUsername())) {
+                redirectAttributes.addFlashAttribute("error", "Solo el líder del trabajo puede editarlo.");
+                return "redirect:/trabajos/" + id;
+            }
+            
+            // Obtener el trabajo actual
+            Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
+            model.addAttribute("trabajo", trabajo);
+            return "trabajos/editar";
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "No se pudo cargar el formulario de edición.");
+            return "redirect:/trabajos";
+        }
+    }
+
+    // HU-15: Procesar edición del trabajo (solo LIDER)
+    @PostMapping("/{id}/editar")
+    public String actualizarTrabajo(@PathVariable long id,
+                                   @ModelAttribute Trabajo trabajoEditado,
+                                   @AuthenticationPrincipal UserDetails user,
+                                   RedirectAttributes redirectAttributes) {
+        try {
+            // Validar que el usuario sea LIDER del trabajo
+            if (!customTrabajoDetailsService.esLider(id, user.getUsername())) {
+                redirectAttributes.addFlashAttribute("error", "Solo el líder del trabajo puede editarlo.");
+                return "redirect:/trabajos/" + id;
+            }
+            
+            // Validar que el nombre no esté vacío
+            if (trabajoEditado.getNombreTrabajo() == null || trabajoEditado.getNombreTrabajo().trim().isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "El nombre del trabajo no puede estar vacío.");
+                return "redirect:/trabajos/" + id + "/editar";
+            }
+            
+            // Actualizar el trabajo (incluye validación de nombre único)
+            customTrabajoDetailsService.actualizarTrabajo(id, trabajoEditado);
+            
+            redirectAttributes.addFlashAttribute("success", "Trabajo actualizado correctamente.");
+            return "redirect:/trabajos/" + id;
+            
+        } catch (IllegalArgumentException e) {
+            // Error de validación (nombre duplicado, etc.)
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/trabajos/" + id + "/editar";
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error al actualizar el trabajo.");
+            return "redirect:/trabajos/" + id + "/editar";
+        }
     }
 
     @GetMapping("/{id}")
@@ -301,6 +363,50 @@ public class TrabajoController {
             errorResponse.put("error", "Error al actualizar el rol");
             return ResponseEntity.internalServerError().body(errorResponse);
         }
+    }
+    @GetMapping("/{id}/tareas/calendario")
+    @ResponseBody
+    public ResponseEntity<List<Map<String, Object>>> calendarioTareas(@PathVariable long id) {
+        try {
+            List<Tarea> tareas = customTareaDetailsService.tareas(id);
+            LocalDateTime ahora = LocalDateTime.now();
+            DateTimeFormatter fmt = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+
+            List<Map<String, Object>> eventos = new ArrayList<>();
+
+            for (Tarea tarea : tareas) {
+                // Solo incluir tareas que tengan al menos una fecha
+                if (tarea.getFechaInicio() == null && tarea.getFechaFinal() == null) continue;
+
+                boolean vencida = !tarea.getIsCompletada()
+                        && tarea.getFechaFinal() != null
+                        && tarea.getFechaFinal().isBefore(ahora);
+
+                Map<String, Object> evento = new HashMap<>();
+                evento.put("id",          tarea.getId().toString());
+                evento.put("title",       tarea.getNombre());
+                evento.put("start",       tarea.getFechaInicio() != null ? tarea.getFechaInicio().format(fmt) : tarea.getFechaFinal().format(fmt));
+                evento.put("end",         tarea.getFechaFinal() != null ? tarea.getFechaFinal().format(fmt) : null);
+                evento.put("completada",  tarea.getIsCompletada());
+                evento.put("vencida",     vencida);
+                evento.put("dificultad",  tarea.getDificultad().name());
+
+                eventos.add(evento);
+            }
+
+            return ResponseEntity.ok(eventos);
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    @GetMapping("/{id}/calendario")
+    public String vistaCalendario(@PathVariable long id, Model model,
+                                  @AuthenticationPrincipal UserDetails user) {
+        Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
+        model.addAttribute("trabajo", trabajo);
+        model.addAttribute("trabajoId", id);
+        return "trabajos/calendario";
     }
 
 }

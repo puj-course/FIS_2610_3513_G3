@@ -155,5 +155,48 @@ public class CustomTrabajoDetailsService {
                 .orElse(false);
     }
 
+    // HU-15: Actualizar un trabajo existente (solo nombre, descripción y fechas)
+    /**
+     * Actualiza los datos editables de un trabajo existente.
+     * Solo se pueden editar: nombre, descripción, fechaInicio y fechaEntrega.
+     * No se modifican los colaboradores ni las tareas.
+     * 
+     * @param id ID del trabajo a actualizar
+     * @param trabajoEditado Objeto con los nuevos valores
+     * @throws IllegalArgumentException si el trabajo no existe
+     * @throws IllegalArgumentException si el nombre está vacío
+     * @throws IllegalArgumentException si el nombre ya existe en otro trabajo
+     */
+    @Transactional
+    public void actualizarTrabajo(Long id, Trabajo trabajoEditado) {
+        // Obtener el trabajo actual desde la BD
+        Trabajo trabajoExistente = trabajoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("El trabajo no existe"));
+        
+        // Validación 1: El nombre no puede estar vacío
+        if (trabajoEditado.getNombreTrabajo() == null || trabajoEditado.getNombreTrabajo().trim().isEmpty()) {
+            throw new IllegalArgumentException("El nombre del trabajo no puede estar vacío");
+        }
+        
+        // Validación 2: El nombre no puede estar duplicado (excepto si no cambió)
+        String nuevoNombre = trabajoEditado.getNombreTrabajo().trim();
+        if (!trabajoExistente.getNombreTrabajo().equals(nuevoNombre)) {
+            // Solo validar si el nombre cambió
+            boolean nombreExiste = trabajoRepository.existsByNombreTrabajo(nuevoNombre);
+            if (nombreExiste) {
+                throw new IllegalArgumentException("Ya existe un trabajo con ese nombre");
+            }
+        }
+        
+        // Actualizar solo los campos editables (no tocar colaboradores ni tareas)
+        trabajoExistente.setNombreTrabajo(nuevoNombre);
+        trabajoExistente.setDescripcion(trabajoEditado.getDescripcion());
+        trabajoExistente.setFechaInicio(trabajoEditado.getFechaInicio());
+        trabajoExistente.setFechaEntrega(trabajoEditado.getFechaEntrega());
+        
+        // Guardar cambios en la BD
+        trabajoRepository.save(trabajoExistente);
+    }
+
 
 }

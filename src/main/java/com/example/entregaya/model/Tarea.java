@@ -2,9 +2,8 @@ package com.example.entregaya.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Objects;
+import java.util.*;
+
 import org.springframework.format.annotation.DateTimeFormat;
 
 @Entity
@@ -42,6 +41,12 @@ public class Tarea {
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private Set<User> responsables = new HashSet<>();
+
+    // Comentarios de la tarea
+    @OneToMany(mappedBy = "tarea", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("fechaCreacion DESC")
+    private List<Comentario> comentarios = new ArrayList<>();
+
 
     // Enum de dificultad de tarea
     public enum Dificultad {
@@ -161,6 +166,14 @@ public class Tarea {
 
     public void setCompletada(boolean completada) {
         this.completada = completada;
+    }
+
+    public List<Comentario> getComentarios() {
+        return comentarios;
+    }
+
+    public void setComentarios(List<Comentario> comentarios) {
+        this.comentarios = comentarios;
     }
 
 }
