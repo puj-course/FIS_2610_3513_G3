@@ -79,6 +79,14 @@ public class TareaBuilder {
     }
 
     public Tarea build() {
+
+        //validacion de nombre obligatorio
+        if (nombre == null || nombre.isBlank()) {
+            throw new IllegalStateException(
+                    "El nombre de la tarea es obligatorio y no puede estar en blanco.");
+        }
+
+
         Tarea tarea = new Tarea();
         tarea.setNombre(nombre);
         tarea.setDescripcion(descripcion);
