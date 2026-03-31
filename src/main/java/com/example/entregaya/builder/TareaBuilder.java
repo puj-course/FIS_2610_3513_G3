@@ -82,10 +82,13 @@ public class TareaBuilder {
 
         //validacion de nombre obligatorio
         if (nombre == null || nombre.isBlank()) {
-            throw new IllegalStateException(
-                    "El nombre de la tarea es obligatorio y no puede estar en blanco.");
+            throw new IllegalStateException( "El nombre de la tarea es obligatorio y no puede estar en blanco.");
         }
 
+        //validacion de fechas
+        if (fechaInicio != null && fechaFinal != null && fechaFinal.isBefore(fechaInicio)) {
+            throw new IllegalStateException( "La fecha final no puede ser anterior a la fecha de inicio.");
+        }
 
         Tarea tarea = new Tarea();
         tarea.setNombre(nombre);
