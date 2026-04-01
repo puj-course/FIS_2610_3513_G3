@@ -135,7 +135,7 @@ public class CustomTrabajoDetailsService {
         // Validar que quien ejecuta la acción sea LIDER
         User ejecutor = userRepository.findByUsername(usernameQuienEjecuta)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario ejecutor no encontrado"));
-        
+
         // No permitir que el líder se elimine a sí mismo
         if (ejecutor.getId().equals(userId)) {
             throw new IllegalArgumentException("No puedes eliminarte a ti mismo del trabajo");
