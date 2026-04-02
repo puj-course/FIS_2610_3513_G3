@@ -8,6 +8,8 @@ import com.example.entregaya.model.User;
 import com.example.entregaya.repository.ColaboradorTrabajoRepository;
 import com.example.entregaya.repository.TrabajoRepository;
 import com.example.entregaya.repository.UserRepository;
+import com.example.entregaya.strategy.Permisostrategy;
+import com.example.entregaya.strategy.Sololiderstrategy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -17,11 +19,15 @@ public class CustomTrabajoDetailsService {
     private final  UserRepository userRepository;
     private final TrabajoRepository trabajoRepository;
     private final ColaboradorTrabajoRepository colaboradorTrabajoRepository;
+    private final Sololiderstrategy sololiderstrategy;
 
-    public CustomTrabajoDetailsService(TrabajoRepository trabajoRepository, UserRepository userRepository, ColaboradorTrabajoRepository colaboradorTrabajoRepository){
+    public CustomTrabajoDetailsService(TrabajoRepository trabajoRepository, UserRepository userRepository,
+                                       ColaboradorTrabajoRepository colaboradorTrabajoRepository, Sololiderstrategy sololiderstrategy) {
+
         this.userRepository = userRepository;
         this.trabajoRepository = trabajoRepository;
         this.colaboradorTrabajoRepository = colaboradorTrabajoRepository;
+        this.sololiderstrategy = sololiderstrategy;
     }
 
  // Crear un nuevo trabajo y agregar al creador como colaborador
@@ -88,6 +94,26 @@ public class CustomTrabajoDetailsService {
                 .toList();
     }
 
+    /**
+     * Verifica si el usuario tiene permiso en el trabajo
+     * según la estrategia recibida.
+     *
+     * Reemplaza los métodos duplicados esLider() y puedeEditarTarea().
+     *
+     * @param trabajoId id del trabajo a verificar
+     * @param username  usuario autenticado
+     * @param strategy  regla de permiso a aplicar (SoloLider, LiderOEditor, etc.)
+     * @return true si el usuario cumple la regla
+     */
+
+    public boolean verificarPermiso(Long trabajoId, String username, Permisostrategy strategy) {
+        return trabajoRepository.findById(trabajoId)
+                .map(trabajo -> trabajo.getColaboradores().stream()
+                        .filter(c -> c.getUser().getUsername().equals(username))
+                        .anyMatch(strategy::tienePermiso))
+                .orElse(false);
+    }
+
     public void eliminar(long Id){
         trabajoRepository.deleteById(Id);
     }
@@ -103,17 +129,12 @@ public class CustomTrabajoDetailsService {
         Trabajo trabajo = trabajoRepository.findById(trabajoId)
                 .orElseThrow(() -> new IllegalArgumentException("El trabajo no existe"));
 
+        if(!verificarPermiso(trabajoId,usernameQuienEjecuta,sololiderstrategy))
+            throw new IllegalArgumentException("Solo un lider puede elminar un colaborador");
+
         // Validar que quien ejecuta la acción sea LIDER
         User ejecutor = userRepository.findByUsername(usernameQuienEjecuta)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario ejecutor no encontrado"));
-
-        ColaboradorTrabajoId ejecutorId = new ColaboradorTrabajoId(trabajoId, ejecutor.getId());
-        ColaboradorTrabajo ejecutorCol = colaboradorTrabajoRepository.findById(ejecutorId)
-                .orElseThrow(() -> new IllegalArgumentException("No perteneces a este trabajo"));
-
-        if (ejecutorCol.getRol() != ColaboradorTrabajo.Rol.LIDER) {
-            throw new IllegalArgumentException("Solo un líder puede eliminar colaboradores");
-        }
 
         // No permitir que el líder se elimine a sí mismo
         if (ejecutor.getId().equals(userId)) {
@@ -137,22 +158,27 @@ public class CustomTrabajoDetailsService {
 
         colaboradorTrabajoRepository.delete(target);
     }
+    /**
+     * @deprecated
+     *
+     * Este metodo quedo obsoleto usar verificarPermiso(id, username, new SoloLiderStrategy()) en su luagr
+     *
+    */
+    @Deprecated
     public boolean puedeEditarTarea(Long trabajoId, String username) {
-        return trabajoRepository.findById(trabajoId)
-                .map(trabajo -> trabajo.getColaboradores().stream()
-                        .anyMatch(col -> col.getUser().getUsername().equals(username) &&
-                                (col.getRol() == ColaboradorTrabajo.Rol.LIDER ||
-                                        col.getRol() == ColaboradorTrabajo.Rol.EDITOR)))
-                .orElse(false);
+        return verificarPermiso(trabajoId,username,
+                colaborador -> colaborador.getRol() == ColaboradorTrabajo.Rol.EDITOR
+                        || colaborador.getRol() == ColaboradorTrabajo.Rol.LIDER);
     }
 
-    // Verificar si un usuario es LIDER de un trabajo
+    /**
+     * @deprecated
+     *
+     *  Este metodo quedo obsoleto usar verificarPermiso(id, username, new SoloLiderStrategy()) en su luagr
+     */
+    @Deprecated
     public boolean esLider(Long trabajoId, String username) {
-        return trabajoRepository.findById(trabajoId)
-                .map(trabajo -> trabajo.getColaboradores().stream()
-                        .anyMatch(col -> col.getUser().getUsername().equals(username) &&
-                                col.getRol() == ColaboradorTrabajo.Rol.LIDER))
-                .orElse(false);
+        return verificarPermiso(trabajoId,username,sololiderstrategy);
     }
 
     // HU-15: Actualizar un trabajo existente (solo nombre, descripción y fechas)
