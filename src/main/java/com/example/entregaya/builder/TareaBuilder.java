@@ -22,6 +22,12 @@ import java.util.Set;
  *       .trabajo(trabajo)
  *       .responsables(Set.of(user1))
  *       .build();
+ *
+ * Resultados pruebas manuales:
+ * [OK] build() con nombre vacío, lanza IllegalStateException: "El nombre de la tarea..."
+ * [OK] build() con fechaFinal anterior a fechaInicio, lanza IllegalStateException: "La fecha final..."
+ * [OK] build() con datos válidos, retorna Tarea con todos los campos asignados correctamente
+ *
  */
 
 public class TareaBuilder {
