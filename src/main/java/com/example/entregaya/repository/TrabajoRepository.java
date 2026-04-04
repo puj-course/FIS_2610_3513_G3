@@ -13,4 +13,7 @@ public interface TrabajoRepository extends JpaRepository<Trabajo,Long> {
     // Pasar por ColaboradorTrabajo para el username.
     @Query("SELECT t FROM Trabajo t " + "JOIN t.colaboradores c " + "WHERE c.user.username = :username")
     List<Trabajo> findByColaboradoresUsername(@Param("username") String username);
+    
+    // HU-15: Verificar si existe un trabajo con un nombre específico
+    boolean existsByNombreTrabajo(String nombreTrabajo);
 }

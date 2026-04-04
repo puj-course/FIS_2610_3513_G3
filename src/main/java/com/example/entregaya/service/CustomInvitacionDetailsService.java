@@ -7,6 +7,7 @@ import com.example.entregaya.model.User;
 import com.example.entregaya.repository.InvitacionRepository;
 import com.example.entregaya.repository.TrabajoRepository;
 import com.example.entregaya.repository.UserRepository;
+import com.example.entregaya.strategy.Lideroeditorstrategy;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -16,11 +17,15 @@ public class CustomInvitacionDetailsService {
     private final InvitacionRepository invitacionRepository;
     private final TrabajoRepository trabajoRepository;
     private final UserRepository userRepository;
+    private final Lideroeditorstrategy lideroeditorstrategy;
+    private final CustomTrabajoDetailsService customTrabajoDetailsService;
 
-    public CustomInvitacionDetailsService(InvitacionRepository invitacionRepository, TrabajoRepository trabajoRepository, UserRepository userRepository) {
+    public CustomInvitacionDetailsService(InvitacionRepository invitacionRepository, TrabajoRepository trabajoRepository, UserRepository userRepository, Lideroeditorstrategy lideroeditorstrategy, CustomTrabajoDetailsService customTrabajoDetailsService) {
         this.invitacionRepository = invitacionRepository;
         this.trabajoRepository = trabajoRepository;
         this.userRepository = userRepository;
+        this.lideroeditorstrategy = lideroeditorstrategy;
+        this.customTrabajoDetailsService = customTrabajoDetailsService;
     }
 
     public Invitacion enviarInvitacion(Long trabajoId, String remitenteUsername, String destinatarioUsername) {
@@ -78,14 +83,8 @@ public class CustomInvitacionDetailsService {
             throw new IllegalArgumentException("Solo se pueden cancelar invitaciones en estado PENDIENTE");
         }
 
-        boolean puedeGestionar = inv.getTrabajo().getColaboradores().stream()
-                .anyMatch(col -> col.getUser().getUsername().equals(username) &&
-                        (col.getRol() == ColaboradorTrabajo.Rol.LIDER ||
-                                col.getRol() == ColaboradorTrabajo.Rol.EDITOR));
-
-        if (!puedeGestionar) {
-            throw new RuntimeException("No tienes permiso para cancelar esta invitación");
-        }
+        if(!customTrabajoDetailsService.verificarPermiso(inv.getTrabajo().getId(),username,lideroeditorstrategy))
+            throw new IllegalArgumentException("No tiene permiso para el usuario");
 
         Long trabajoId = inv.getTrabajo().getId();
         invitacionRepository.delete(inv);

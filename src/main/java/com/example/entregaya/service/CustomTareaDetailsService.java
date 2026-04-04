@@ -1,5 +1,6 @@
 package com.example.entregaya.service;
 
+import com.example.entregaya.builder.TareaBuilder;
 import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
 import com.example.entregaya.model.User;
@@ -24,17 +25,43 @@ public class CustomTareaDetailsService {
         this.userRepository = userRepository;
     }
 
-    //Crear una tarea asociada a un trabajo
+    /**
+     * HU-22 (#269): Crear una tarea usando TareaBuilder con validaciones automáticas.
+     * 
+     * @param tarea Objeto con los datos de la tarea (nombre, descripción, fechas, dificultad)
+     * @param trabajoId ID del trabajo al que pertenece la tarea
+     * @param responsableIds IDs de los usuarios responsables
+     * @return Tarea guardada en la base de datos
+     * @throws IllegalStateException si el nombre está vacío o las fechas son inconsistentes
+     * @throws RuntimeException si el trabajo no existe
+     */
     public Tarea crearTarea(Tarea tarea, Long trabajoId, List<Long> responsableIds) {
-        Trabajo trabajo =  trabajoRepository.findById(trabajoId)
+        // 1. Buscar el trabajo
+        Trabajo trabajo = trabajoRepository.findById(trabajoId)
                 .orElseThrow(() -> new RuntimeException("trabajo no encontrado"));
-        tarea.setTrabajo(trabajo);
-        if(responsableIds != null && !responsableIds.isEmpty()) {
-            Set<User> responsables = new HashSet<>(userRepository.findAllById(responsableIds));
-            tarea.setResponsables(responsables);
+        
+        // 2. Buscar responsables si se proporcionaron
+        Set<User> responsables = new HashSet<>();
+        if (responsableIds != null && !responsableIds.isEmpty()) {
+            responsables = new HashSet<>(userRepository.findAllById(responsableIds));
         }
-        return tareaRepository.save(tarea);
+        
+        // 3. USAR BUILDER para construir la tarea con validaciones automáticas
+        // Las validaciones del Builder se ejecutan en build() y lanzan IllegalStateException si hay errores
+        Tarea tareaValidada = new TareaBuilder()
+                .nombre(tarea.getNombre())
+                .descripcion(tarea.getDescripcion())
+                .fechaInicio(tarea.getFechaInicio())
+                .fechaFinal(tarea.getFechaFinal())
+                .dificultad(tarea.getDificultad())
+                .trabajo(trabajo)
+                .responsables(responsables)
+                .build();  // ← Aquí se ejecutan las validaciones
+        
+        // 4. Guardar la tarea validada
+        return tareaRepository.save(tareaValidada);
     }
+    
     public Tarea crearTarea(Tarea tarea, Long trabajoId) {
         return crearTarea(tarea, trabajoId, null);
     }
