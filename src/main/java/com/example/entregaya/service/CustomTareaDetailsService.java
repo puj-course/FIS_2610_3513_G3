@@ -112,25 +112,51 @@ public class CustomTareaDetailsService {
         return (int) Math.round((pesoCompletado * 100.0) / pesoTotal);
     }
 
+    /**
+     * HU-22 (#270): Editar una tarea usando TareaBuilder con validaciones automáticas.
+     * Usa el Builder para validar los nuevos datos antes de actualizar la tarea existente.
+     * Preserva el ID y el trabajo de la tarea original.
+     * 
+     * @param tareaId ID de la tarea a editar
+     * @param tareaActualizada Objeto con los nuevos datos
+     * @param responsableIds IDs de los nuevos responsables
+     * @return Tarea actualizada y guardada
+     * @throws IllegalStateException si el nombre está vacío o las fechas son inconsistentes
+     * @throws RuntimeException si la tarea no existe
+     */
     public Tarea editarTarea(Long tareaId, Tarea tareaActualizada, List<Long> responsableIds) {
-        Tarea tarea = findById(tareaId);
-
-        // Actualizar campos
-        tarea.setNombre(tareaActualizada.getNombre());
-        tarea.setDescripcion(tareaActualizada.getDescripcion());
-        tarea.setFechaInicio(tareaActualizada.getFechaInicio());
-        tarea.setFechaFinal(tareaActualizada.getFechaFinal());
-        tarea.setDificultad(tareaActualizada.getDificultad());
-
-        // Actualizar responsables
+        // 1. Obtener tarea existente de la BD
+        Tarea tareaExistente = findById(tareaId);
+        
+        // 2. Preparar responsables
+        Set<User> responsables = new HashSet<>();
         if (responsableIds != null && !responsableIds.isEmpty()) {
-            Set<User> responsables = new HashSet<>(userRepository.findAllById(responsableIds));
-            tarea.setResponsables(responsables);
-        } else {
-            tarea.setResponsables(new HashSet<>());
+            responsables = new HashSet<>(userRepository.findAllById(responsableIds));
         }
-
-        return tareaRepository.save(tarea);
+        
+        // 3. USAR BUILDER para validar los nuevos datos
+        // Mantener el mismo trabajo que la tarea existente
+        Tarea tareaValidada = new TareaBuilder()
+                .nombre(tareaActualizada.getNombre())
+                .descripcion(tareaActualizada.getDescripcion())
+                .fechaInicio(tareaActualizada.getFechaInicio())
+                .fechaFinal(tareaActualizada.getFechaFinal())
+                .dificultad(tareaActualizada.getDificultad())
+                .trabajo(tareaExistente.getTrabajo())  // Preservar trabajo original
+                .responsables(responsables)
+                .build();  // ← Valida todo aquí
+        
+        // 4. Si llegamos aquí, los datos son válidos
+        // Copiar campos validados a la tarea existente (preserva ID)
+        tareaExistente.setNombre(tareaValidada.getNombre());
+        tareaExistente.setDescripcion(tareaValidada.getDescripcion());
+        tareaExistente.setFechaInicio(tareaValidada.getFechaInicio());
+        tareaExistente.setFechaFinal(tareaValidada.getFechaFinal());
+        tareaExistente.setDificultad(tareaValidada.getDificultad());
+        tareaExistente.setResponsables(tareaValidada.getResponsables());
+        
+        // 5. Guardar tarea existente (preserva ID y relaciones)
+        return tareaRepository.save(tareaExistente);
     }
 
 }
