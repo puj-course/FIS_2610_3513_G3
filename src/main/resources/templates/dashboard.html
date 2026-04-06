@@ -40,7 +40,7 @@
         .stat-num.orange { color: #e67e22; }
         .stat-num.red { color: #e74c3c; }
         .stat-num.green { color: #27ae60; }
-        
+
         /* HU-11: Tarjeta de alerta para tareas vencidas */
         .stat-alert {
             background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
@@ -139,28 +139,28 @@
         <!-- ESTADÍSTICAS -->
         <div class="stats">
             <div class="stat">
-                <div class="stat-num" th:text="${totalTrabajos}">0</div>
+                <div class="stat-num" th:text="${data.totalTrabajos}">0</div>
                 <div class="stat-label">Total de trabajos</div>
             </div>
             <div class="stat">
-                <div class="stat-num orange" th:text="${trabajos.size()}">0</div>
+                <div class="stat-num orange" th:text="${data.trabajos.size()}">0</div>
                 <div class="stat-label">Activos</div>
             </div>
             <div class="stat">
-                <div class="stat-num green" th:text="${completados}">0</div>
+                <div class="stat-num green" th:text="${data.completados}">0</div>
                 <div class="stat-label">Completados</div>
             </div>
             <!-- HU-11: Contador de tareas vencidas con diseño de alerta -->
             <div class="stat stat-alert">
-                <div class="stat-num red" th:text="${tareasVencidas}">0</div>
+                <div class="stat-num red" th:text="${data.tareasVencidas}">0</div>
                 <div class="stat-label">🔴 Tareas vencidas</div>
             </div>
         </div>
 
         <!-- INVITACIONES PENDIENTES -->
-        <div class="inv-section" th:if="${invitaciones != null and not #lists.isEmpty(invitaciones)}">
+        <div class="inv-section" th:if="${data.invitaciones != null and not #lists.isEmpty(data.invitaciones)}">
             <div class="section-label">📬 Invitaciones pendientes</div>
-            <div th:each="inv : ${invitaciones}" class="inv-card">
+            <div th:each="inv : ${data.invitaciones}" class="inv-card">
                 <div class="inv-info">
                     Te invitaron a colaborar en <strong th:text="${inv.trabajo.nombreTrabajo}">Trabajo</strong>
                 </div>
@@ -182,35 +182,35 @@
             <div class="suggestions-header">
                 <h3>
                     💡 Sugerencias
-                    <span class="badge" th:if="${not #lists.isEmpty(trabajos)}" th:text="${trabajos.size()}">0</span>
+                    <span class="badge" th:if="${not #lists.isEmpty(data.trabajos)}" th:text="${data.trabajos.size()}">0</span>
                 </h3>
                 <button class="toggle-btn" onclick="toggleSuggestions()">Ocultar</button>
             </div>
             <div class="suggestions-content" id="suggestionsContent">
-                <div class="suggestion-card" th:if="${not #lists.isEmpty(trabajos)}">
+                <div class="suggestion-card" th:if="${not #lists.isEmpty(data.trabajos)}">
                     <div class="suggestion-icon">📋</div>
                     <div class="suggestion-title">Organiza tus tareas</div>
                     <div class="suggestion-description">
-                        Tienes <span th:text="${trabajos.size()}">0</span> trabajo(s) activo(s). Revisa las fechas para priorizar.
+                        Tienes <span th:text="${data.trabajos.size()}">0</span> trabajo(s) activo(s). Revisa las fechas para priorizar.
                     </div>
                     <a th:href="@{/trabajos}" class="suggestion-action">Ver todos</a>
                 </div>
-                <div class="suggestion-card" th:if="${proximosVencer != null and not #lists.isEmpty(proximosVencer)}">
+                <div class="suggestion-card" th:if="${data.proximosVencer != null and not #lists.isEmpty(data.proximosVencer)}">
                     <div class="suggestion-icon">⏰</div>
                     <div class="suggestion-title">¡Trabajos por vencer!</div>
                     <div class="suggestion-description">
-                        <span th:text="${proximosVencer.size()}">0</span> trabajo(s) vencen en los próximos 7 días.
+                        <span th:text="${data.proximosVencer.size()}">0</span> trabajo(s) vencen en los próximos 7 días.
                     </div>
                     <a th:href="@{/trabajos}" class="suggestion-action">Revisar</a>
                 </div>
-                <div class="suggestion-card" th:if="${completados != null and completados > 0}">
+                <div class="suggestion-card" th:if="${data.completados != null and data.completados > 0}">
                     <div class="suggestion-icon">🎯</div>
                     <div class="suggestion-title">¡Excelente progreso!</div>
                     <div class="suggestion-description">
-                        Has completado <span th:text="${completados}">0</span> trabajo(s). ¡Sigue adelante!
+                        Has completado <span th:text="${data.completados}">0</span> trabajo(s). ¡Sigue adelante!
                     </div>
                 </div>
-                <div class="suggestion-card" th:if="${#lists.isEmpty(trabajos)}">
+                <div class="suggestion-card" th:if="${#lists.isEmpty(data.trabajos)}">
                     <div class="suggestion-icon">🚀</div>
                     <div class="suggestion-title">Comienza tu primer trabajo</div>
                     <div class="suggestion-description">Crea tu primer trabajo para organizar tus tareas de forma efectiva.</div>
@@ -227,12 +227,12 @@
         <!-- TRABAJOS ACTIVOS -->
         <div class="section-label">Trabajos activos</div>
 
-        <div class="grid" th:if="${not #lists.isEmpty(trabajos)}">
-            <div class="card" th:each="trabajo : ${trabajos}">
+        <div class="grid" th:if="${not #lists.isEmpty(data.trabajos)}">
+            <div class="card" th:each="trabajo : ${data.trabajos}">
 
                 <span class="tag"
-                      th:classappend="${proximosVencer != null and #lists.contains(proximosVencer, trabajo)} ? 'tag-vence-pronto' : (${progresos[trabajo.id] == 0} ? 'tag-pendiente' : 'tag-progreso')"
-                      th:text="${proximosVencer != null and #lists.contains(proximosVencer, trabajo)} ? 'Vence pronto' : (${progresos[trabajo.id] == 0} ? 'Pendiente' : 'En progreso')">
+                      th:classappend="${data.proximosVencer != null and #lists.contains(data.proximosVencer, trabajo)} ? 'tag-vence-pronto' : (${data.progresos[trabajo.id] == 0} ? 'tag-pendiente' : 'tag-progreso')"
+                      th:text="${data.proximosVencer != null and #lists.contains(data.proximosVencer, trabajo)} ? 'Vence pronto' : (${data.progresos[trabajo.id] == 0} ? 'Pendiente' : 'En progreso')">
                 </span>
 
                 <div class="card-title" th:text="${trabajo.nombreTrabajo}">Nombre</div>
@@ -241,7 +241,7 @@
 
                 <div class="card-meta"
                      th:if="${trabajo.fechaEntrega}"
-                     th:classappend="${proximosVencer != null and #lists.contains(proximosVencer, trabajo)} ? 'vence-pronto' : ''">
+                     th:classappend="${data.proximosVencer != null and #lists.contains(data.proximosVencer, trabajo)} ? 'vence-pronto' : ''">
                     ⏰ Vence: <span th:text="${#temporals.format(trabajo.fechaEntrega, 'dd/MM/yyyy')}"></span>
                 </div>
                 <div class="card-meta" th:unless="${trabajo.fechaEntrega}">Sin fecha límite</div>
@@ -252,17 +252,17 @@
 
                 <div class="progress-row">
                     <span>Progreso</span>
-                    <span th:text="${progresos[trabajo.id]} + '%'">0%</span>
+                    <span th:text="${data.progresos[trabajo.id]} + '%'">0%</span>
                 </div>
                 <div class="progress-bar">
-                    <div class="progress-fill" th:style="'width:' + ${progresos[trabajo.id]} + '%'"></div>
+                    <div class="progress-fill" th:style="'width:' + ${data.progresos[trabajo.id]} + '%'"></div>
                 </div>
 
                 <a th:href="@{/trabajos/{id}(id=${trabajo.id})}" class="card-link">Ver detalle →</a>
             </div>
         </div>
 
-        <div class="empty" th:if="${#lists.isEmpty(trabajos)}">
+        <div class="empty" th:if="${#lists.isEmpty(data.trabajos)}">
             <p>No tienes trabajos activos.</p>
             <a th:href="@{/trabajos/nuevo}">+ Crear tu primer trabajo</a>
         </div>

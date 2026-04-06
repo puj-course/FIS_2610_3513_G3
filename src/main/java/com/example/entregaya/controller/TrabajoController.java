@@ -63,40 +63,76 @@ public class TrabajoController {
         return "redirect:/trabajos";
     }
 
-    // HU-15: Mostrar formulario de edición (solo LIDER)
+    /**
+     * HU-15 (#226): Mostrar formulario de edición (solo LIDER)
+     * Valida que el usuario sea LIDER antes de permitir acceso al formulario.
+     * Si no es LIDER, redirige con mensaje de error.
+     * 
+     * @param id ID del trabajo a editar
+     * @param model Modelo para pasar datos a la vista
+     * @param user Usuario autenticado
+     * @param redirectAttributes Para mensajes flash
+     * @return Vista editar.html si es LIDER, redirect si no
+     */
     @GetMapping("/{id}/editar")
     public String mostrarFormularioEditar(@PathVariable long id, 
                                           Model model, 
                                           @AuthenticationPrincipal UserDetails user,
                                           RedirectAttributes redirectAttributes) {
         try {
-            // Validar que el usuario sea LIDER del trabajo
+            // Verificar que el trabajo existe
+            Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
+            
+            // VALIDACIÓN CRÍTICA: Solo LIDER puede editar
             if (!customTrabajoDetailsService.esLider(id, user.getUsername())) {
-                redirectAttributes.addFlashAttribute("error", "Solo el líder del trabajo puede editarlo.");
+                // Determinar rol del usuario para mensaje específico
+                boolean esColaborador = trabajo.getColaboradores().stream()
+                        .anyMatch(col -> col.getUser().getUsername().equals(user.getUsername()));
+                
+                if (esColaborador) {
+                    redirectAttributes.addFlashAttribute("error", 
+                        "No tienes permisos para editar este trabajo. Solo el líder puede hacerlo.");
+                } else {
+                    redirectAttributes.addFlashAttribute("error", 
+                        "No perteneces a este trabajo.");
+                }
                 return "redirect:/trabajos/" + id;
             }
             
-            // Obtener el trabajo actual
-            Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
+            // Usuario es LIDER - permitir acceso al formulario
             model.addAttribute("trabajo", trabajo);
             return "trabajos/editar";
             
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", "El trabajo no existe o no tienes acceso a él.");
+            return "redirect:/trabajos";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "No se pudo cargar el formulario de edición.");
             return "redirect:/trabajos";
         }
     }
 
-    // HU-15: Procesar edición del trabajo (solo LIDER)
+    /**
+     * HU-15 (#226): Procesar edición del trabajo (solo LIDER)
+     * Valida permisos LIDER antes de guardar cambios.
+     * Valida datos del formulario (nombre único, no vacío).
+     * 
+     * @param id ID del trabajo a actualizar
+     * @param trabajoEditado Datos del formulario
+     * @param user Usuario autenticado
+     * @param redirectAttributes Para mensajes flash
+     * @return Redirect a detalle si éxito, a editar si error
+     */
     @PostMapping("/{id}/editar")
     public String actualizarTrabajo(@PathVariable long id,
                                    @ModelAttribute Trabajo trabajoEditado,
                                    @AuthenticationPrincipal UserDetails user,
                                    RedirectAttributes redirectAttributes) {
         try {
-            // Validar que el usuario sea LIDER del trabajo
+            // VALIDACIÓN CRÍTICA: Solo LIDER puede editar
             if (!customTrabajoDetailsService.esLider(id, user.getUsername())) {
-                redirectAttributes.addFlashAttribute("error", "Solo el líder del trabajo puede editarlo.");
+                redirectAttributes.addFlashAttribute("error", 
+                    "No tienes permisos para editar este trabajo. Solo el líder puede hacerlo.");
                 return "redirect:/trabajos/" + id;
             }
             

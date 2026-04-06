@@ -166,6 +166,9 @@
         .btn-calendar:hover { background: #f5f5f5; border-color: #bbb; }
         .btn-danger-ghost { padding: 5px 10px; background: transparent; color: #ccc; border: 1px solid #e5e5e5; border-radius: 5px; font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
         .btn-danger-ghost:hover { color: #e74c3c; border-color: #e74c3c; background: #fff5f5; }
+        /* HU-15: Botón para editar trabajo */
+        .btn-edit-ghost { padding: 5px 10px; background: transparent; color: #3b82f6; border: 1px solid #dbeafe; border-radius: 5px; font-size: 0.75rem; font-weight: 500; cursor: pointer; text-decoration: none; display: inline-block; transition: all 0.15s; white-space: nowrap; }
+        .btn-edit-ghost:hover { color: #2563eb; border-color: #3b82f6; background: #eff6ff; }
         .btn-sm-save  { padding: 3px 8px; background: #f4a535; color: #fff; border: none; border-radius: 4px; font-size: 0.72rem; font-weight: 600; cursor: pointer; }
         .btn-sm-save:hover { background: #e0932b; }
         .btn-sm-danger { padding: 3px 8px; background: transparent; color: #e74c3c; border: 1px solid #e74c3c; border-radius: 4px; font-size: 0.72rem; font-weight: 600; cursor: pointer; }
@@ -309,12 +312,15 @@
         <div class="card">
             <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:4px;">
                 <div class="work-title" th:text="${trabajo.nombreTrabajo}">Nombre</div>
-                <form th:if="${esLider}"
-                      th:action="@{/trabajos/{id}/eliminar(id=${trabajo.id})}" method="post" style="margin:0; flex-shrink:0;"
-                      onsubmit="return confirm('¿Eliminar este trabajo y todas sus tareas?')">
-                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                    <button type="submit" class="btn-danger-ghost">Eliminar trabajo</button>
-                </form>
+                <!-- HU-15: Botones de acción solo para LIDER -->
+                <div th:if="${esLider}" style="display:flex; gap:6px; flex-shrink:0;">
+                    <a th:href="@{/trabajos/{id}/editar(id=${trabajo.id})}" class="btn-edit-ghost">✏️ Editar trabajo</a>
+                    <form th:action="@{/trabajos/{id}/eliminar(id=${trabajo.id})}" method="post" style="margin:0;"
+                          onsubmit="return confirm('¿Eliminar este trabajo y todas sus tareas?')">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <button type="submit" class="btn-danger-ghost">🗑️ Eliminar trabajo</button>
+                    </form>
+                </div>
             </div>
             <div class="work-desc" th:if="${trabajo.descripcion}" th:text="${trabajo.descripcion}"></div>
 
