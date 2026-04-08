@@ -83,3 +83,17 @@ CREATE INDEX idx_comentario_user_id ON comentario(user_id);
 
 -- agregar columna para email en usuarios
 ALTER TABLE users ADD COLUMN email VARCHAR(255) UNIQUE;
+
+--Crear tabla notificacion
+CREATE TABLE notificacion (
+    id BIGSERIAL PRIMARY KEY,
+    destinatario_id BIGINT NOT NULL,
+    mensaje VARCHAR(500) NOT NULL,
+    leida BOOLEAN NOT NULL DEFAULT FALSE,
+    fecha_creacion TIMESTAMP NOT NULL,
+
+    CONSTRAINT fk_notificacion_usuario
+        FOREIGN KEY (destinatario_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE
+);
