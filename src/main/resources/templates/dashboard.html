@@ -100,6 +100,15 @@
 
         .empty { padding: 50px; text-align: center; color: #888; background: white; border: 1px solid #ddd; border-radius: 6px; }
         .empty a { color: #e67e22; }
+
+        /* DoD D6: Badge de notificaciones no leídas */
+        .notif-badge { display: inline-block; background: #e74c3c; color: white; font-size: 0.68rem; font-weight: 700; padding: 1px 6px; border-radius: 10px; margin-left: 6px; vertical-align: middle; line-height: 1.4; }
+        .notif-item { background: white; border: 1px solid #e2e2e2; border-left: 4px solid #3498db; padding: 12px 16px; border-radius: 4px; margin-bottom: 8px; font-size: 0.86rem; color: #444; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+        .notif-item.no-leida { border-left-color: #e67e22; background: #fffbf5; }
+        .notif-texto { flex: 1; line-height: 1.4; }
+        .notif-fecha { font-size: 0.75rem; color: #aaa; white-space: nowrap; }
+        .btn-leer { padding: 3px 10px; background: transparent; border: 1px solid #3498db; color: #3498db; border-radius: 4px; font-size: 0.75rem; cursor: pointer; white-space: nowrap; }
+        .btn-leer:hover { background: #3498db; color: white; }
     </style>
 </head>
 
@@ -126,7 +135,13 @@
 
     <div class="topbar">
         <span class="topbar-title">Dashboard</span>
-        <span th:text="'Hola, ' + ${#authentication.name}">Hola, usuario</span>
+        <span>
+            Hola, <span th:text="${#authentication.name}">usuario</span>
+            <!-- DoD D6: badge de notificaciones no leídas -->
+            <span class="notif-badge"
+                  th:if="${data.notificacionesNoLeidas > 0}"
+                  th:text="${data.notificacionesNoLeidas}">0</span>
+        </span>
     </div>
 
     <div class="content">
@@ -155,6 +170,18 @@
                 <div class="stat-num red" th:text="${data.tareasVencidas}">0</div>
                 <div class="stat-label">🔴 Tareas vencidas</div>
             </div>
+        </div>
+
+        <!-- NOTIFICACIONES NO LEÍDAS (DoD D6 / CA3 / CA4) -->
+        <div class="inv-section" th:if="${data.notificacionesNoLeidas > 0}">
+            <div class="section-label">
+                🔔 Notificaciones
+                <span class="notif-badge" th:text="${data.notificacionesNoLeidas}">0</span>
+            </div>
+            <p style="font-size:0.82rem; color:#888; margin-bottom:10px;">
+                Tienes <span th:text="${data.notificacionesNoLeidas}">0</span> notificación(es) sin leer.
+                <a th:href="@{/notificaciones}" style="color:#e67e22; font-weight:600;">Ver todas</a>
+            </p>
         </div>
 
         <!-- INVITACIONES PENDIENTES -->

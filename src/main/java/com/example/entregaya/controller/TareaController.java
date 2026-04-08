@@ -28,11 +28,12 @@ public class TareaController {
     private final UserRepository userRepository;
     private final Lideroeditorstrategy lideroeditorstrategy;
 
-
     public TareaController(TareaRepository tareaRepository,
                            CustomTareaDetailsService customTareaDetailsService,
                            CustomTrabajoDetailsService customTrabajoDetailsService,
-                           CustomComentarioDetailsService customComentarioDetailsService, UserRepository userRepository, Lideroeditorstrategy lideroeditorstrategy) {
+                           CustomComentarioDetailsService customComentarioDetailsService,
+                           UserRepository userRepository,
+                           Lideroeditorstrategy lideroeditorstrategy) {
         this.tareaRepository = tareaRepository;
         this.customTareaDetailsService = customTareaDetailsService;
         this.customTrabajoDetailsService = customTrabajoDetailsService;
@@ -52,7 +53,9 @@ public class TareaController {
     }
 
     @PostMapping("/nueva")
-    public String guardar(@PathVariable long trabajoId, @ModelAttribute Tarea tarea, @RequestParam(value = "responsableIds", required = false) List<Long> responsableIds) {
+    public String guardar(@PathVariable long trabajoId,
+                          @ModelAttribute Tarea tarea,
+                          @RequestParam(value = "responsableIds", required = false) List<Long> responsableIds) {
         customTareaDetailsService.crearTarea(tarea, trabajoId, responsableIds);
         return "redirect:/trabajos/" + trabajoId;
     }
@@ -63,23 +66,32 @@ public class TareaController {
         return "redirect:/trabajos/" + trabajoId;
     }
 
+    /**
+     * Pasa el username del usuario autenticado para que el Observer
+     * pueda incluirlo en la notificación (CA2 HU-3).
+     */
     @PostMapping("/{tareaId}/completar")
-    public String completar(@PathVariable Long trabajoId, @PathVariable Long tareaId) {
-        customTareaDetailsService.toggleCompletada(tareaId);
+    public String completar(@PathVariable Long trabajoId,
+                            @PathVariable Long tareaId,
+                            @AuthenticationPrincipal UserDetails userDetails) {
+        customTareaDetailsService.toggleCompletada(tareaId, userDetails.getUsername());
         return "redirect:/trabajos/" + trabajoId;
     }
 
     @PostMapping("/{tareaId}/asignar")
-    public String asignarResponsables(@PathVariable Long trabajoId, @PathVariable Long tareaId, @RequestParam(value = "responsableIds", required = false) List<Long> responsableIds) {
+    public String asignarResponsables(@PathVariable Long trabajoId,
+                                      @PathVariable Long tareaId,
+                                      @RequestParam(value = "responsableIds", required = false) List<Long> responsableIds) {
         customTareaDetailsService.actualizarResponsables(tareaId, responsableIds);
         return "redirect:/trabajos/" + trabajoId;
     }
 
     @GetMapping("/{tareaId}/editar")
-    public String formularioEditar(@PathVariable long trabajoId, @PathVariable Long tareaId,
-                                   Model model, @AuthenticationPrincipal UserDetails user) {
-        // Verificar que el usuario tenga permiso (LIDER o EDITOR)
-        if (!customTrabajoDetailsService.verificarPermiso(trabajoId,user.getUsername(), lideroeditorstrategy)) {
+    public String formularioEditar(@PathVariable long trabajoId,
+                                   @PathVariable Long tareaId,
+                                   Model model,
+                                   @AuthenticationPrincipal UserDetails user) {
+        if (!customTrabajoDetailsService.verificarPermiso(trabajoId, user.getUsername(), lideroeditorstrategy)) {
             return "redirect:/trabajos/" + trabajoId + "?error=noPermiso";
         }
 
@@ -90,19 +102,19 @@ public class TareaController {
         model.addAttribute("trabajoId", trabajoId);
         model.addAttribute("dificultades", Tarea.Dificultad.values());
         model.addAttribute("colaboradores", trabajo.getColaboradores());
-        model.addAttribute("responsablesSeleccionados", tarea.getResponsables().stream()
-                .map(User::getId).toList());
+        model.addAttribute("responsablesSeleccionados",
+                tarea.getResponsables().stream().map(User::getId).toList());
 
         return "trabajos/tareas/EditarTarea";
     }
+
     @PostMapping("/{tareaId}/editar")
-    public String guardarEdicion(@PathVariable long trabajoId, @PathVariable Long tareaId,
+    public String guardarEdicion(@PathVariable long trabajoId,
+                                 @PathVariable Long tareaId,
                                  @ModelAttribute Tarea tarea,
                                  @RequestParam(value = "responsableIds", required = false) List<Long> responsableIds,
                                  @AuthenticationPrincipal UserDetails user) {
-
-        // Verificar permisos
-        if (!customTrabajoDetailsService.verificarPermiso(trabajoId,user.getUsername(), lideroeditorstrategy)) {
+        if (!customTrabajoDetailsService.verificarPermiso(trabajoId, user.getUsername(), lideroeditorstrategy)) {
             return "redirect:/trabajos/" + trabajoId + "?error=noPermiso";
         }
 
@@ -115,16 +127,14 @@ public class TareaController {
                                     @PathVariable Long tareaId,
                                     @RequestParam String contenido,
                                     @AuthenticationPrincipal UserDetails userDetails) {
-
-        // Obtener el usuario autenticado
         User usuario = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // Crear el comentario
         customComentarioDetailsService.crearComentario(tareaId, usuario.getId(), contenido);
 
         return "redirect:/trabajos/" + trabajoId + "/tareas/" + tareaId + "/detalle";
     }
+
     @GetMapping("/{tareaId}/detalle")
     public String verDetalleTarea(@PathVariable Long trabajoId,
                                   @PathVariable Long tareaId,
@@ -136,7 +146,4 @@ public class TareaController {
 
         return "trabajos/tareas/detalle_tarea";
     }
-
-
-
 }

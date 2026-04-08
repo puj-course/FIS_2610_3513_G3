@@ -7,16 +7,19 @@ import com.example.entregaya.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
 
 /**
- * Controlador REST para gestión de notificaciones.
- * DoD D7: endpoint PATCH /notificaciones/{id}/leer
+ * Controlador para gestión de notificaciones.
+ * GET  /notificaciones        → vista con todas las notificaciones del usuario
+ * PATCH /notificaciones/{id}/leer → marca como leída (DoD D7)
  */
-@RestController
+@Controller
 @RequestMapping("/notificaciones")
 public class NotificacionController {
 
@@ -30,22 +33,50 @@ public class NotificacionController {
     }
 
     /**
-     * Marca una notificación como leída.
-     * Solo el destinatario puede marcar su propia notificación (CA4).
+     * Muestra todas las notificaciones del usuario autenticado,
+     * ordenadas de más reciente a más antigua.
+     */
+    @GetMapping
+    public String verNotificaciones(Model model,
+                                    @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        List<Notificacion> todas =
+                notificacionRepository.findByDestinatarioOrderByFechaCreacionDesc(user);
+
+        long noLeidas = todas.stream().filter(n -> !n.isLeida()).count();
+
+        model.addAttribute("notificaciones", todas);
+        model.addAttribute("noLeidas", noLeidas);
+
+        return "notificaciones";
+    }
+
+    /**
+     * Marca una notificación como leída (CA4, DoD D7).
+     * Solo el destinatario puede marcarla.
      *
-     * @return 200 OK si se actualizó, 403 si no es el destinatario, 404 si no existe
+     * @return 200 OK, 403 si no es el destinatario, 404 si no existe.
      */
     @PatchMapping("/{id}/leer")
+    @ResponseBody
     public ResponseEntity<Void> marcarLeida(@PathVariable Long id,
                                             @AuthenticationPrincipal UserDetails userDetails) {
-        return notificacionRepository.findById(id).map(notificacion -> {
-            // Verificar que el usuario autenticado sea el destinatario
-            if (!notificacion.getDestinatario().getUsername().equals(userDetails.getUsername())) {
-                return ResponseEntity.<Void>status(403).build();
-            }
-            notificacion.setLeida(true);
-            notificacionRepository.save(notificacion);
-            return ResponseEntity.<Void>ok().build();
-        }).orElse(ResponseEntity.<Void>notFound().build());
+        Optional<Notificacion> opcional = notificacionRepository.findById(id);
+
+        if (opcional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Notificacion notificacion = opcional.get();
+
+        if (!notificacion.getDestinatario().getUsername().equals(userDetails.getUsername())) {
+            return ResponseEntity.status(403).build();
+        }
+
+        notificacion.setLeida(true);
+        notificacionRepository.save(notificacion);
+        return ResponseEntity.ok().build();
     }
 }
