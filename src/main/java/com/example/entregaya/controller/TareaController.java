@@ -2,209 +2,149 @@ package com.example.entregaya.controller;
 
 import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
-import com.example.entregaya.model.ColaboradorTrabajo;
-import com.example.entregaya.service.CustomTareaDetailsService;
-import com.example.entregaya.service.CustomTrabajoDetailsService;
+import com.example.entregaya.model.User;
 import com.example.entregaya.repository.TareaRepository;
 import com.example.entregaya.repository.UserRepository;
+import com.example.entregaya.service.CustomComentarioDetailsService;
+import com.example.entregaya.service.CustomInvitacionDetailsService;
+import com.example.entregaya.service.CustomTareaDetailsService;
+import com.example.entregaya.service.CustomTrabajoDetailsService;
 import com.example.entregaya.strategy.Lideroeditorstrategy;
-import com.example.entregaya.strategy.Sololiderstrategy;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-/**
- * Controlador para gestionar las tareas dentro de un trabajo.
- * HU-20, HU-21, HU-22 — Gestión completa de tareas con validación y permisos.
- */
+import java.util.*;
+
 @Controller
-@RequestMapping("/trabajos")
+@RequestMapping("/trabajos/{trabajoId}/tareas")
 public class TareaController {
+    private final TareaRepository tareaRepository;
+    private final CustomTareaDetailsService customTareaDetailsService;
+    private final CustomTrabajoDetailsService customTrabajoDetailsService;
+    private final CustomComentarioDetailsService customComentarioDetailsService;
+    private final UserRepository userRepository;
+    private final Lideroeditorstrategy lideroeditorstrategy;
 
-    @Autowired
-    private CustomTareaDetailsService customTareaDetailsService;
+    public TareaController(TareaRepository tareaRepository,
+                           CustomTareaDetailsService customTareaDetailsService,
+                           CustomTrabajoDetailsService customTrabajoDetailsService,
+                           CustomComentarioDetailsService customComentarioDetailsService,
+                           UserRepository userRepository,
+                           Lideroeditorstrategy lideroeditorstrategy) {
+        this.tareaRepository = tareaRepository;
+        this.customTareaDetailsService = customTareaDetailsService;
+        this.customTrabajoDetailsService = customTrabajoDetailsService;
+        this.customComentarioDetailsService = customComentarioDetailsService;
+        this.userRepository = userRepository;
+        this.lideroeditorstrategy = lideroeditorstrategy;
+    }
 
-    @Autowired
-    private CustomTrabajoDetailsService customTrabajoDetailsService;
+    @GetMapping("/nuevo")
+    public String formulario(@PathVariable Long trabajoId, Model model) {
+        Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(trabajoId);
+        model.addAttribute("tarea", new Tarea());
+        model.addAttribute("trabajoId", trabajoId);
+        model.addAttribute("dificultades", Tarea.Dificultad.values());
+        model.addAttribute("colaboradores", trabajo.getColaboradores());
+        return "trabajos/tareas/CrearTarea";
+    }
 
-    @Autowired
-    private TareaRepository tareaRepository;
+    @PostMapping("/nueva")
+    public String guardar(@PathVariable Long trabajoId,
+                          @ModelAttribute Tarea tarea,
+                          @RequestParam(value = "responsableIds", required = false) List<Long> responsableIds) {
+        customTareaDetailsService.crearTarea(tarea, trabajoId, responsableIds);
+        return "redirect:/trabajos/" + trabajoId;
+    }
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private Lideroeditorstrategy lideroeditorstrategy;
-
-    @Autowired
-    private Sololiderstrategy sololiderstrategy;
-
-    /**
-     * Mostrar formulario de creación de tarea
-     */
-    @GetMapping("/{id}/tareas/CrearTarea")
-    public String mostrarFormularioCrearTarea(
-            @PathVariable Long id,
-            Model model,
-            Authentication authentication) {
-
-        try {
-            Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
-            model.addAttribute("trabajo", trabajo);
-            model.addAttribute("tarea", new Tarea());
-            return "trabajos/tareas/CrearTarea";
-        } catch (Exception e) {
-            model.addAttribute("error", "No se pudo cargar el formulario de creación de tarea");
-            return "trabajos/tareas/CrearTarea";
-        }
+    @PostMapping("/{tareaId}/eliminar")
+    public String eliminar(@PathVariable Long trabajoId, @PathVariable Long tareaId) {
+        customTareaDetailsService.eliminar(tareaId);
+        return "redirect:/trabajos/" + trabajoId;
     }
 
     /**
-     * Crear una nueva tarea en un trabajo
+     * Pasa el username del usuario autenticado para que el Observer
+     * pueda incluirlo en la notificación (CA2 HU-3).
      */
-    @PostMapping("/{id}/tareas/nueva")
-    public String crearTarea(
-            @PathVariable Long id,
-            @ModelAttribute Tarea tarea,
-            RedirectAttributes redirectAttributes,
-            Authentication authentication) {
-
-        try {
-            // Validar que el usuario tenga permisos (solo LIDER puede crear tareas)
-            String username = authentication.getName();
-            boolean tienePermiso = customTrabajoDetailsService.verificarPermiso(id, username, sololiderstrategy);
-
-            if (!tienePermiso) {
-                redirectAttributes.addFlashAttribute("error", "No tienes permisos para crear tareas en este trabajo");
-                return "redirect:/trabajos/" + id + "/tareas/CrearTarea";
-            }
-
-            // Crear la tarea sin responsables (se pueden asignar después)
-            Tarea tareaCreada = customTareaDetailsService.crearTarea(tarea, id);
-            redirectAttributes.addFlashAttribute("success", "Tarea creada exitosamente");
-            return "redirect:/trabajos/" + id;
-
-        } catch (IllegalStateException e) {
-            // Capturar errores de validación del Builder
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/trabajos/" + id + "/tareas/CrearTarea";
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Error al crear la tarea: " + e.getMessage());
-            return "redirect:/trabajos/" + id + "/tareas/CrearTarea";
-        }
+    @PostMapping("/{tareaId}/completar")
+    public String completar(@PathVariable Long trabajoId,
+                            @PathVariable Long tareaId,
+                            @AuthenticationPrincipal UserDetails userDetails) {
+        customTareaDetailsService.toggleCompletada(tareaId, userDetails.getUsername());
+        return "redirect:/trabajos/" + trabajoId;
     }
 
-    /**
-     * Mostrar formulario de edición de tarea
-     */
-    @GetMapping("/{id}/tareas/{tareaId}/editar")
-    public String mostrarFormularioEditarTarea(
-            @PathVariable Long id,
-            @PathVariable Long tareaId,
-            Model model,
-            Authentication authentication) {
-
-        try {
-            Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
-            Tarea tarea = customTareaDetailsService.findById(tareaId);
-
-            model.addAttribute("trabajo", trabajo);
-            model.addAttribute("tarea", tarea);
-            return "trabajos/tareas/EditarTarea";
-        } catch (Exception e) {
-            model.addAttribute("error", "No se pudo cargar el formulario de edición");
-            return "trabajos/tareas/EditarTarea";
-        }
+    @PostMapping("/{tareaId}/asignar")
+    public String asignarResponsables(@PathVariable Long trabajoId,
+                                      @PathVariable Long tareaId,
+                                      @RequestParam(value = "responsableIds", required = false) List<Long> responsableIds) {
+        customTareaDetailsService.actualizarResponsables(tareaId, responsableIds);
+        return "redirect:/trabajos/" + trabajoId;
     }
 
-    /**
-     * Editar una tarea existente
-     */
-    @PostMapping("/{id}/tareas/{tareaId}/editar")
-    public String editarTarea(
-            @PathVariable Long id,
-            @PathVariable Long tareaId,
-            @ModelAttribute Tarea tarea,
-            RedirectAttributes redirectAttributes,
-            Authentication authentication) {
-
-        try {
-            // Verificar permisos (EDITOR o LIDER pueden editar)
-            String username = authentication.getName();
-            boolean tienePermiso = customTrabajoDetailsService.verificarPermiso(id, username, lideroeditorstrategy);
-
-            if (!tienePermiso) {
-                redirectAttributes.addFlashAttribute("error", "No tienes permisos para editar tareas");
-                return "redirect:/trabajos/" + id + "/tareas/" + tareaId + "/editar";
-            }
-
-            // Editar la tarea sin cambiar responsables (se pueden editar en otra acción)
-            Tarea tareaActualizada = customTareaDetailsService.editarTarea(tareaId, tarea, null);
-            redirectAttributes.addFlashAttribute("success", "Tarea actualizada exitosamente");
-            return "redirect:/trabajos/" + id;
-
-        } catch (IllegalStateException e) {
-            // Capturar errores de validación del Builder
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/trabajos/" + id + "/tareas/" + tareaId + "/editar";
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Error al editar la tarea: " + e.getMessage());
-            return "redirect:/trabajos/" + id + "/tareas/" + tareaId + "/editar";
+    @GetMapping("/{tareaId}/editar")
+    public String formularioEditar(@PathVariable Long trabajoId,
+                                   @PathVariable Long tareaId,
+                                   Model model,
+                                   @AuthenticationPrincipal UserDetails user) {
+        if (!customTrabajoDetailsService.verificarPermiso(trabajoId, user.getUsername(), lideroeditorstrategy)) {
+            return "redirect:/trabajos/" + trabajoId + "?error=noPermiso";
         }
+
+        Tarea tarea = customTareaDetailsService.findById(tareaId);
+        Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(trabajoId);
+
+        model.addAttribute("tarea", tarea);
+        model.addAttribute("trabajoId", trabajoId);
+        model.addAttribute("dificultades", Tarea.Dificultad.values());
+        model.addAttribute("colaboradores", trabajo.getColaboradores());
+        model.addAttribute("responsablesSeleccionados",
+                tarea.getResponsables().stream().map(User::getId).toList());
+
+        return "trabajos/tareas/EditarTarea";
     }
 
-    /**
-     * Ver detalle de una tarea
-     */
-    @GetMapping("/{id}/tareas/{tareaId}/detalle")
-    public String verDetalleTarea(
-            @PathVariable Long id,
-            @PathVariable Long tareaId,
-            Model model,
-            Authentication authentication) {
-
-        try {
-            Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
-            Tarea tarea = customTareaDetailsService.findById(tareaId);
-
-            model.addAttribute("trabajo", trabajo);
-            model.addAttribute("tarea", tarea);
-            return "trabajos/tareas/detalle_tarea";
-        } catch (Exception e) {
-            model.addAttribute("error", "Tarea no encontrada");
-            return "error";
+    @PostMapping("/{tareaId}/editar")
+    public String guardarEdicion(@PathVariable Long trabajoId,
+                                 @PathVariable Long tareaId,
+                                 @ModelAttribute Tarea tarea,
+                                 @RequestParam(value = "responsableIds", required = false) List<Long> responsableIds,
+                                 @AuthenticationPrincipal UserDetails user) {
+        if (!customTrabajoDetailsService.verificarPermiso(trabajoId, user.getUsername(), lideroeditorstrategy)) {
+            return "redirect:/trabajos/" + trabajoId + "?error=noPermiso";
         }
+
+        customTareaDetailsService.editarTarea(tareaId, tarea, responsableIds);
+        return "redirect:/trabajos/" + trabajoId;
     }
 
-    /**
-     * Eliminar una tarea
-     */
-    @PostMapping("/{id}/tareas/{tareaId}/eliminar")
-    public String eliminarTarea(
-            @PathVariable Long id,
-            @PathVariable Long tareaId,
-            RedirectAttributes redirectAttributes,
-            Authentication authentication) {
+    @PostMapping("/{tareaId}/comentario")
+    public String agregarComentario(@PathVariable Long trabajoId,
+                                    @PathVariable Long tareaId,
+                                    @RequestParam String contenido,
+                                    @AuthenticationPrincipal UserDetails userDetails) {
+        User usuario = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        try {
-            String username = authentication.getName();
-            boolean tienePermiso = customTrabajoDetailsService.verificarPermiso(id, username, sololiderstrategy);
+        customComentarioDetailsService.crearComentario(tareaId, usuario.getId(), contenido);
 
-            if (!tienePermiso) {
-                redirectAttributes.addFlashAttribute("error", "No tienes permisos para eliminar tareas");
-                return "redirect:/trabajos/" + id;
-            }
+        return "redirect:/trabajos/" + trabajoId + "/tareas/" + tareaId + "/detalle";
+    }
 
-            customTareaDetailsService.eliminar(tareaId);
-            redirectAttributes.addFlashAttribute("success", "Tarea eliminada exitosamente");
-            return "redirect:/trabajos/" + id;
+    @GetMapping("/{tareaId}/detalle")
+    public String verDetalleTarea(@PathVariable Long trabajoId,
+                                  @PathVariable Long tareaId,
+                                  Model model) {
+        Tarea tarea = customTareaDetailsService.findById(tareaId);
 
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Error al eliminar la tarea");
-            return "redirect:/trabajos/" + id;
-        }
+        model.addAttribute("tarea", tarea);
+        model.addAttribute("trabajoId", trabajoId);
+
+        return "trabajos/tareas/detalle_tarea";
     }
 }

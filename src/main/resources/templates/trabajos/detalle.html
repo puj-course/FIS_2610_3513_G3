@@ -401,7 +401,7 @@
             </div>
 
             <div class="card-actions">
-                <a th:href="@{/trabajos/{id}/tareas/CrearTarea(id=${trabajo.id})}" class="btn-primary">+ Nueva tarea</a>
+                <a th:href="@{/trabajos/{id}/tareas/nuevo(id=${trabajo.id})}" class="btn-primary">+ Nueva tarea</a>
                 <a th:href="@{/trabajos/{id}/calendario(id=${trabajo.id})}" class="btn-calendar">📅 Calendario</a>
             </div>
         </div>
@@ -537,9 +537,8 @@
 
         <div class="empty" th:if="${#sets.isEmpty(trabajo.tareas)}">
             <p>No hay tareas aún.</p>
-            <a th:href="@{/trabajos/{id}/tareas/CrearTarea(id=${trabajo.id})}" class="btn-primary">+ Agregar primera tarea</a>
+            <a th:href="@{/trabajos/{id}/tareas/nuevo(id=${trabajo.id})}" class="btn-primary">+ Agregar primera tarea</a>
         </div>
-
     </main>
 
     <!-- ─── SIDEBAR ─── -->

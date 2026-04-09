@@ -257,12 +257,6 @@ public class TrabajoController {
         return "redirect:/trabajos/" + id;
     }
 
-    @GetMapping("/CrearTarea")
-    public String CrearTarea(Model model) {
-        model.addAttribute("tarea", new Tarea());
-        return "trabajos/CrearTarea";
-    }
-
     @GetMapping("/trabajos-especificos")
     public String TrabajosEspecificos(Model model) {
         model.addAttribute("trabajo", new Trabajo());
