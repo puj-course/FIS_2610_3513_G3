@@ -1,0 +1,6 @@
+# Configuracion de los templates
+
+# Permitir issues en blanco o normales para
+# - Necesitamos flexibilidad para subissues
+# - No todos los issues deben ser historias de usuario
+blank_issues_enabled: true
