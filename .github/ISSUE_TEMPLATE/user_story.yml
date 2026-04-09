@@ -1,0 +1,49 @@
+# Plantilla para historias de usuario (HU)
+
+name: Historia de Usuario
+description: Crear una nueva historia de usuario
+title: "HU-XX: "  # XX para cambiar
+labels: ["user-story"]  # asignar un label para las que son historias de usuario
+
+body:
+  - type: textarea
+    id: descripcion
+    attributes:
+      label: Descripción
+      description: Se debe seguir el formato estándar de historia de usuario
+      placeholder: |
+        HU-XX
+        Como [rol], quiero [acción], para [beneficio].
+    validations:
+      required: true  # Campo obligatorio
+
+  - type: textarea
+    id: invest
+    attributes:
+      label: INVEST
+      description: Se deben completar los 6 criterios INVEST
+      placeholder: |
+        I - Independiente
+        N - Negociable
+        V - Valiosa
+        E - Estimable
+        S - Small
+        T - Testeable
+    validations:
+      required: true
+
+  - type: textarea
+    id: criterios
+    attributes:
+      label: Criterios de aceptación
+      description: Condiciones que deben cumplirse para considerar la HU como válida
+    validations:
+      required: true
+
+  - type: textarea
+    id: dod
+    attributes:
+      label: Definition of Done
+      description: Condiciones para dar para considerar terminada la HU
+    validations:
+      required: true

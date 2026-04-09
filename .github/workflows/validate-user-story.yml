@@ -1,0 +1,70 @@
+# Workflow de GitHub Actions para validar historias de usuario
+# La idea es que solo las HU tengan validaciones estrictas
+
+name: Validate User Story
+
+on:
+  issues:
+    types: [opened, edited]  # Se ejecuta cuando se crea o edita un issue
+
+jobs:
+  validate:
+    runs-on: ubuntu-22.04  # Se ejecuta en una máquina virtual de Ubuntu
+
+    steps:
+      - name: Validar contenido de la historia de usuario
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Obtenemos el issue actual
+            const issue = context.payload.issue;
+
+            // Obtenemos los labels del issue
+            const labels = issue.labels.map(l => l.name);
+
+            // Obtenemos el contenido del issue
+            const body = issue.body;
+
+            // Solo validamos si es una historia de usuario
+            if (!labels.includes("user-story")) {
+              console.log("No es una historia de usuario, no se valida");
+              return;
+            }
+
+            // Función para marcar error
+            function fail(msg) {
+              core.setFailed(msg);
+            }
+
+            // Validaciones básicas del formato Scrum
+
+            // Validar estructura "Como, quiero, para"
+            if (!body.includes("Como")) {
+              fail("Falta 'Como [rol]'");
+            }
+
+            if (!body.includes("quiero")) {
+              fail("Falta 'quiero [acción]'");
+            }
+
+            if (!body.includes("para")) {
+              fail("Falta 'para [beneficio]'");
+            }
+
+            // Validar secciones importantes
+            if (!body.includes("INVEST")) {
+              fail("Falta la sección INVEST");
+            }
+
+            if (!body.includes("Criterios de aceptación")) {
+              fail("Faltan criterios de aceptación");
+            }
+
+            if (!body.includes("Definition of Done")) {
+              fail("Falta Definition of Done");
+            }
+
+            // Validar longitud mínima (para evitar respuestas vacías o pobres)
+            if (body.length < 300) {
+              fail("La historia de usuario es demasiado corta");
+            }
