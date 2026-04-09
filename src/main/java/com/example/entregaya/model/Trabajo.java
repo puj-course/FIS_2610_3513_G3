@@ -1,5 +1,7 @@
 package com.example.entregaya.model;
 
+import com.example.entregaya.builder.TareaBuilder;
+import com.example.entregaya.prototype.TrabajoPrototype;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -8,7 +10,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 @Entity
 @Table(name = "trabajo")
-public class Trabajo {
+public class Trabajo implements TrabajoPrototype {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -98,6 +100,36 @@ public class Trabajo {
 
     public void setColaboradores(Set<ColaboradorTrabajo> colaboradores) {
         this.colaboradores = colaboradores;
+    }
+
+
+    /**
+     * Copia profunda de este trabajo.
+     * Las tareas se recrean con TareaBuilder para respetar sus invariantes.
+     * Los colaboradores NO se copian — el servicio agrega al creador como LIDER.
+     */
+    @Override
+    public Trabajo clonar(){
+        Trabajo copia = new Trabajo();
+        copia.setNombreTrabajo(this.nombreTrabajo + " (copia) ");
+        copia.setDescripcion(this.descripcion);
+        copia.setFechaInicio(this.fechaInicio);
+        copia.setFechaEntrega(this.fechaEntrega);
+
+        // Clonar cada tarea: nuevo objeto, mismos datos, sin estado completada
+        for(Tarea original : this.tareas){
+            Tarea tareaClon= new TareaBuilder()
+                    .nombre(original.getNombre())
+                    .fechaInicio(original.getFechaInicio())
+                    .fechaFinal(original.getFechaFinal())
+                    .descripcion(original.getDescripcion())
+                    .dificultad(original.getDificultad())
+                    .trabajo(copia)
+                    .responsables(new HashSet<>())
+                    .build();
+            copia.getTareas().add(tareaClon);
+        }
+        return copia;
     }
 
     // Agregar un mimebro con un rol
