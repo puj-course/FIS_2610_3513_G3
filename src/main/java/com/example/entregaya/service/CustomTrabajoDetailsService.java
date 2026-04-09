@@ -5,6 +5,7 @@ import com.example.entregaya.model.ColaboradorTrabajo;
 import com.example.entregaya.model.ColaboradorTrabajoId;
 import com.example.entregaya.model.Trabajo;
 import com.example.entregaya.model.User;
+import com.example.entregaya.strategy.Sololiderstrategy;
 import com.example.entregaya.repository.ColaboradorTrabajoRepository;
 import com.example.entregaya.repository.TrabajoRepository;
 import com.example.entregaya.repository.UserRepository;
@@ -223,6 +224,41 @@ public class CustomTrabajoDetailsService {
         // Guardar cambios en la BD
         trabajoRepository.save(trabajoExistente);
     }
+    /**
+     *
+     * Reglas:
+     *  - Solo el LIDER del trabajo original puede clonar.
+     *  - Si el nombre "<nombre> (copia)" ya existe, se agrega sufijo numérico
+     *    hasta encontrar uno libre: "(copia)", "(copia) 2", "(copia) 3"...
+     *  - El creador (username) queda como único miembro con rol LIDER.
+     *
+     * @param trabajoId id del trabajo a clonar
+     * @param username  usuario autenticado que solicita la clonación
+     * @return el nuevo Trabajo persistido
+     * @throws IllegalArgumentException si el trabajo no existe
+     * @throws SecurityException        si el usuario no es LIDER
+     */
+    @Transactional
+    public Trabajo clonarTrabajo(Long id, String username) {
+        Trabajo original = trabajoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("El trabajo no existe"));
+        if(!verificarPermiso(id,username,sololiderstrategy)) {
+            throw new SecurityException("Solo el lider puede clonar el trabajo");
+        }
+        Trabajo copia = original.clonar();
+        String nombreBase = copia.getNombreTrabajo();
+        String nombreFinal = nombreBase;
+        int sufijo = 2;
+        while(trabajoRepository.existsByNombreTrabajo(nombreFinal)) {
+            nombreFinal = nombreBase +" "+ sufijo;
+            sufijo++;
+        }
+        copia.setNombreTrabajo(nombreFinal);
+        User creador = userRepository.findByUsername(username)
+                .orElseThrow((()-> new RuntimeException("Usuario no encontrado")));
+        copia.agregarColaborador(creador,ColaboradorTrabajo.Rol.LIDER);
 
+        return trabajoRepository.save(copia);
+    }
 
 }

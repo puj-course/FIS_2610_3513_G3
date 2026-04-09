@@ -48,6 +48,9 @@
 
         .empty { text-align: center; padding: 50px; color: #888; background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; }
         .empty p { margin-bottom: 14px; }
+        .btn-clone { background: none; border: 1px solid #ccc; border-radius: 5px;
+            font-size: 0.75rem; color: #555; cursor: pointer; padding: 3px 8px; }
+        .btn-clone:hover { border-color: #f4a535; color: #f4a535; }
     </style>
 </head>
 <body>
@@ -89,6 +92,14 @@
                 </div>
             </div>
             <div class="card-actions">
+                <th:block th:each="col : ${trabajo.colaboradores}"
+                          th:if="${col.user.username == #authentication.name and col.rol.name() == 'LIDER'}">
+                    <button class="btn btn-sm btn-outline-secondary"
+                            th:attr="data-id=${trabajo.id}"
+                            onclick="clonarTrabajo(this)">
+                        ✦ Duplicar como plantilla
+                    </button>
+                </th:block>
                 <a th:href="@{/trabajos/{id}(id=${trabajo.id})}" class="btn-detail">Ver detalle →</a>
                 <form th:action="@{/trabajos/{id}/eliminar(id=${trabajo.id})}" method="post" style="margin:0"
                       onsubmit="return confirm('¿Eliminar este trabajo?')">
@@ -111,6 +122,23 @@
         document.querySelectorAll('#cardGrid .card').forEach(c => {
             c.style.display = c.querySelector('.card-title')?.textContent.toLowerCase().includes(q) ? '' : 'none';
         });
+    }
+
+    function clonarTrabajo(btn) {
+        const id = btn.getAttribute('data-id');
+        btn.disabled = true;
+        btn.textContent = 'Clonando...';
+        fetch(`/trabajos/${id}/clonar`, { method: 'POST',
+            headers: { 'X-CSRF-TOKEN': document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] || '' }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.id) { window.location.reload(); }
+                else { alert('Error: ' + (data.error || 'No se pudo clonar'));
+                    btn.disabled = false; btn.textContent = '✦ Duplicar'; }
+            })
+            .catch(() => { alert('Error de conexión');
+                btn.disabled = false; btn.textContent = '✦ Duplicar'; });
     }
 </script>
 </body>

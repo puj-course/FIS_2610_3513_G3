@@ -9,6 +9,7 @@ import com.example.entregaya.model.User;
 import com.example.entregaya.service.CustomInvitacionDetailsService;
 import com.example.entregaya.service.CustomTrabajoDetailsService;
 import com.example.entregaya.service.CustomTareaDetailsService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -257,12 +258,6 @@ public class TrabajoController {
         return "redirect:/trabajos/" + id;
     }
 
-    @GetMapping("/CrearTarea")
-    public String CrearTarea(Model model) {
-        model.addAttribute("tarea", new Tarea());
-        return "trabajos/CrearTarea";
-    }
-
     @GetMapping("/trabajos-especificos")
     public String TrabajosEspecificos(Model model) {
         model.addAttribute("trabajo", new Trabajo());
@@ -443,6 +438,34 @@ public class TrabajoController {
         model.addAttribute("trabajo", trabajo);
         model.addAttribute("trabajoId", id);
         return "trabajos/calendario";
+    }
+
+
+    /**
+     *
+     *  @return 201 Created con el nuevo trabajo, o 403 Forbidden si no es LIDER,
+     *          o 404 si el trabajo no existe.
+     *
+     *
+     *
+     */
+
+    @PostMapping("/{id}/clonar")
+    @ResponseBody
+    public ResponseEntity<?> clonar(@PathVariable long id,
+                                    @AuthenticationPrincipal UserDetails user) {
+        try{
+            Trabajo nuevo = customTrabajoDetailsService.clonarTrabajo(id, user.getUsername());
+            return ResponseEntity.status(201).body(Map.of(
+                    "id", nuevo.getId(),
+                    "nombre", nuevo.getNombreTrabajo(),
+                    "mensaje", "Trabajo clonado con exito"
+            ));
+        }catch (SecurityException e){
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        }catch (IllegalArgumentException e){
+            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+        }
     }
 
 }
