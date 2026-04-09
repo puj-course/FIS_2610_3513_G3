@@ -9,7 +9,7 @@ on:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest  # Se ejecuta en una máquina virtual de Ubuntu
+    runs-on: ubuntu-22.04  # Se ejecuta en una máquina virtual de Ubuntu
 
     steps:
       - name: Validar contenido de la historia de usuario
