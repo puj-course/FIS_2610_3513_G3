@@ -1,0 +1,16 @@
+# Plantilla para tareas o subissues que no sean historias de usuario
+
+name: Tarea / Subissue
+description: Crear una tarea técnica o subissue
+title: "TASK: "
+labels: ["task"]  # Label para esos issues
+
+body:
+  - type: textarea
+    id: descripcion
+    attributes:
+      label: Descripción
+      description: Explicar qué se debe hacer
+      placeholder: Describe la tarea a realizar...
+    validations:
+      required: true
