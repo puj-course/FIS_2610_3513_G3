@@ -156,6 +156,8 @@
         .btn-deshacer:hover { background: #999; }
         .btn-eliminar  { padding: 4px 8px; background: transparent; color: #e74c3c; border: 1px solid #e74c3c; border-radius: 4px; font-size: 0.71rem; font-weight: 600; cursor: pointer; }
         .btn-eliminar:hover { background: #e74c3c; color: #fff; }
+        .btn-clonar { padding: 4px 8px; background: #9b59b6; color: #fff; border: none; border-radius: 4px; font-size: 0.71rem; font-weight: 600; cursor: pointer; }
+        .btn-clonar:hover { background: #8e44ad; }
 
         .empty { text-align: center; padding: 32px; color: #bbb; background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; }
         .empty p { margin-bottom: 12px; font-size: 0.85rem; }
@@ -504,6 +506,14 @@
 
                             <a th:href="@{/trabajos/{wId}/tareas/{tId}/editar(wId=${trabajo.id}, tId=${tarea.id})}"
                                class="btn-editar">Editar</a>
+
+                            <button th:if="${puedeGestionar}"
+                                    class="btn-clonar"
+                                    th:attr="onclick='clonarTarea(' + ${trabajo.id} + ',' + ${tarea.id} + ')'"
+                                    type="button">
+                                Clonar
+                            </button>
+
                             <form th:action="@{/trabajos/{wId}/tareas/{tId}/completar(wId=${trabajo.id}, tId=${tarea.id})}"
                                   method="post" style="margin:0">
                                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
@@ -888,6 +898,32 @@
             if (btnInv) switchSbTab('invitaciones', btnInv);
         }
     });
+
+    function clonarTarea(trabajoId, tareaId) {
+        const csrfToken   = document.querySelector('meta[name="_csrf"]')?.content
+            || document.querySelector('input[name="_csrf"]')?.value;
+
+        const csrfHeader  = document.querySelector('meta[name="_csrf_header"]')?.content
+            || 'X-CSRF-TOKEN';
+
+        fetch(`/trabajos/${trabajoId}/tareas/${tareaId}/clonar`, {
+            method: 'POST',
+            headers: { [csrfHeader]: csrfToken }
+        })
+            .then(res => {
+                if (res.status === 201) {
+                    return res.json().then(data => {
+                        alert(`Tarea clonada: "${data.nombre}"`);
+                        location.reload();
+                    });
+                } else if (res.status === 403) {
+                    return res.json().then(data => alert('Sin permiso: ' + data.error));
+                } else {
+                    alert('Error al clonar la tarea.');
+                }
+            })
+            .catch(() => alert('Error de conexión al clonar.'));
+    }
 </script>
 </body>
 </html>
