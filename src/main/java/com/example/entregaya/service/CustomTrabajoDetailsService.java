@@ -1,10 +1,12 @@
 package com.example.entregaya.service;
 
 import com.example.entregaya.dto.MiembroRolDTO;
+import com.example.entregaya.dto.TrabajoEventoDTO;
 import com.example.entregaya.model.ColaboradorTrabajo;
 import com.example.entregaya.model.ColaboradorTrabajoId;
 import com.example.entregaya.model.Trabajo;
 import com.example.entregaya.model.User;
+import com.example.entregaya.observer.TrabajoObserver;
 import com.example.entregaya.repository.ColaboradorTrabajoRepository;
 import com.example.entregaya.repository.TrabajoRepository;
 import com.example.entregaya.repository.UserRepository;
@@ -12,76 +14,109 @@ import com.example.entregaya.strategy.Permisostrategy;
 import com.example.entregaya.strategy.Sololiderstrategy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class CustomTrabajoDetailsService {
-    private final  UserRepository userRepository;
+    private final UserRepository userRepository;
     private final TrabajoRepository trabajoRepository;
     private final ColaboradorTrabajoRepository colaboradorTrabajoRepository;
     private final Sololiderstrategy sololiderstrategy;
 
-    public CustomTrabajoDetailsService(TrabajoRepository trabajoRepository, UserRepository userRepository,
-                                       ColaboradorTrabajoRepository colaboradorTrabajoRepository, Sololiderstrategy sololiderstrategy) {
+    // ── Lista de observers para eventos de trabajo ──
+    private final List<TrabajoObserver> observers = new ArrayList<>();
 
+    public CustomTrabajoDetailsService(TrabajoRepository trabajoRepository,
+                                       UserRepository userRepository,
+                                       ColaboradorTrabajoRepository colaboradorTrabajoRepository,
+                                       Sololiderstrategy sololiderstrategy,
+                                       List<TrabajoObserver> observers) {
         this.userRepository = userRepository;
         this.trabajoRepository = trabajoRepository;
         this.colaboradorTrabajoRepository = colaboradorTrabajoRepository;
         this.sololiderstrategy = sololiderstrategy;
+        this.observers.addAll(observers);  // Spring inyecta todos los TrabajoObserver
     }
 
- // Crear un nuevo trabajo y agregar al creador como colaborador
- // El creador del trabajo automaticamente lider
-    public Trabajo crearTrabajo(Trabajo trabajo, String username){
-        User user= userRepository.findByUsername(username)
-                .orElseThrow(()-> new RuntimeException("Usuario no encontrado"));
+    // ── Gestión de observers ──
+
+    public void registrarObserver(TrabajoObserver observer) {
+        observers.add(observer);
+    }
+
+    public void eliminarObserver(TrabajoObserver observer) {
+        observers.remove(observer);
+    }
+
+    /** Notifica a todos los observers registrados */
+    private void notificarObservers(TrabajoEventoDTO evento) {
+        for (TrabajoObserver observer : observers) {
+            observer.actualizar(evento);
+        }
+    }
+
+    // ── Métodos existentes (sin cambios importantes) ──
+
+    public Trabajo crearTrabajo(Trabajo trabajo, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         trabajo.agregarColaborador(user, ColaboradorTrabajo.Rol.LIDER);
         return trabajoRepository.save(trabajo);
     }
 
-    // Listar trabajos donde el usuario es colaborador
     public List<Trabajo> listarPorUsuario(String username) {
         return trabajoRepository.findByColaboradoresUsername(username);
     }
 
-    // Obtener un trabajo por id
     public Trabajo obtenerPorId(Long id) {
         return trabajoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Trabajo no encontrado"));
     }
 
-    // Agregar un colaborador a un trabajo existente
+    /**
+     * HU-28: Agregar un colaborador a un trabajo.
+     * Dispara evento TrabajoEventoDTO con tipoEvento = INGRESO
+     */
+    @Transactional
     public Trabajo agregarColaborador(Long trabajoId, String username) {
         Trabajo trabajo = obtenerPorId(trabajoId);
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
         trabajo.agregarColaborador(user);
-        return trabajoRepository.save(trabajo);
+        Trabajo trabajoGuardado = trabajoRepository.save(trabajo);
+
+        // HU-28: Disparar evento de ingreso
+        TrabajoEventoDTO evento = new TrabajoEventoDTO(
+                trabajoId,
+                trabajo.getNombreTrabajo(),
+                TrabajoEventoDTO.TipoEvento.INGRESO,
+                username,
+                username,  // El usuario que se unió es quien ejecuta la acción
+                LocalDateTime.now()
+        );
+        notificarObservers(evento);
+
+        return trabajoGuardado;
     }
 
     @Transactional
-    public void cambiarRol(Long trabajoId, Long userId, ColaboradorTrabajo.Rol nuevoRol){
-        // Validar que el trabajo exista
+    public void cambiarRol(Long trabajoId, Long userId, ColaboradorTrabajo.Rol nuevoRol) {
         if (!trabajoRepository.existsById(trabajoId)) {
             throw new IllegalArgumentException("El trabajo no existe");
         }
-
-        // Validar que el rol sea válido (no nulo)
         if (nuevoRol == null) {
             throw new IllegalArgumentException("El rol no puede ser nulo");
         }
-
-        // Validar que el usuario pertenezca al grupo
         ColaboradorTrabajoId id = new ColaboradorTrabajoId(trabajoId, userId);
         ColaboradorTrabajo colaborador = colaboradorTrabajoRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("El usuario no pertenece a este trabajo"));
-
-        // Actualizar el rol en la base de datos
         colaborador.setRol(nuevoRol);
         colaboradorTrabajoRepository.save(colaborador);
     }
 
-    // Consultar los miembros de un trabajo con sus roles, desde el DTO
     public List<MiembroRolDTO> consultarMiembros(Long trabajoId) {
         if (!trabajoRepository.existsById(trabajoId)) {
             throw new RuntimeException("Trabajo no encontrado");
@@ -94,18 +129,6 @@ public class CustomTrabajoDetailsService {
                 .toList();
     }
 
-    /**
-     * Verifica si el usuario tiene permiso en el trabajo
-     * según la estrategia recibida.
-     *
-     * Reemplaza los métodos duplicados esLider() y puedeEditarTarea().
-     *
-     * @param trabajoId id del trabajo a verificar
-     * @param username  usuario autenticado
-     * @param strategy  regla de permiso a aplicar (SoloLider, LiderOEditor, etc.)
-     * @return true si el usuario cumple la regla
-     */
-
     public boolean verificarPermiso(Long trabajoId, String username, Permisostrategy strategy) {
         return trabajoRepository.findById(trabajoId)
                 .map(trabajo -> trabajo.getColaboradores().stream()
@@ -114,39 +137,32 @@ public class CustomTrabajoDetailsService {
                 .orElse(false);
     }
 
-    public void eliminar(long Id){
+    public void eliminar(long Id) {
         trabajoRepository.deleteById(Id);
     }
 
     /**
-     * Elimina un colaborador de un trabajo.
-     * Solo un LIDER puede realizar esta acción.
-     * No se puede eliminar al único LIDER del trabajo.
+     * HU-28: Elimina un colaborador y dispara evento TrabajoEventoDTO con tipoEvento = SALIDA
      */
     @Transactional
     public void eliminarColaborador(Long trabajoId, Long userId, String usernameQuienEjecuta) {
-        // Validar que el trabajo exista
         Trabajo trabajo = trabajoRepository.findById(trabajoId)
                 .orElseThrow(() -> new IllegalArgumentException("El trabajo no existe"));
 
-        if(!verificarPermiso(trabajoId,usernameQuienEjecuta,sololiderstrategy))
-            throw new IllegalArgumentException("Solo un lider puede elminar un colaborador");
+        if (!verificarPermiso(trabajoId, usernameQuienEjecuta, sololiderstrategy))
+            throw new IllegalArgumentException("Solo un lider puede eliminar un colaborador");
 
-        // Validar que quien ejecuta la acción sea LIDER
         User ejecutor = userRepository.findByUsername(usernameQuienEjecuta)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario ejecutor no encontrado"));
 
-        // No permitir que el líder se elimine a sí mismo
         if (ejecutor.getId().equals(userId)) {
             throw new IllegalArgumentException("No puedes eliminarte a ti mismo del trabajo");
         }
 
-        // Validar que el colaborador a eliminar exista en el trabajo
         ColaboradorTrabajoId targetId = new ColaboradorTrabajoId(trabajoId, userId);
         ColaboradorTrabajo target = colaboradorTrabajoRepository.findById(targetId)
                 .orElseThrow(() -> new IllegalArgumentException("El colaborador no pertenece a este trabajo"));
 
-        // No permitir eliminar al único LIDER
         if (target.getRol() == ColaboradorTrabajo.Rol.LIDER) {
             long cantidadLideres = trabajo.getColaboradores().stream()
                     .filter(c -> c.getRol() == ColaboradorTrabajo.Rol.LIDER)
@@ -156,7 +172,21 @@ public class CustomTrabajoDetailsService {
             }
         }
 
+        // Obtener username del usuario a eliminar
+        String usernameEliminado = target.getUser().getUsername();
+
         colaboradorTrabajoRepository.delete(target);
+
+        // HU-28: Disparar evento de salida
+        TrabajoEventoDTO evento = new TrabajoEventoDTO(
+                trabajoId,
+                trabajo.getNombreTrabajo(),
+                TrabajoEventoDTO.TipoEvento.SALIDA,
+                usernameEliminado,
+                usernameQuienEjecuta,
+                LocalDateTime.now()
+        );
+        notificarObservers(evento);
     }
     /**
      * @deprecated
