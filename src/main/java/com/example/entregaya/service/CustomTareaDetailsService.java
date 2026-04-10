@@ -10,6 +10,9 @@ import com.example.entregaya.repository.TareaRepository;
 import com.example.entregaya.repository.TrabajoRepository;
 import com.example.entregaya.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import com.example.entregaya.strategy.Lideroeditorstrategy;
+import com.example.entregaya.service.CustomTrabajoDetailsService;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -23,6 +26,8 @@ public class CustomTareaDetailsService {
     private final TareaRepository tareaRepository;
     private final TrabajoRepository trabajoRepository;
     private final UserRepository userRepository;
+    private final CustomTrabajoDetailsService customTrabajoDetailsService;
+    private final Lideroeditorstrategy lideroeditorstrategy;
 
     // ── Lista de observers (patrón Observer) ──
     private final List<TareaObserver> observers = new ArrayList<>();
@@ -34,11 +39,13 @@ public class CustomTareaDetailsService {
     public CustomTareaDetailsService(TareaRepository tareaRepository,
                                      TrabajoRepository trabajoRepository,
                                      UserRepository userRepository,
-                                     List<TareaObserver> observers) {
-        this.tareaRepository  = tareaRepository;
+                                     CustomTrabajoDetailsService customTrabajoDetailsService,
+                                     Lideroeditorstrategy lideroeditorstrategy) {
+        this.tareaRepository = tareaRepository;
         this.trabajoRepository = trabajoRepository;
-        this.userRepository   = userRepository;
-        this.observers.addAll(observers);
+        this.userRepository = userRepository;
+        this.customTrabajoDetailsService = customTrabajoDetailsService;
+        this.lideroeditorstrategy = lideroeditorstrategy;
     }
 
     // ── Gestión de observers ──
@@ -217,4 +224,24 @@ public class CustomTareaDetailsService {
         return tareaRepository.save(tareaExistente);
     }
 
+    /**
+     * Clona una tarea existente dentro del mismo trabajo.
+     * Solo LIDER o EDITOR pueden clonar.
+     *
+     * @param tareaId  id de la tarea a clonar
+     * @param trabajoId id del trabajo contenedor
+     * @param username usuario autenticado que solicita la clonación
+     * @return la nueva Tarea persistida
+     * @throws SecurityException si el usuario no tiene rol LIDER o EDITOR
+     */
+    @Transactional
+    public Tarea clonarTarea(Long tareaId, Long trabajoId, String username) {
+        if (!customTrabajoDetailsService.verificarPermiso(trabajoId, username, lideroeditorstrategy)) {
+            throw new SecurityException("Solo LIDER o EDITOR pueden clonar tareas.");
+        }
+        Tarea original = findById(tareaId);
+        Trabajo trabajo = trabajoRepository.findById(trabajoId).orElseThrow(() -> new RuntimeException("Trabajo no encontrado"));
+        Tarea clon = original.clonar(trabajo);
+        return tareaRepository.save(clon);
+    }
 }
