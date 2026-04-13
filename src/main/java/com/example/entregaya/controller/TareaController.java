@@ -1,5 +1,6 @@
 package com.example.entregaya.controller;
 
+import com.example.entregaya.dto.TareaConEtiquetaDTO;
 import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
 import com.example.entregaya.model.User;
@@ -142,8 +143,12 @@ public class TareaController {
                                   @PathVariable Long tareaId,
                                   Model model) {
         Tarea tarea = customTareaDetailsService.findById(tareaId);
+        
+        // HU-29 (#317): Obtener tarea con etiqueta de urgencia
+        TareaConEtiquetaDTO tareaConEtiqueta = customTareaDetailsService.findByIdConEtiqueta(tareaId);
 
         model.addAttribute("tarea", tarea);
+        model.addAttribute("tareaConEtiqueta", tareaConEtiqueta);  // HU-29 (#317)
         model.addAttribute("trabajoId", trabajoId);
 
         return "trabajos/tareas/detalle_tarea";

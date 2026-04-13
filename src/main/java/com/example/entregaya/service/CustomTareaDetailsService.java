@@ -135,6 +135,20 @@ public class CustomTareaDetailsService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * HU-29 (#317): Obtiene una tarea individual con etiqueta de urgencia.
+     * 
+     * @param tareaId ID de la tarea
+     * @return TareaConEtiquetaDTO con etiqueta de urgencia aplicada
+     */
+    public TareaConEtiquetaDTO findByIdConEtiqueta(Long tareaId) {
+        Tarea tarea = tareaRepository.findById(tareaId)
+                .orElseThrow(() -> new RuntimeException("tarea no encontrado"));
+        
+        TareaInfo tareaInfo = TareaDecoratorFactory.resolver(tarea);
+        return TareaConEtiquetaDTO.fromTareaInfo(tareaInfo);
+    }
+
 
     public Tarea findById(Long tareaId) {
         return tareaRepository.findById(tareaId)
