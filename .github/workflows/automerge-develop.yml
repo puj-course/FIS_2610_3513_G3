@@ -9,19 +9,25 @@ on:
       - develop
     types: [opened, synchronize, labeled, reopened]
 
+permissions:
+  contents: write
+  pull-requests: write
+  
 jobs:
-  automerge:
+  enable:
     runs-on: ubuntu-22.04
 
+    #solo si tiene el label de automerge
+    if: contains(github.event.pull_request.labels.*.name, 'automerge')
+
     steps:
-      - name: Auto merge PR
-        uses: pascalgn/automerge-action@v0.15.6
+      - name: Instalar GitHub CLI
+        uses: cli/cli@v3
+
+      - name: Activar auto-merge
+        run: |
+          gh pr merge ${{ github.event.pull_request.number }} \
+            --squash \
+            --auto
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-          # Solo hace merge si tiene este label
-          MERGE_LABELS: "automerge"
-
-          # Metodo de merge
-          MERGE_METHOD: "squash"
-          
