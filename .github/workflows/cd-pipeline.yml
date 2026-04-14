@@ -3,9 +3,10 @@ name: CD EntregaYa
 on:
   push:
     branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
-
+    
+permissions:
+  contents: write
+  
 jobs:
   build:
     name: Compilar proyecto
@@ -26,3 +27,24 @@ jobs:
 
       - name: Verificar que el .jar existe
         run: ls target/*.jar
+  
+      - name: Obtener version del proyecto
+        id: version
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION-$(date +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
+
+      - name: Crear GitHub Release y subir .jar
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "Release ${{ steps.version.outputs.tag }}"
+          body: |
+            Despliegue automático generado por merge a `main`.
+            
+            **Commit:** ${{ github.sha }}
+            **Autor:** ${{ github.actor }}
+          files: target/*.jar
+          token: ${{ secrets.GITHUB_TOKEN }}
+        
