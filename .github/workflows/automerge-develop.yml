@@ -1,0 +1,27 @@
+# Auto merge de PRs hacia develop
+# Solo se ejecuta si el PR esta listo y cumple condiciones
+
+name: Auto Merge to Develop
+
+on:
+  pull_request:
+    branches:
+      - develop
+    types: [opened, synchronize, labeled, reopened]
+
+jobs:
+  automerge:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Auto merge PR
+        uses: pascalgn/automerge-action@v0.15.6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          # Solo hace merge si tiene este label
+          MERGE_LABELS: "automerge"
+
+          # Metodo de merge
+          MERGE_METHOD: "squash"
+          
