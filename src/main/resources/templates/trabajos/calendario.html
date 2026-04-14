@@ -164,8 +164,8 @@
     function showTooltip(info) {
         const ext = info.event.extendedProps;
         ttTitle.textContent  = info.event.title;
-        ttStart.textContent  = 'Inicio: '  + fmt(info.event.startStr);
-        ttEnd.textContent    = 'Límite: '  + fmt(info.event.endStr);
+        ttStart.textContent = 'Inicio: '  + fmt(info.event.extendedProps.fechaInicio ?? info.event.startStr);
+        ttEnd.textContent   = 'Límite: '  + fmt(info.event.extendedProps.fechaFinal  ?? '—');
         ttDif.textContent    = 'Dificultad: ' + (DIF_LABEL[ext.dificultad] || ext.dificultad);
 
         if (ext.completada) {
@@ -219,13 +219,17 @@
                         // Sub-issue 3: Asignar clase CSS según estado
                         const eventos = data.map(ev => ({
                             ...ev,
+                            start: ev.end ?? ev.start,   // ← solo aparece en el día de cierre
+                            end:   null,                  // ← sin barra continua
                             classNames: ev.completada ? ['ev-completada']
                                 : ev.vencida   ? ['ev-vencida']
-                                    :                ['ev-pendiente'],
+                                    :                 ['ev-pendiente'],
                             extendedProps: {
                                 completada: ev.completada,
                                 vencida:    ev.vencida,
-                                dificultad: ev.dificultad
+                                dificultad: ev.dificultad,
+                                fechaInicio: ev.start,
+                                fechaFinal:  ev.end
                             }
                         }));
                         successCallback(eventos);

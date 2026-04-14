@@ -21,5 +21,5 @@ public interface TareaPrototype {
      * - trabajo     → debe reasignarse externamente
      */
 
-    Tarea cloanr(Trabajo trabajo);
+    Tarea clonar(Trabajo trabajo);
 }

@@ -1,6 +1,9 @@
 package com.example.entregaya.service;
 
 import com.example.entregaya.builder.TareaBuilder;
+import com.example.entregaya.decorator.TareaDecoratorFactory;
+import com.example.entregaya.decorator.TareaInfo;
+import com.example.entregaya.dto.TareaConEtiquetaDTO;
 import com.example.entregaya.dto.TareaEventoDTO;
 import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
@@ -10,12 +13,16 @@ import com.example.entregaya.repository.TareaRepository;
 import com.example.entregaya.repository.TrabajoRepository;
 import com.example.entregaya.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import com.example.entregaya.strategy.Lideroeditorstrategy;
+import com.example.entregaya.service.CustomTrabajoDetailsService;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class CustomTareaDetailsService {
@@ -23,6 +30,8 @@ public class CustomTareaDetailsService {
     private final TareaRepository tareaRepository;
     private final TrabajoRepository trabajoRepository;
     private final UserRepository userRepository;
+    private final CustomTrabajoDetailsService customTrabajoDetailsService;
+    private final Lideroeditorstrategy lideroeditorstrategy;
 
     // ── Lista de observers (patrón Observer) ──
     private final List<TareaObserver> observers = new ArrayList<>();
@@ -34,11 +43,13 @@ public class CustomTareaDetailsService {
     public CustomTareaDetailsService(TareaRepository tareaRepository,
                                      TrabajoRepository trabajoRepository,
                                      UserRepository userRepository,
-                                     List<TareaObserver> observers) {
-        this.tareaRepository  = tareaRepository;
+                                     CustomTrabajoDetailsService customTrabajoDetailsService,
+                                     Lideroeditorstrategy lideroeditorstrategy) {
+        this.tareaRepository = tareaRepository;
         this.trabajoRepository = trabajoRepository;
-        this.userRepository   = userRepository;
-        this.observers.addAll(observers);
+        this.userRepository = userRepository;
+        this.customTrabajoDetailsService = customTrabajoDetailsService;
+        this.lideroeditorstrategy = lideroeditorstrategy;
     }
 
     // ── Gestión de observers ──
@@ -105,6 +116,39 @@ public class CustomTareaDetailsService {
     public List<Tarea> tareas (Long trabajoId) {
             return tareaRepository.findBytrabajoId(trabajoId);
     }
+
+    /**
+     * HU-29 (#316): Lista de tareas de un trabajo con etiquetas de urgencia.
+     * 
+     * Usa el patrón Decorator para añadir etiquetas dinámicas (Normal, Próxima, 
+     * Urgente, Vencida, Sin fecha, Completada) según la fecha final de cada tarea.
+     * 
+     * @param trabajoId ID del trabajo
+     * @return Lista de TareaConEtiquetaDTO con etiquetas de urgencia
+     */
+    public List<TareaConEtiquetaDTO> tareasConEtiquetas(Long trabajoId) {
+        List<Tarea> tareas = tareaRepository.findBytrabajoId(trabajoId);
+        
+        return tareas.stream()
+                .map(TareaDecoratorFactory::resolver)  // Aplica decorador según fecha
+                .map(TareaConEtiquetaDTO::fromTareaInfo)  // Convierte a DTO
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * HU-29 (#317): Obtiene una tarea individual con etiqueta de urgencia.
+     * 
+     * @param tareaId ID de la tarea
+     * @return TareaConEtiquetaDTO con etiqueta de urgencia aplicada
+     */
+    public TareaConEtiquetaDTO findByIdConEtiqueta(Long tareaId) {
+        Tarea tarea = tareaRepository.findById(tareaId)
+                .orElseThrow(() -> new RuntimeException("tarea no encontrado"));
+        
+        TareaInfo tareaInfo = TareaDecoratorFactory.resolver(tarea);
+        return TareaConEtiquetaDTO.fromTareaInfo(tareaInfo);
+    }
+
 
     public Tarea findById(Long tareaId) {
         return tareaRepository.findById(tareaId)
@@ -217,4 +261,24 @@ public class CustomTareaDetailsService {
         return tareaRepository.save(tareaExistente);
     }
 
+    /**
+     * Clona una tarea existente dentro del mismo trabajo.
+     * Solo LIDER o EDITOR pueden clonar.
+     *
+     * @param tareaId  id de la tarea a clonar
+     * @param trabajoId id del trabajo contenedor
+     * @param username usuario autenticado que solicita la clonación
+     * @return la nueva Tarea persistida
+     * @throws SecurityException si el usuario no tiene rol LIDER o EDITOR
+     */
+    @Transactional
+    public Tarea clonarTarea(Long tareaId, Long trabajoId, String username) {
+        if (!customTrabajoDetailsService.verificarPermiso(trabajoId, username, lideroeditorstrategy)) {
+            throw new SecurityException("Solo LIDER o EDITOR pueden clonar tareas.");
+        }
+        Tarea original = findById(tareaId);
+        Trabajo trabajo = trabajoRepository.findById(trabajoId).orElseThrow(() -> new RuntimeException("Trabajo no encontrado"));
+        Tarea clon = original.clonar(trabajo);
+        return tareaRepository.save(clon);
+    }
 }

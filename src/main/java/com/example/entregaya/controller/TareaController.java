@@ -1,5 +1,6 @@
 package com.example.entregaya.controller;
 
+import com.example.entregaya.dto.TareaConEtiquetaDTO;
 import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
 import com.example.entregaya.model.User;
@@ -10,6 +11,7 @@ import com.example.entregaya.service.CustomInvitacionDetailsService;
 import com.example.entregaya.service.CustomTareaDetailsService;
 import com.example.entregaya.service.CustomTrabajoDetailsService;
 import com.example.entregaya.strategy.Lideroeditorstrategy;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -141,10 +143,43 @@ public class TareaController {
                                   @PathVariable Long tareaId,
                                   Model model) {
         Tarea tarea = customTareaDetailsService.findById(tareaId);
+        
+        // HU-29 (#317): Obtener tarea con etiqueta de urgencia
+        TareaConEtiquetaDTO tareaConEtiqueta = customTareaDetailsService.findByIdConEtiqueta(tareaId);
 
         model.addAttribute("tarea", tarea);
+        model.addAttribute("tareaConEtiqueta", tareaConEtiqueta);  // HU-29 (#317)
         model.addAttribute("trabajoId", trabajoId);
 
         return "trabajos/tareas/detalle_tarea";
     }
+
+    /**
+     * Clona la tarea indicada dentro del mismo trabajo.
+     * Retorna 201 Created con la tarea clonada, o 403 si no tiene permiso.
+     */
+    @PostMapping("/{tareaId}/clonar")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> clonarTarea(
+            @PathVariable Long trabajoId,
+            @PathVariable Long tareaId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            Tarea clon = customTareaDetailsService.clonarTarea(tareaId, trabajoId, userDetails.getUsername());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", clon.getId());
+            response.put("nombre", clon.getNombre());
+            response.put("descripcion", clon.getDescripcion());
+            response.put("dificultad", clon.getDificultad().name());
+
+            return ResponseEntity.status(201).body(response);
+
+        } catch (SecurityException e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(403).body(error);
+        }
+    }
+
 }

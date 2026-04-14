@@ -278,11 +278,13 @@
                 <div class="info-value" th:text="${tarea.trabajo.nombreTrabajo}">Informe de Estructuras de Datos</div>
             </div>
             <div class="info-block">
-                <div class="info-label">Fecha límite</div>
-                <div class="info-value" th:if="${tarea.fechaFinal}">
-                    <span class="date-tag" th:text="'⏰ ' + ${#temporals.format(tarea.fechaFinal, 'dd/MM/yyyy')}">⏰ 05/04/2026</span>
+                <div class="info-label">Urgencia</div>
+                <!-- HU-29 (#317): Badge de urgencia del decorador -->
+                <div class="info-value">
+                    <span class="badge-urgencia"
+                          th:style="'background-color: ' + ${tareaConEtiqueta.colorEtiqueta()} + '; color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; display: inline-block;'"
+                          th:text="${tareaConEtiqueta.etiquetaUrgencia()}">Normal</span>
                 </div>
-                <div class="info-value" th:if="not ${tarea.fechaFinal}">Sin fecha definida</div>
             </div>
             <div class="info-block">
                 <div class="info-label">Dificultad</div>
