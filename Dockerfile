@@ -10,8 +10,7 @@ COPY . .
 RUN mvn clean package -DskipTests
 
 # runtime (ejecutar la app)
-FROM openjdk:17-jdk-slim
-
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
 # Copiar el .jar generado desde la etapa anterior

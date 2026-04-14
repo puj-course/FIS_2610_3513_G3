@@ -1,0 +1,33 @@
+# Auto merge de PRs hacia develop
+# Solo se ejecuta si el PR esta listo y cumple condiciones
+
+name: Auto Merge to Develop
+
+on:
+  pull_request:
+    branches:
+      - develop
+    types: [opened, synchronize, labeled, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+  
+jobs:
+  enable:
+    runs-on: ubuntu-22.04
+
+    #solo si tiene el label de automerge
+    if: contains(github.event.pull_request.labels.*.name, 'automerge')
+
+    steps:
+      - name: Instalar GitHub CLI
+        uses: cli/cli@v3
+
+      - name: Activar auto-merge
+        run: |
+          gh pr merge ${{ github.event.pull_request.number }} \
+            --squash \
+            --auto
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
