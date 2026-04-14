@@ -24,3 +24,4 @@ jobs:
 
           # Metodo de merge
           MERGE_METHOD: "squash"
+          
