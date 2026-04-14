@@ -18,7 +18,7 @@ WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 
 # Exponer el puerto
-EXPOSE 8080
+EXPOSE 8081
 
 # Ejecutar la aplicación
 ENTRYPOINT ["java", "-jar", "app.jar"]
