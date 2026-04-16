@@ -152,16 +152,16 @@ jobs:
           reporte += `- Pendientes: ${pendientes.length}\n`;
           reporte += `- Cumplimiento: ${porcentaje}%\n\n`;
 
-          reporte += `## Historias de usuario\n`;
-          reporte += historias.length ? historias.join("\n") : "Ninguna";
+          reporte += `## Historias de usuario\n\n`;
+          reporte += historias.length ? historias.map(i => `- ${i}`).join("\n") : "- Ninguna";
           reporte += "\n\n";
 
           reporte += `## Issues completados\n`;
-          reporte += completados.length ? completados.join("\n") : "Ninguno";
+          reporte += completados.length ? completados.map(i => `- ${i}`).join("\n") : "- Ninguno";
           reporte += "\n\n";
 
           reporte += `## Issues pendientes\n`;
-          reporte += pendientes.length ? pendientes.join("\n") : "Ninguno";
+          reporte += pendientes.length ? pendientes.map(i => `- ${i}`).join("\n") : "- Ninguno";
           reporte += "\n\n";
 
           reporte += `## Métricas por usuario\n\n`;
