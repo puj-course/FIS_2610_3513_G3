@@ -4,38 +4,33 @@ on:
   schedule:
     # Sábado 12:00 PM Colombia (UTC-5 - 17:00 UTC)
     - cron: '0 17 * * 6'
-  workflow_dispatch: # permite ejecutarlo manualmente
+  workflow_dispatch:
 
 permissions:
-  contents: write  # necesario para hacer commit
+  contents: write
 
 jobs:
   report:
     runs-on: ubuntu-22.04
 
     steps:
-      # Descargar el repo
-      - name: Checkout repo
+      # Clonar repo
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # Crear carpeta docs/reporte si no existe
-      - name: Crear carpeta de reportes
+      # Crear carpeta si no existe
+      - name: Crear carpeta docs/reporte
         run: mkdir -p docs/reporte
 
-      # Generar el reporte usando GraphQL
-      - name: Generar reporte de sprint
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-
-            // QUERY GRAPHQL
-            // Se obtiene info del Project (issues + sprint)
-            const query = `
+      # Obtener datos del project usando GH_PAT
+      - name: Obtener datos del Project (GraphQL)
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          gh api graphql -f query='
             query($org: String!, $num: Int!) {
               organization(login: $org) {
                 projectV2(number: $num) {
-                  title
                   items(first: 100) {
                     nodes {
                       content {
@@ -62,171 +57,137 @@ jobs:
                 }
               }
             }
-            `;
+          ' \
+          -f org="puj-course" \
+          -F num=61 \
+          > data.json
 
-            // que busque en el project 61 que es el de nuestro grupo 
-            const result = await github.graphql(query, {
-              org: "puj-course",
-              num: 61
-            });
+      # Procesar JSON y generar reporte
+      - name: Generar reporte
+        run: |
+          node << 'EOF'
+          const fs = require('fs');
 
-            const items = result.organization.projectV2.items.nodes;
+          const data = JSON.parse(fs.readFileSync('data.json', 'utf8'));
+          const items = data.data.organization.projectV2.items.nodes;
 
-            // detectar el sprint iteration
-            let currentSprint = null;
-            let latestSprint = null;
-            const today = new Date();
+          let currentSprint = null;
+          let latestSprint = null;
+          const today = new Date();
 
-            for (const item of items) {
+          // Detectar sprint
+          for (const item of items) {
+            const iteration = item.fieldValues.nodes.find(f => f.title);
 
-              const iteration = item.fieldValues.nodes.find(f => f.title);
+            if (!iteration || !iteration.startDate) continue;
 
-              if (!iteration || !iteration.startDate || !iteration.duration) continue;
+            const start = new Date(iteration.startDate);
 
-              const start = new Date(iteration.startDate);
-
-              // guardar el sprint mas reciente
-              if (!latestSprint || start > latestSprint.date) {
-                latestSprint = {
-                  name: iteration.title,
-                  date: start
-                };
-              }
-
-              const end = new Date(start);
-              end.setDate(start.getDate() + iteration.duration);
-
-              // verificar si hoy esta dentro del sprint
-              if (today >= start && today <= end) {
-                currentSprint = iteration.title;
-              }
+            if (!latestSprint || start > latestSprint.date) {
+              latestSprint = { name: iteration.title, date: start };
             }
 
-            // usar sprint activo o fallback al ultimo
-            const SPRINT_NAME = currentSprint || (latestSprint ? latestSprint.name : "Sprint desconocido");
+            const end = new Date(start);
+            end.setDate(start.getDate() + iteration.duration);
 
-            console.log("Sprint detectado:", SPRINT_NAME);
+            if (today >= start && today <= end) {
+              currentSprint = iteration.title;
+            }
+          }
+          
+          const SPRINT_NAME = currentSprint || (latestSprint ? latestSprint.name : "sprint");
 
-            // nombre del archivo
-            const FILE_NAME = `docs/reporte/report-${SPRINT_NAME.replace(" ", "-").toLowerCase()}.md`;
+          console.log("Sprint detectado:", SPRINT_NAME);
 
-            // variables
-            let completados = [];
-            let pendientes = [];
-            let historias = [];
-            let usuarios = {};
+          const fileName = `docs/reporte/report-${SPRINT_NAME.replace(" ", "-").toLowerCase()}.md`;
+          
+          let completados = [];
+          let pendientes = [];
+          let historias = [];
+          let usuarios = {};
 
-            // procesar los issues
-            for (const item of items) {
+          // Procesar issues
+          for (const item of items) {
 
-              const issue = item.content;
-              if (!issue) continue;
+            const issue = item.content;
+            if (!issue) continue;
 
-              const iteration = item.fieldValues.nodes.find(f => f.title);
+            const iteration = item.fieldValues.nodes.find(f => f.title);
+            if (!iteration || iteration.title !== SPRINT_NAME) continue;
 
-              // solo los issues del sprint detectado
-              if (!iteration || iteration.title !== SPRINT_NAME) continue;
+            const asignados = issue.assignees.nodes.map(a => a.login);
 
-              const asignados = issue.assignees.nodes.map(a => a.login);
-
-              // inicializar usuarios
-              for (const user of asignados) {
-                if (!usuarios[user]) {
-                  usuarios[user] = {
-                    asignados: 0,
-                    completados: 0,
-                    pendientes: 0
-                  };
-                }
-                usuarios[user].asignados++;
+            for (const user of asignados) {
+              if (!usuarios[user]) {
+                usuarios[user] = { asignados: 0, completados: 0, pendientes: 0 };
               }
-
-              const info = `#${issue.number} ${issue.title}`;
-
-              // detectar historias de usuario (por HU-)
-              if (issue.title.toUpperCase().startsWith("HU-")) {
-                historias.push(info);
-              }
-
-              // clasificar estado
-              if (issue.state === "CLOSED") {
-                completados.push(info);
-                asignados.forEach(u => usuarios[u].completados++);
-              } else {
-                pendientes.push(info);
-                asignados.forEach(u => usuarios[u].pendientes++);
-              }
+              usuarios[user].asignados++;
             }
 
-            // calculos
-            const total = completados.length + pendientes.length;
-            const porcentaje = total > 0
-              ? ((completados.length / total) * 100).toFixed(2)
+            const info = `#${issue.number} ${issue.title}`;
+
+            // detectar HU
+            if (issue.title.toUpperCase().startsWith("HU-")) {
+              historias.push(info);
+            }
+
+            if (issue.state === "CLOSED") {
+              completados.push(info);
+              asignados.forEach(u => usuarios[u].completados++);
+            } else {
+              pendientes.push(info);
+              asignados.forEach(u => usuarios[u].pendientes++);
+            }
+          }
+
+          const total = completados.length + pendientes.length;
+          const porcentaje = total > 0 ? ((completados.length / total) * 100).toFixed(2) : 0;
+
+          // Crear reporte
+          let reporte = `# Reporte ${SPRINT_NAME}\n\n`;
+
+          reporte += `## Resumen\n`;
+          reporte += `- Total: ${total}\n`;
+          reporte += `- Completados: ${completados.length}\n`;
+          reporte += `- Pendientes: ${pendientes.length}\n`;
+          reporte += `- Cumplimiento: ${porcentaje}%\n\n`;
+
+          reporte += `## Historias de usuario\n`;
+          reporte += historias.length ? historias.join("\n") : "Ninguna";
+          reporte += "\n\n";
+
+          reporte += `## Issues completados\n`;
+          reporte += completados.length ? completados.join("\n") : "Ninguno";
+          reporte += "\n\n";
+
+          reporte += `## Issues pendientes\n`;
+          reporte += pendientes.length ? pendientes.join("\n") : "Ninguno";
+          reporte += "\n\n";
+
+          reporte += `## Métricas por usuario\n\n`;
+
+          for (const [user, dataU] of Object.entries(usuarios)) {
+
+            const pct = dataU.asignados > 0
+              ? ((dataU.completados / dataU.asignados) * 100).toFixed(2)
               : 0;
 
-            // hacer reporte
-            let reporte = `# Reporte ${SPRINT_NAME}\n\n`;
+            reporte += `### @${user}\n`;
+            reporte += `- Asignados: ${dataU.asignados}\n`;
+            reporte += `- Completados: ${dataU.completados}\n`;
+            reporte += `- Pendientes: ${dataU.pendientes}\n`;
+            reporte += `- Cumplimiento: ${pct}%\n\n`;
+          }
 
-            reporte += `## Resumen\n\n`;
-            reporte += `- Total: ${total}\n`;
-            reporte += `- Completados: ${completados.length}\n`;
-            reporte += `- Pendientes: ${pendientes.length}\n`;
-            reporte += `- Cumplimiento: ${porcentaje}%\n\n`;
+          fs.writeFileSync(fileName, reporte);
+          EOF
 
-            reporte += `## Historias de usuario\n\n`;
-            reporte += historias.length ? historias.join("\n") : "Ninguna";
-            reporte += "\n\n";
-
-            reporte += `## Issues completados\n\n`;
-            reporte += completados.length ? completados.join("\n") : "Ninguno";
-            reporte += "\n\n";
-
-            reporte += `## Issues pendientes\n\n`;
-            reporte += pendientes.length ? pendientes.join("\n") : "Ninguno";
-            reporte += "\n\n";
-
-            reporte += `## Métricas por usuario\n\n`;
-
-            for (const [user, data] of Object.entries(usuarios)) {
-
-              const pct = data.asignados > 0
-                ? ((data.completados / data.asignados) * 100).toFixed(2)
-                : 0;
-
-              reporte += `### @${user}\n`;
-              reporte += `- Asignados: ${data.asignados}\n`;
-              reporte += `- Completados: ${data.completados}\n`;
-              reporte += `- Pendientes: ${data.pendientes}\n`;
-              reporte += `- Cumplimiento: ${pct}%\n\n`;
-            }
-
-            // ranking
-            reporte += `## Ranking de desempeño\n\n`;
-
-            const ranking = Object.entries(usuarios)
-              .map(([user, data]) => ({
-                user,
-                score: data.asignados > 0
-                  ? data.completados / data.asignados
-                  : 0
-              }))
-              .sort((a, b) => b.score - a.score);
-
-            ranking.forEach((r, i) => {
-              reporte += `${i + 1}. @${r.user} - ${(r.score * 100).toFixed(2)}%\n`;
-            });
-
-            reporte += "\n";
-
-            // guardar archivo
-            fs.writeFileSync(FILE_NAME, reporte);
-
-      # Subir el archivo al repo
-      - name: Commit y push del reporte
+      # Commit automatico
+      - name: Subir reporte
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
 
           git add docs/reporte/
-          git commit -m "docs: agregar reporte automático de sprint" || echo "No hay cambios"
+          git commit -m "docs: agregar reporte automatico de sprint" || echo "No hay cambios"
           git push
