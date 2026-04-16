@@ -1,6 +1,9 @@
 package com.example.entregaya.service;
 
 import com.example.entregaya.builder.TareaBuilder;
+import com.example.entregaya.decorator.TareaDecoratorFactory;
+import com.example.entregaya.decorator.TareaInfo;
+import com.example.entregaya.dto.TareaConEtiquetaDTO;
 import com.example.entregaya.dto.TareaEventoDTO;
 import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
@@ -19,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class CustomTareaDetailsService {
@@ -112,6 +116,39 @@ public class CustomTareaDetailsService {
     public List<Tarea> tareas (Long trabajoId) {
             return tareaRepository.findBytrabajoId(trabajoId);
     }
+
+    /**
+     * HU-29 (#316): Lista de tareas de un trabajo con etiquetas de urgencia.
+     * 
+     * Usa el patrón Decorator para añadir etiquetas dinámicas (Normal, Próxima, 
+     * Urgente, Vencida, Sin fecha, Completada) según la fecha final de cada tarea.
+     * 
+     * @param trabajoId ID del trabajo
+     * @return Lista de TareaConEtiquetaDTO con etiquetas de urgencia
+     */
+    public List<TareaConEtiquetaDTO> tareasConEtiquetas(Long trabajoId) {
+        List<Tarea> tareas = tareaRepository.findBytrabajoId(trabajoId);
+        
+        return tareas.stream()
+                .map(TareaDecoratorFactory::resolver)  // Aplica decorador según fecha
+                .map(TareaConEtiquetaDTO::fromTareaInfo)  // Convierte a DTO
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * HU-29 (#317): Obtiene una tarea individual con etiqueta de urgencia.
+     * 
+     * @param tareaId ID de la tarea
+     * @return TareaConEtiquetaDTO con etiqueta de urgencia aplicada
+     */
+    public TareaConEtiquetaDTO findByIdConEtiqueta(Long tareaId) {
+        Tarea tarea = tareaRepository.findById(tareaId)
+                .orElseThrow(() -> new RuntimeException("tarea no encontrado"));
+        
+        TareaInfo tareaInfo = TareaDecoratorFactory.resolver(tarea);
+        return TareaConEtiquetaDTO.fromTareaInfo(tareaInfo);
+    }
+
 
     public Tarea findById(Long tareaId) {
         return tareaRepository.findById(tareaId)

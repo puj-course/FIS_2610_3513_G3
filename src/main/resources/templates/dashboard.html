@@ -63,20 +63,88 @@
         .btn-reject { padding: 6px 14px; background: none; color: #e74c3c; border: 1px solid #e74c3c; font-size: 0.82rem; font-weight: 600; cursor: pointer; border-radius: 4px; }
         .btn-reject:hover { background: #fdecea; }
 
-        .suggestions-panel { background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%); border-radius: 8px; padding: 20px; margin-bottom: 28px; }
-        .suggestions-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .suggestions-header h3 { color: white; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
-        .toggle-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
-        .toggle-btn:hover { background: rgba(255,255,255,0.3); }
-        .suggestions-content { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
+        .suggestions-panel {
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 28px;
+        }
+        .suggestions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .suggestions-header h3 {
+            color: #222;
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+        .toggle-btn {
+            background: none;
+            border: 1px solid #e5e5e5;
+            color: #888;
+            padding: 4px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.78rem;
+        }
+        .toggle-btn:hover { border-color: #ccc; color: #444; }
+        .suggestions-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
         .suggestions-content.collapsed { display: none; }
-        .suggestion-card { background: rgba(255,255,255,0.95); border-radius: 6px; padding: 16px; border-left: 4px solid #e67e22; }
-        .suggestion-icon { font-size: 1.4rem; margin-bottom: 6px; }
-        .suggestion-title { font-weight: 700; color: #2c3e50; margin-bottom: 5px; font-size: 0.9rem; }
-        .suggestion-description { color: #7f8c8d; font-size: 0.82rem; line-height: 1.4; }
-        .suggestion-action { margin-top: 10px; padding: 5px 12px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.78rem; text-decoration: none; display: inline-block; }
-        .suggestion-action:hover { background: #2980b9; }
-        .badge { background: #e67e22; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; }
+        .suggestion-card {
+            background: #fafafa;
+            border: 1px solid #efefef;
+            border-radius: 7px;
+            padding: 14px;
+            border-top: 3px solid #f4a535;
+        }
+        .suggestion-icon {
+            margin-bottom: 8px;
+            color: #f4a535;
+            display: flex;
+        }
+        .suggestion-title {
+            font-weight: 700;
+            color: #222;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+        }
+        .suggestion-description { color: #888; font-size: 0.8rem; line-height: 1.45; }
+        .suggestion-action {
+            margin-top: 10px;
+            padding: 4px 11px;
+            background: #1a1a1a;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.76rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .suggestion-action:hover { background: #333; }
+        .badge {
+            background: #f4a535;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.68rem;
+            font-weight: 700;
+        }
 
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; margin-bottom: 32px; }
         .card { background: white; border: 1px solid #e2e2e2; padding: 18px; border-radius: 6px; transition: all 0.15s ease; }
@@ -104,8 +172,10 @@
         /* DoD D6: Badge de notificaciones no leídas */
         .notif-badge { display: inline-block; background: #e74c3c; color: white; font-size: 0.68rem; font-weight: 700; padding: 1px 6px; border-radius: 10px; margin-left: 6px; vertical-align: middle; line-height: 1.4; }
         .notif-item { background: white; border: 1px solid #e2e2e2; border-left: 4px solid #3498db; padding: 12px 16px; border-radius: 4px; margin-bottom: 8px; font-size: 0.86rem; color: #444; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+        .notif-icon { font-size: 1.2rem; flex-shrink: 0; min-width: 24px; }
         .notif-item.no-leida { border-left-color: #e67e22; background: #fffbf5; }
         .notif-texto { flex: 1; line-height: 1.4; }
+        .notif-icon { font-size: 1.2rem; flex-shrink: 0; min-width: 24px; text-align: center; }
         .notif-fecha { font-size: 0.75rem; color: #aaa; white-space: nowrap; }
         .btn-leer { padding: 3px 10px; background: transparent; border: 1px solid #3498db; color: #3498db; border-radius: 4px; font-size: 0.75rem; cursor: pointer; white-space: nowrap; }
         .btn-leer:hover { background: #3498db; color: white; }
@@ -168,14 +238,26 @@
             <!-- HU-11: Contador de tareas vencidas con diseño de alerta -->
             <div class="stat stat-alert">
                 <div class="stat-num red" th:text="${data.tareasVencidas}">0</div>
-                <div class="stat-label">🔴 Tareas vencidas</div>
+                <div class="stat-label">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                         fill="none" stroke="#e74c3c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                         style="vertical-align:-1px;margin-right:3px;">
+                        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>Tareas vencidas
+                </div>
             </div>
         </div>
 
         <!-- NOTIFICACIONES NO LEÍDAS (DoD D6 / CA3 / CA4) -->
         <div class="inv-section" th:if="${data.notificacionesNoLeidas > 0}">
             <div class="section-label">
-                🔔 Notificaciones
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                     style="vertical-align:-2px;margin-right:5px;">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>Notificaciones
                 <span class="notif-badge" th:text="${data.notificacionesNoLeidas}">0</span>
             </div>
             <p style="font-size:0.82rem; color:#888; margin-bottom:10px;">
@@ -186,7 +268,14 @@
 
         <!-- INVITACIONES PENDIENTES -->
         <div class="inv-section" th:if="${data.invitaciones != null and not #lists.isEmpty(data.invitaciones)}">
-            <div class="section-label">📬 Invitaciones pendientes</div>
+            <div class="section-label">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                     style="vertical-align:-2px;margin-right:5px;">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                </svg>Invitaciones pendientes
+            </div>
             <div th:each="inv : ${data.invitaciones}" class="inv-card">
                 <div class="inv-info">
                     Te invitaron a colaborar en <strong th:text="${inv.trabajo.nombreTrabajo}">Trabajo</strong>
@@ -208,14 +297,30 @@
         <div class="suggestions-panel">
             <div class="suggestions-header">
                 <h3>
-                    💡 Sugerencias
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                         style="vertical-align:-2px;margin-right:5px;">
+                        <line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/>
+                        <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/>
+                        <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/>
+                        <line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/>
+                        <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/>
+                        <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/>
+                    </svg>Sugerencias
                     <span class="badge" th:if="${not #lists.isEmpty(data.trabajos)}" th:text="${data.trabajos.size()}">0</span>
                 </h3>
                 <button class="toggle-btn" onclick="toggleSuggestions()">Ocultar</button>
             </div>
             <div class="suggestions-content" id="suggestionsContent">
                 <div class="suggestion-card" th:if="${not #lists.isEmpty(data.trabajos)}">
-                    <div class="suggestion-icon">📋</div>
+                    <div class="suggestion-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+                            <rect x="9" y="3" width="6" height="4" rx="1" ry="1"/>
+                            <line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>
+                        </svg>
+                    </div>
                     <div class="suggestion-title">Organiza tus tareas</div>
                     <div class="suggestion-description">
                         Tienes <span th:text="${data.trabajos.size()}">0</span> trabajo(s) activo(s). Revisa las fechas para priorizar.
@@ -223,7 +328,13 @@
                     <a th:href="@{/trabajos}" class="suggestion-action">Ver todos</a>
                 </div>
                 <div class="suggestion-card" th:if="${data.proximosVencer != null and not #lists.isEmpty(data.proximosVencer)}">
-                    <div class="suggestion-icon">⏰</div>
+                    <div class="suggestion-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                    </div>
                     <div class="suggestion-title">¡Trabajos por vencer!</div>
                     <div class="suggestion-description">
                         <span th:text="${data.proximosVencer.size()}">0</span> trabajo(s) vencen en los próximos 7 días.
@@ -231,20 +342,37 @@
                     <a th:href="@{/trabajos}" class="suggestion-action">Revisar</a>
                 </div>
                 <div class="suggestion-card" th:if="${data.completados != null and data.completados > 0}">
-                    <div class="suggestion-icon">🎯</div>
+                    <div class="suggestion-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                    </div>
                     <div class="suggestion-title">¡Excelente progreso!</div>
                     <div class="suggestion-description">
                         Has completado <span th:text="${data.completados}">0</span> trabajo(s). ¡Sigue adelante!
                     </div>
                 </div>
                 <div class="suggestion-card" th:if="${#lists.isEmpty(data.trabajos)}">
-                    <div class="suggestion-icon">🚀</div>
+                    <div class="suggestion-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 5 5 12"/>
+                        </svg>
+                    </div>
                     <div class="suggestion-title">Comienza tu primer trabajo</div>
                     <div class="suggestion-description">Crea tu primer trabajo para organizar tus tareas de forma efectiva.</div>
                     <a th:href="@{/trabajos/nuevo}" class="suggestion-action">Crear trabajo</a>
                 </div>
                 <div class="suggestion-card">
-                    <div class="suggestion-icon">👥</div>
+                    <div class="suggestion-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </div>
                     <div class="suggestion-title">Trabaja en equipo</div>
                     <div class="suggestion-description">Invita colaboradores a tus trabajos para avanzar juntos.</div>
                 </div>
@@ -266,15 +394,23 @@
 
                 <div class="card-meta" th:if="${trabajo.descripcion}" th:text="${trabajo.descripcion}"></div>
 
-                <div class="card-meta"
-                     th:if="${trabajo.fechaEntrega}"
-                     th:classappend="${data.proximosVencer != null and #lists.contains(data.proximosVencer, trabajo)} ? 'vence-pronto' : ''">
-                    ⏰ Vence: <span th:text="${#temporals.format(trabajo.fechaEntrega, 'dd/MM/yyyy')}"></span>
+                <div class="card-meta" ...>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                         style="vertical-align:-1px;margin-right:3px;">
+                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    </svg>Vence: <span th:text="${#temporals.format(trabajo.fechaEntrega, 'dd/MM/yyyy')}"></span>
                 </div>
                 <div class="card-meta" th:unless="${trabajo.fechaEntrega}">Sin fecha límite</div>
 
                 <div class="card-meta">
-                    👥 <span th:text="${#sets.size(trabajo.colaboradores)}">0</span> integrante(s)
+                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                         style="vertical-align:-1px;margin-right:3px;">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg><span th:text="${#sets.size(trabajo.colaboradores)}">0</span> integrante(s)
                 </div>
 
                 <div class="progress-row">

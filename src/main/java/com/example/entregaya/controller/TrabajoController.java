@@ -2,6 +2,7 @@ package com.example.entregaya.controller;
 
 
 import com.example.entregaya.dto.MiembroRolDTO;
+import com.example.entregaya.dto.TareaConEtiquetaDTO;
 import com.example.entregaya.model.ColaboradorTrabajo;
 import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
@@ -169,6 +170,9 @@ public class TrabajoController {
         model.addAttribute("puedeGestionar", puedeGestionar);
         Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
         List<Tarea> tareas = customTareaDetailsService.tareas(id);
+        
+        // HU-29 (#317): Obtener tareas con etiquetas de urgencia para display en la vista
+        List<TareaConEtiquetaDTO> tareasConEtiquetas = customTareaDetailsService.tareasConEtiquetas(id);
 
         trabajo.getColaboradores().size();
         tareas.forEach(t -> t.getResponsables().size());
@@ -218,6 +222,7 @@ public class TrabajoController {
 
         model.addAttribute("trabajo", trabajo);
         model.addAttribute("tareas", tareas);
+        model.addAttribute("tareasConEtiquetas", tareasConEtiquetas);  // HU-29 (#317): Para mostrar badges
         model.addAttribute("progreso", customTareaDetailsService.calcularProgreso(id));
         model.addAttribute("completadas", completadas);
         model.addAttribute("pendientes", pendientes);

@@ -316,11 +316,28 @@
                 <div class="work-title" th:text="${trabajo.nombreTrabajo}">Nombre</div>
                 <!-- HU-15: Botones de acción solo para LIDER -->
                 <div th:if="${esLider}" style="display:flex; gap:6px; flex-shrink:0;">
-                    <a th:href="@{/trabajos/{id}/editar(id=${trabajo.id})}" class="btn-edit-ghost">✏️ Editar trabajo</a>
+                    <a th:href="@{/trabajos/{id}/editar(id=${trabajo.id})}" class="btn-edit-ghost">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2.2"
+                             stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/>
+                        </svg>Editar trabajo
+                    </a>
+
                     <form th:action="@{/trabajos/{id}/eliminar(id=${trabajo.id})}" method="post" style="margin:0;"
                           onsubmit="return confirm('¿Eliminar este trabajo y todas sus tareas?')">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                        <button type="submit" class="btn-danger-ghost">🗑️ Eliminar trabajo</button>
+                        <button type="submit" class="btn-danger-ghost">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2.2"
+                                 stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                                <path d="M10 11v6M14 11v6"/>
+                                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                            </svg>Eliminar trabajo
+                        </button>
                     </form>
                 </div>
             </div>
@@ -404,7 +421,15 @@
 
             <div class="card-actions">
                 <a th:href="@{/trabajos/{id}/tareas/nuevo(id=${trabajo.id})}" class="btn-primary">+ Nueva tarea</a>
-                <a th:href="@{/trabajos/{id}/calendario(id=${trabajo.id})}" class="btn-calendar">📅 Calendario</a>
+                <a th:href="@{/trabajos/{id}/calendario(id=${trabajo.id})}" class="btn-calendar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2.2"
+                         stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>Calendario
+                </a>
             </div>
         </div>
 
@@ -459,70 +484,65 @@
                     data-completada  → "true" o "false"
                     data-inicio      → fechaInicio ISO (puede ser vacío) — determina "en progreso"
                 -->
-                <tr th:each="tarea : ${tareas}"
-                    th:attr="data-nombre=${tarea.nombre},
-                             data-dificultad=${tarea.dificultad != null ? tarea.dificultad.name() : 'MEDIA'},
-                             data-completada=${tarea.isCompletada},
-                             data-inicio=${tarea.fechaInicio}">
+                <tr th:each="tarea : ${tareasConEtiquetas}"
+                    th:attr="data-nombre=${tarea.nombre()},
+                             data-dificultad=${tarea.dificultad() != null ? tarea.dificultad().name() : 'MEDIA'},
+                             data-completada=${tarea.isCompletada()},
+                             data-inicio=${tarea.fechaInicio()}">
                     <td>
-                        <div style="font-weight:600;" th:text="${tarea.nombre}">Nombre</div>
-                        <div th:if="${tarea.descripcion}" th:text="${tarea.descripcion}"
+                        <div style="font-weight:600;" th:text="${tarea.nombre()}">Nombre</div>
+                        <div th:if="${tarea.descripcion()}" th:text="${tarea.descripcion()}"
                              style="font-size:0.75rem; color:#bbb; margin-top:2px;"></div>
                     </td>
                     <td>
                         <span class="badge"
-                              th:classappend="${tarea.dificultad != null and tarea.dificultad.name() == 'SIMPLE'} ? 'badge-simple' : (${tarea.dificultad != null and tarea.dificultad.name() == 'ALTA'} ? 'badge-alta' : 'badge-media')"
-                              th:text="${tarea.dificultad != null} ? ${tarea.dificultad.name()} : 'MEDIA'">
+                              th:classappend="${tarea.dificultad() != null and tarea.dificultad().name() == 'SIMPLE'} ? 'badge-simple' : (${tarea.dificultad() != null and tarea.dificultad().name() == 'ALTA'} ? 'badge-alta' : 'badge-media')"
+                              th:text="${tarea.dificultad() != null} ? ${tarea.dificultad().name()} : 'MEDIA'">
                         </span>
                     </td>
                     <td>
-                        <div th:text="${tarea.fechaFinal != null} ? ${#temporals.format(tarea.fechaFinal, 'dd/MM/yyyy')} : '—'">—</div>
-                        <span class="badge badge-vencida"
-                              th:if="${tareasVencidas != null and #lists.contains(tareasVencidas, tarea.id)}">
-                            <svg width="8" height="8" viewBox="0 0 8 8" style="margin-right:3px;vertical-align:middle;"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>Vencida
-                        </span>
-                        <span class="badge badge-pronto"
-                              th:if="${tareasVencenPronto != null and #lists.contains(tareasVencenPronto, tarea.id)}">
-                            <svg width="8" height="8" viewBox="0 0 8 8" style="margin-right:3px;vertical-align:middle;"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>Vence pronto
-                        </span>
+                        <!-- HU-29 (#317): Badge de urgencia del decorador -->
+                        <span class="badge-urgencia"
+                              th:style="'background-color: ' + ${tarea.colorEtiqueta()} + '; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;'"
+                              th:text="${tarea.etiquetaUrgencia()}">Normal</span>
                     </td>
                     <td>
                         <span class="badge"
                             th:classappend="
-                            ${tarea.isCompletada} ? 'badge-completada' :
-                            (${tarea.fechaInicio != null and tarea.fechaInicio <= T(java.time.LocalDateTime).now()} ? 'badge-en-progreso' : 'badge-pendiente')
+                            ${tarea.isCompletada()} ? 'badge-completada' :
+                            (${tarea.fechaInicio() != null and tarea.fechaInicio() <= T(java.time.LocalDateTime).now()} ? 'badge-en-progreso' : 'badge-pendiente')
                             "
                             th:text="
-                            ${tarea.isCompletada} ? 'Completada' :
-                            (${tarea.fechaInicio != null and tarea.fechaInicio <= T(java.time.LocalDateTime).now()} ? 'En progreso' : 'Pendiente')
+                            ${tarea.isCompletada()} ? 'Completada' :
+                            (${tarea.fechaInicio() != null and tarea.fechaInicio() <= T(java.time.LocalDateTime).now()} ? 'En progreso' : 'Pendiente')
                             ">
                         </span>
                     </td>
                     <td>
                         <div class="tarea-actions">
-                            <a th:href="@{/trabajos/{wId}/tareas/{tId}/detalle(wId=${trabajo.id}, tId=${tarea.id})}"
+                            <a th:href="@{/trabajos/{wId}/tareas/{tId}/detalle(wId=${trabajo.id}, tId=${tarea.id()})}"
                                class="btn-editar"
                                style="background: #1abc9c;">👁 Ver</a>
 
-                            <a th:href="@{/trabajos/{wId}/tareas/{tId}/editar(wId=${trabajo.id}, tId=${tarea.id})}"
+                            <a th:href="@{/trabajos/{wId}/tareas/{tId}/editar(wId=${trabajo.id}, tId=${tarea.id()})}"
                                class="btn-editar">Editar</a>
 
                             <button th:if="${puedeGestionar}"
                                     class="btn-clonar"
-                                    th:attr="onclick='clonarTarea(' + ${trabajo.id} + ',' + ${tarea.id} + ')'"
+                                    th:attr="onclick='clonarTarea(' + ${trabajo.id} + ',' + ${tarea.id()} + ')'"
                                     type="button">
                                 Clonar
                             </button>
 
-                            <form th:action="@{/trabajos/{wId}/tareas/{tId}/completar(wId=${trabajo.id}, tId=${tarea.id})}"
+                            <form th:action="@{/trabajos/{wId}/tareas/{tId}/completar(wId=${trabajo.id}, tId=${tarea.id()})}"
                                   method="post" style="margin:0">
                                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                                 <button type="submit"
-                                        th:class="${tarea.isCompletada} ? 'btn-deshacer' : 'btn-completar'"
-                                        th:text="${tarea.isCompletada} ? 'Deshacer' : 'Completar'">
+                                        th:class="${tarea.isCompletada()} ? 'btn-deshacer' : 'btn-completar'"
+                                        th:text="${tarea.isCompletada()} ? 'Deshacer' : 'Completar'">
                                 </button>
                             </form>
-                            <form th:action="@{/trabajos/{wId}/tareas/{tId}/eliminar(wId=${trabajo.id}, tId=${tarea.id})}"
+                            <form th:action="@{/trabajos/{wId}/tareas/{tId}/eliminar(wId=${trabajo.id}, tId=${tarea.id()})}"
                                   method="post" style="margin:0"
                                   onsubmit="return confirm('¿Eliminar esta tarea?')">
                                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
