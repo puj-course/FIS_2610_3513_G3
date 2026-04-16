@@ -175,7 +175,13 @@
              th:classappend="${!notif.leida} ? 'no-leida' : ''">
 
             <div class="notif-body">
-                <div class="notif-mensaje" th:text="${notif.mensaje}">Mensaje de notificación</div>
+                <div class="notif-mensaje">
+                    <!-- HU-28: Ícono según tipo de notificación -->
+                    <span th:if="${notif.tipo == 'TAREA'}" style="font-size:1.1em; margin-right:6px;">📋</span>
+                    <span th:if="${notif.tipo == 'MIEMBRO'}" style="font-size:1.1em; margin-right:6px;">👥</span>
+
+                    <span th:text="${notif.mensaje}">Mensaje de notificación</span>
+                </div>
                 <div class="notif-meta">
                     <span class="notif-dot" th:if="${!notif.leida}"></span>
                     <span th:text="${#temporals.format(notif.fechaCreacion, 'dd/MM/yyyy HH:mm')}">01/01/2026 10:00</span>
