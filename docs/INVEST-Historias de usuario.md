@@ -360,7 +360,7 @@ INVEST significa:
 
 ---
 
-### HU-36 -
+### HU-36 - Automatizar a done 
 - **I:** No depende de otras historias activas; se basa en la configuración del tablero del proyecto.
 - **N:** Se puede ajustar el evento disparador o el estado destino según cambios en el flujo de trabajo.
 - **V:** Mantiene actualizado el tablero automáticamente, reduciendo errores humanos y mejorando la visibilidad del progreso.
