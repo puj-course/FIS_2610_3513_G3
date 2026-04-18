@@ -1,10 +1,10 @@
 # Reporte Sprint 10
 
 ## Resumen
-- Total: 21
-- Completados: 19
+- Total: 22
+- Completados: 20
 - Pendientes: 2
-- Cumplimiento: 90.48%
+- Cumplimiento: 90.91%
 
 ## Historias de usuario
 
@@ -16,6 +16,7 @@
 - #365 HU-35: Como desarrollador del proyecto quiero automatizar el merge de las ramas personales hacia la rama develop...
 
 ## Issues completados
+- #387 Daily 3 Sprint 10
 - #378 Daily 2 Sprint 10
 - #347 TASK: Documentar relaciones, protocolos y justificación
 - #352 TASK: Revisión, ajuste y documentación
@@ -43,32 +44,32 @@
 ## Métricas por usuario
 
 ### @echaustre12
-- Asignados: 7
-- Completados: 7
+- Asignados: 8
+- Completados: 8
 - Pendientes: 0
 - Cumplimiento: 100.00%
 
 ### @Juanjoyt2
-- Asignados: 3
-- Completados: 3
+- Asignados: 4
+- Completados: 4
 - Pendientes: 0
 - Cumplimiento: 100.00%
 
 ### @andresj-castrillo
-- Asignados: 9
-- Completados: 9
+- Asignados: 10
+- Completados: 10
 - Pendientes: 0
 - Cumplimiento: 100.00%
 
 ### @Silverweta20
-- Asignados: 7
-- Completados: 7
+- Asignados: 8
+- Completados: 8
 - Pendientes: 0
 - Cumplimiento: 100.00%
 
 ### @barretordaniel
-- Asignados: 7
-- Completados: 5
+- Asignados: 8
+- Completados: 6
 - Pendientes: 2
-- Cumplimiento: 71.43%
+- Cumplimiento: 75.00%
 
