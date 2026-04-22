@@ -1,41 +1,41 @@
 package com.example.entregaya.model;
-
+ 
 import com.example.entregaya.builder.TareaBuilder;
 import com.example.entregaya.prototype.TareaPrototype;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.*;
-
+ 
 import org.springframework.format.annotation.DateTimeFormat;
-
+ 
 @Entity
 @Table(name = "tarea")
 public class Tarea implements TareaPrototype {
-
+ 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+ 
     @Column(nullable = false)
     private String nombre;
-
+ 
     @Column
     private String descripcion;
-
+ 
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     @Column(name = "fechainicio")
     private LocalDateTime fechaInicio;
-
+ 
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     @Column(name = "fechafinal")
     private LocalDateTime fechaFinal;
-
+ 
     // Muchas tareas a un trabajo
     @ManyToOne
     @JoinColumn(name = "trabajo_id", nullable = false)
     private Trabajo trabajo;
-
-    // Responsables de la tarea, muchos pueden ser asignados a la misma tarea
+ 
+    // Responsables de la tarea
     @ManyToMany
     @JoinTable(
             name = "tarea_responsables",
@@ -43,18 +43,21 @@ public class Tarea implements TareaPrototype {
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private Set<User> responsables = new HashSet<>();
-
+ 
     // Comentarios de la tarea
     @OneToMany(mappedBy = "tarea", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("fechaCreacion DESC")
     private List<Comentario> comentarios = new ArrayList<>();
-
-
+ 
+    @ElementCollection
+    @CollectionTable(name = "tarea_etiquetas", joinColumns = @JoinColumn(name = "tarea_id"))
+    @Column(name = "etiqueta", length = 20)
+    private List<String> etiquetas = new ArrayList<>();
+ 
     // Enum de dificultad de tarea
     public enum Dificultad {
         SIMPLE, MEDIA, ALTA;
-
-        // Peso por dificicultad
+ 
         public int getPeso() {
             return switch (this) {
                 case SIMPLE -> 1;
@@ -63,18 +66,18 @@ public class Tarea implements TareaPrototype {
             };
         }
     }
-
+ 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Dificultad dificultad = Dificultad.MEDIA;
-
-    // Estado de la tarea
+ 
     @Column(nullable = false)
     private boolean completada = false;
-    public Tarea() {
-    }
-
-    public Tarea(Long id, String nombre, String descripcion, LocalDateTime fechaInicio, LocalDateTime fechaFinal, Dificultad dificultad) {
+ 
+    public Tarea() {}
+ 
+    public Tarea(Long id, String nombre, String descripcion, LocalDateTime fechaInicio,
+                 LocalDateTime fechaFinal, Dificultad dificultad) {
         this.id = id;
         this.nombre = nombre;
         this.descripcion = descripcion;
@@ -82,7 +85,7 @@ public class Tarea implements TareaPrototype {
         this.fechaFinal = fechaFinal;
         this.dificultad = dificultad;
     }
-
+ 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -90,7 +93,7 @@ public class Tarea implements TareaPrototype {
         Tarea tarea = (Tarea) o;
         return id != null && id.equals(tarea.id);
     }
-
+ 
     @Override
     public int hashCode() {
         return Objects.hashCode(id);

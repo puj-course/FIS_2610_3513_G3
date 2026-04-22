@@ -97,3 +97,22 @@ CREATE TABLE notificacion (
         REFERENCES users(id)
         ON DELETE CASCADE
 );
+
+-- Tabla para almacenar etiquetas
+CREATE TABLE tarea_etiquetas (
+    tarea_id BIGINT NOT NULL,
+    etiqueta VARCHAR(20) NOT NULL,
+
+    CONSTRAINT fk_tarea_etiquetas_tarea
+        FOREIGN KEY (tarea_id)
+        REFERENCES tarea(id)
+        ON DELETE CASCADE
+);
+
+-- Índice para mejorar búsqueda por etiqueta
+CREATE INDEX idx_tarea_etiquetas_etiqueta 
+ON tarea_etiquetas(etiqueta);
+
+-- Índice para joins rápidos con tarea
+CREATE INDEX idx_tarea_etiquetas_tarea_id 
+ON tarea_etiquetas(tarea_id);
