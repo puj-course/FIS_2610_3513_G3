@@ -181,6 +181,9 @@ public class Tarea implements TareaPrototype {
         this.comentarios = comentarios;
     }
 
+    public List<String> getEtiquetas() { return etiquetas; }
+    public void setEtiquetas(List<String> etiquetas) { this.etiquetas = etiquetas; }
+
     /**
      * Copia profunda de esta tarea. Patrón GoF Prototype.
      *
