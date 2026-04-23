@@ -63,4 +63,15 @@ public class AuthController {
         model.addAttribute("data", dashboardFacade.getDashboardData(userDetails.getUsername()));
         return "dashboard";
     }
+
+
+    /**
+     * HU-37: Panel de estadísticas personales del usuario autenticado.
+     */
+    @GetMapping("/estadisticas")
+    public String estadisticas(Model model, @AuthenticationPrincipal UserDetails userDetails) {
+        model.addAttribute("stats", dashboardFacade.getEstadisticasPersonales(userDetails.getUsername()));
+        return "estadisticas";
+    }
+
 }
