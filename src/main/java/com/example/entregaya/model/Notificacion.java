@@ -9,7 +9,8 @@ public class Notificacion {
 
     public enum TipoNotificacion {
         TAREA,
-        MIEMBRO
+        MIEMBRO,
+        RECORDATORIO_VENCIMIENTO  // ← solo agrega esta línea
     }
 
     @Id
