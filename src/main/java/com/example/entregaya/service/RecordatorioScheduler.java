@@ -37,6 +37,8 @@ public class RecordatorioScheduler {
                 Notificacion n = new Notificacion(responsable, mensaje, TipoNotificacion.RECORDATORIO_VENCIMIENTO);
                 notificacionRepository.save(n);
             }
+            tarea.setRecordatorioEnviado(true);
+            tareaRepository.save(tarea);
         }
     }
 }

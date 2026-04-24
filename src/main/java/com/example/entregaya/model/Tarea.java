@@ -30,6 +30,9 @@ public class Tarea implements TareaPrototype {
     @Column(name = "fechafinal")
     private LocalDateTime fechaFinal;
 
+    @Column(name = "recordatorio_enviado", nullable = false)
+    private boolean recordatorioEnviado = false;
+
     // Muchas tareas a un trabajo
     @ManyToOne
     @JoinColumn(name = "trabajo_id", nullable = false)
@@ -100,6 +103,11 @@ public class Tarea implements TareaPrototype {
 
     public Long getId() {
         return id;
+    }
+
+    public boolean isRecordatorioEnviado() { return recordatorioEnviado; }
+    public void setRecordatorioEnviado(boolean recordatorioEnviado) {
+        this.recordatorioEnviado = recordatorioEnviado;
     }
 
     public void setId(Long id) {

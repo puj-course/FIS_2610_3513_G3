@@ -13,7 +13,7 @@ public interface TareaRepository extends JpaRepository<Tarea, Long> {
     @Query(value = "SELECT * FROM tarea WHERE trabajo_id = :id", nativeQuery = true)
     List<Tarea> buscarPorTrabajoNativo(@Param("id") Long id);
 
-    @Query("SELECT t FROM Tarea t WHERE t.fechaFinal BETWEEN :ahora AND :limite AND t.completada = false")
+    @Query("SELECT t FROM Tarea t WHERE t.fechaFinal BETWEEN :ahora AND :limite AND t.completada = false AND t.recordatorioEnviado = false")
     List<Tarea> findTareasProximasAVencer(
             @Param("ahora") LocalDateTime ahora,
             @Param("limite") LocalDateTime limite

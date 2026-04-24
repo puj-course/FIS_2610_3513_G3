@@ -6,11 +6,22 @@ spring.datasource.password=tu_password_real
 
 
 --Esquema de la base de datos
+--Drops
+DROP TABLE IF EXISTS comentario CASCADE;
+DROP TABLE IF EXISTS tarea_responsables CASCADE;
+DROP TABLE IF EXISTS tarea CASCADE;
+DROP TABLE IF EXISTS invitacion CASCADE;
+DROP TABLE IF EXISTS colaboradores CASCADE;
+DROP TABLE IF EXISTS notificacion CASCADE;
+DROP TABLE IF EXISTS trabajo CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+
 --Creacion de la tabla de usuarios
 CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
     username VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL
+    password VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE
 );
 
 --Creacion de la tabla trabajo, representa un proyecto
@@ -42,6 +53,7 @@ CREATE TABLE tarea (
     trabajo_id BIGINT NOT NULL,
     dificultad VARCHAR(20) NOT NULL DEFAULT 'MEDIA',
     completada BOOLEAN NOT NULL DEFAULT FALSE,
+    recordatorio_enviado BOOLEAN NOT NULL DEFAULT FALSE,
     FOREIGN KEY (trabajo_id) REFERENCES trabajo(id) ON DELETE CASCADE
 );
 
@@ -81,13 +93,13 @@ CREATE TABLE comentario (
 CREATE INDEX idx_comentario_tarea_id ON comentario(tarea_id);
 CREATE INDEX idx_comentario_user_id ON comentario(user_id);
 
--- agregar columna para email en usuarios
-ALTER TABLE users ADD COLUMN email VARCHAR(255) UNIQUE;
+
 
 --Crear tabla notificacion
 CREATE TABLE notificacion (
     id BIGSERIAL PRIMARY KEY,
     destinatario_id BIGINT NOT NULL,
+    tipo VARCHAR(50) NOT NULL DEFAULT 'TAREA',
     mensaje VARCHAR(500) NOT NULL,
     leida BOOLEAN NOT NULL DEFAULT FALSE,
     fecha_creacion TIMESTAMP NOT NULL,
