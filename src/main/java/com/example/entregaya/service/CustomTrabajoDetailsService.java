@@ -289,7 +289,7 @@ public class CustomTrabajoDetailsService {
      *    hasta encontrar uno libre: "(copia)", "(copia) 2", "(copia) 3"...
      *  - El creador (username) queda como único miembro con rol LIDER.
      *
-     * @param trabajoId id del trabajo a clonar
+     * @param id id del trabajo a clonar
      * @param username  usuario autenticado que solicita la clonación
      * @return el nuevo Trabajo persistido
      * @throws IllegalArgumentException si el trabajo no existe
