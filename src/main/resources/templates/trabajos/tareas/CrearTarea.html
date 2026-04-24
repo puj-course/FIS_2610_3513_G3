@@ -20,24 +20,39 @@
         .no-colabs { font-size: 0.82rem; color: #aaa; padding: 8px 0; }
         .field-label { display: block; font-size: 0.78rem; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
         .btn-primary { color: #1a1a1a; }
-        
+
         /* HU-22 (#271): Estilos para alertas de validación */
-        .alert {
-            padding: 12px 16px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
+        .alert { padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; font-size: 0.9rem; }
+        .alert-error   { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+        .alert-success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+
+        /* HU-40: Gestor de etiquetas */
+        .etiquetas-wrap {
+            display: flex; flex-wrap: wrap; gap: 6px;
+            min-height: 36px; margin-bottom: 8px;
+            padding: 6px 8px; border: 1px solid #e5e5e5;
+            border-radius: 6px; background: #fafafa;
         }
-        .alert-error {
-            background: #fef2f2;
-            color: #991b1b;
-            border: 1px solid #fecaca;
+        .etiqueta-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 4px 10px; border-radius: 20px;
+            font-size: 0.78rem; font-weight: 600; color: #fff;
         }
-        .alert-success {
-            background: #f0fdf4;
-            color: #166534;
-            border: 1px solid #bbf7d0;
+        .etiqueta-badge .btn-remove {
+            background: none; border: none; color: #fff;
+            cursor: pointer; font-size: 1rem; padding: 0;
+            line-height: 1; opacity: 0.8;
         }
+        .etiqueta-badge .btn-remove:hover { opacity: 1; }
+        .etiquetas-input-row { display: flex; gap: 8px; margin-top: 4px; }
+        .etiquetas-input-row input[type="text"] { flex: 1; }
+        .btn-add-etiqueta {
+            padding: 8px 14px; background: #1a1a1a; color: #fff;
+            border: none; border-radius: 6px; font-size: 0.85rem;
+            cursor: pointer; white-space: nowrap; flex-shrink: 0;
+        }
+        .btn-add-etiqueta:hover { background: #333; }
+        .etiqueta-hint { font-size: 0.75rem; color: #aaa; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -49,11 +64,11 @@
     <a th:href="@{/trabajos/{id}(id=${trabajoId})}" class="back">← Volver al trabajo</a>
     <div class="card">
         <div class="card-title">Crear nueva tarea</div>
-        
+
         <!-- HU-22 (#271): Mensajes de error/éxito del TareaBuilder -->
-        <div class="alert alert-error" th:if="${error}" th:text="${error}"></div>
+        <div class="alert alert-error"   th:if="${error}"   th:text="${error}"></div>
         <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
-        
+
         <form th:action="@{/trabajos/{id}/tareas/nueva(id=${trabajoId})}" th:object="${tarea}" method="post">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
@@ -100,6 +115,27 @@
                 </p>
             </div>
 
+            <!-- HU-40: Gestor de etiquetas -->
+            <div class="field">
+                <span class="field-label">
+                    Etiquetas
+                    <span style="font-weight:400; text-transform:none; font-size:0.75rem; color:#aaa;">
+                        (máx. 5, hasta 20 caracteres c/u)
+                    </span>
+                </span>
+                <div class="etiquetas-wrap" id="etiquetasWrap"></div>
+                <div class="etiquetas-input-row">
+                    <input type="text" id="etiquetaInput"
+                           placeholder="Ej. Frontend, Urgente, Revisar…"
+                           maxlength="20"
+                           onkeydown="if(event.key==='Enter'){event.preventDefault();agregarEtiqueta();}"/>
+                    <button type="button" class="btn-add-etiqueta" onclick="agregarEtiqueta()">+ Añadir</button>
+                </div>
+                <div class="etiqueta-hint">Escribe y pulsa Enter o "Añadir". Máximo 5 etiquetas.</div>
+                <!-- Inputs ocultos generados por JS -->
+                <div id="etiquetasHidden"></div>
+            </div>
+
             <div class="actions">
                 <button type="submit" class="btn-primary">Crear tarea</button>
                 <a th:href="@{/trabajos/{id}(id=${trabajoId})}" class="btn-secondary">Cancelar</a>
@@ -107,5 +143,53 @@
         </form>
     </div>
 </div>
+
+<script>
+    const COLORES_ET = ['#f4a535','#3498db','#27ae60','#9b59b6','#e74c3c'];
+    let etiquetas = [];
+
+    function colorEt(i) { return COLORES_ET[i % COLORES_ET.length]; }
+
+    function renderEtiquetas() {
+        const wrap   = document.getElementById('etiquetasWrap');
+        const hidden = document.getElementById('etiquetasHidden');
+        wrap.innerHTML   = '';
+        hidden.innerHTML = '';
+
+        etiquetas.forEach((et, i) => {
+            // Badge visual
+            const badge = document.createElement('span');
+            badge.className = 'etiqueta-badge';
+            badge.style.background = colorEt(i);
+            badge.innerHTML =
+                et + ' <button type="button" class="btn-remove" onclick="eliminarEtiqueta(' + i + ')" title="Quitar">×</button>';
+            wrap.appendChild(badge);
+
+            // Input oculto para el POST
+            const inp = document.createElement('input');
+            inp.type  = 'hidden';
+            inp.name  = 'etiquetas';
+            inp.value = et;
+            hidden.appendChild(inp);
+        });
+    }
+
+    function agregarEtiqueta() {
+        const input = document.getElementById('etiquetaInput');
+        const val   = input.value.trim();
+        if (!val) return;
+        if (val.length > 20)         { alert('La etiqueta no puede superar los 20 caracteres.'); return; }
+        if (etiquetas.length >= 5)   { alert('Se permiten máximo 5 etiquetas por tarea.'); return; }
+        if (etiquetas.includes(val)) { alert('Esa etiqueta ya fue añadida.'); return; }
+        etiquetas.push(val);
+        input.value = '';
+        renderEtiquetas();
+    }
+
+    function eliminarEtiqueta(i) {
+        etiquetas.splice(i, 1);
+        renderEtiquetas();
+    }
+</script>
 </body>
 </html>
