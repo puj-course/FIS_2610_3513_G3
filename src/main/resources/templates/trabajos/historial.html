@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial - <span th:text="${trabajo.nombreTrabajo}"></span></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 30px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #007bff, #28a745, #ffc107, #dc3545);
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+            padding-left: 80px;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 5px;
+            width: 30px;
+            height: 30px;
+            background: white;
+            border: 3px solid #007bff;
+            border-radius: 50%;
+            box-shadow: 0 0 0 4px #f8f9fa;
+        }
+        .timeline-item.ingreso::before {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        .timeline-item.salida::before {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+        .timeline-item.tarea::before {
+            border-color: #007bff;
+            background: #d1ecf1;
+        }
+        .timeline-item.cambio::before {
+            border-color: #ffc107;
+            background: #fff3cd;
+        }
+        .timeline-card {
+            background: white;
+            border-left: 4px solid #007bff;
+            border-radius: 4px;
+            padding: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        .timeline-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        .timeline-card.ingreso {
+            border-left-color: #28a745;
+        }
+        .timeline-card.salida {
+            border-left-color: #dc3545;
+        }
+        .timeline-card.tarea {
+            border-left-color: #007bff;
+        }
+        .timeline-card.cambio {
+            border-left-color: #ffc107;
+        }
+        .tipo-evento {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .tipo-evento.ingreso {
+            background: #d4edda;
+            color: #155724;
+        }
+        .tipo-evento.salida {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .tipo-evento.tarea {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .tipo-evento.cambio {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .evento-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .evento-usuario {
+            font-weight: 600;
+            color: #495057;
+        }
+        .evento-fecha {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        .evento-icono {
+            margin-right: 8px;
+        }
+        .historial-vacio {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+        .historial-vacio i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        .filtro-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .filtro-section .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .back-button {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/trabajos">
+            <i class="fas fa-tasks"></i> EntregaYa
+        </a>
+        <span class="navbar-text text-white" th:text="${trabajo.nombreTrabajo}"></span>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <!-- Botón de regreso -->
+    <div class="back-button">
+        <a th:href="@{/trabajos/{id}(id=${trabajo.id})}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Volver al Trabajo
+        </a>
+    </div>
+
+    <!-- Encabezado -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <h1 class="display-5">
+                <i class="fas fa-history"></i> Historial de Eventos
+            </h1>
+            <p class="text-muted">
+                Visualiza cronológicamente todos los cambios, ingresos/salidas de miembros y actualizaciones en el proyecto.
+            </p>
+        </div>
+        <div class="col-lg-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total de Eventos</h5>
+                    <p class="card-text display-6" th:text="${historial.size()}"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mensaje de error si aplica -->
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Filtros (opcional) -->
+    <div class="filtro-section">
+        <h6 class="mb-3">
+            <i class="fas fa-filter"></i> Filtrar por Tipo
+        </h6>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="mostrarTodos()">
+                Todos
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-success" onclick="filtrar('ingreso')">
+                <i class="fas fa-user-plus"></i> Ingresos
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="filtrar('salida')">
+                <i class="fas fa-user-minus"></i> Salidas
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-info" onclick="filtrar('tarea')">
+                <i class="fas fa-check-circle"></i> Tareas
+            </button>
+        </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="timeline" th:if="${!historial.isEmpty()}">
+        <div th:each="evento : ${historial}"
+             th:class="'timeline-item ' + ${#strings.toLowerCase(evento.tipoEvento.name())}">
+
+            <div th:class="'timeline-card ' + ${#strings.toLowerCase(evento.tipoEvento.name())}">
+
+                <!-- Tipo de evento -->
+                <span th:class="'tipo-evento ' + ${#strings.toLowerCase(evento.tipoEvento.name())}"
+                      th:text="${evento.tipoEvento.descripcionDefault}"></span>
+
+                <!-- Encabezado -->
+                <div class="evento-header">
+                    <span class="evento-usuario" th:text="${evento.usuarioAccion}"></span>
+                    <span class="evento-fecha" th:text="${#temporals.format(evento.fechaEvento, 'dd/MM/yyyy HH:mm:ss')}"></span>
+                </div>
+
+                <!-- Descripción -->
+                <p class="mb-2">
+                    <i class="evento-icono fas"
+                       th:class="${evento.tipoEvento.name() == 'INGRESO_MIEMBRO'} ? 'fa-user-plus text-success' :
+                                     ${evento.tipoEvento.name() == 'SALIDA_MIEMBRO'} ? 'fa-user-minus text-danger' :
+                                     ${evento.tipoEvento.name() == 'CREACION_TAREA'} ? 'fa-plus-circle text-info' :
+                                     'fa-edit text-warning'"></i>
+                    <span th:text="${evento.descripcion}"></span>
+                </p>
+
+                <!-- Detalles (si existen) -->
+                <div th:if="${evento.detalles}" class="alert alert-light mt-2 mb-0">
+                    <small th:text="${evento.detalles}"></small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historial vacío -->
+    <div th:if="${historial.isEmpty()}" class="historial-vacio">
+        <i class="fas fa-inbox"></i>
+        <h4>Sin eventos registrados</h4>
+        <p>El historial de eventos comenzará a registrarse cuando se realicen cambios en el proyecto.</p>
+    </div>
+</div>
+
+<footer class="bg-dark text-white text-center py-4 mt-5">
+    <p class="mb-0">EntregaYa © 2024 - Seguimiento de Proyectos</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script>
+    function mostrarTodos() {
+        document.querySelectorAll('.timeline-item').forEach(item => {
+            item.style.display = 'block';
+        });
+    }
+
+    function filtrar(tipo) {
+        document.querySelectorAll('.timeline-item').forEach(item => {
+            if (item.classList.contains(tipo)) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+</script>
+</body>
+</html>

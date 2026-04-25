@@ -1,6 +1,8 @@
 package com.example.entregaya.controller;
 
-
+import com.example.entregaya.dto.HistorialEventoDTO;
+import com.example.entregaya.model.HistorialEvento;
+import java.util.stream.Collectors;
 import com.example.entregaya.dto.MiembroRolDTO;
 import com.example.entregaya.dto.TareaConEtiquetaDTO;
 import com.example.entregaya.model.ColaboradorTrabajo;
@@ -516,5 +518,77 @@ public class TrabajoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    /**
+     * HU-30: Obtiene el historial cronológico de eventos del trabajo.
+     * Accesible solo para miembros del trabajo.
+     * Retorna eventos ordenados de más reciente a más antiguo.
+     */
+    @GetMapping("/{id}/historial")
+    public String verHistorial(@PathVariable Long id, Model model,
+                               @AuthenticationPrincipal UserDetails user) {
+        try {
+            // Verificar que el usuario sea miembro del trabajo
+            Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
+            boolean esMiembro = trabajo.getColaboradores().stream()
+                    .anyMatch(c -> c.getUser().getUsername().equals(user.getUsername()));
+
+            if (!esMiembro) {
+                throw new SecurityException("No perteneces a este trabajo");
+            }
+
+            // Obtener el historial
+            List<HistorialEvento> historial = customTrabajoDetailsService.obtenerHistorial(id);
+
+            model.addAttribute("trabajo", trabajo);
+            model.addAttribute("historial", historial);
+
+            return "trabajos/historial";
+
+        } catch (SecurityException e) {
+            model.addAttribute("error", e.getMessage());
+            return "redirect:/trabajos";
+        } catch (Exception e) {
+            model.addAttribute("error", "No se pudo cargar el historial");
+            return "redirect:/trabajos";
+        }
+    }
+
+    /**
+     * HU-30: Endpoint REST que retorna el historial en JSON
+     */
+    @GetMapping("/{id}/historial/json")
+    @ResponseBody
+    public ResponseEntity<?> obtenerHistorialJson(@PathVariable Long id,
+                                                  @AuthenticationPrincipal UserDetails user) {
+        try {
+            // Verificar que el usuario sea miembro del trabajo
+            Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
+            boolean esMiembro = trabajo.getColaboradores().stream()
+                    .anyMatch(c -> c.getUser().getUsername().equals(user.getUsername()));
+
+            if (!esMiembro) {
+                return ResponseEntity.status(403).body(Map.of("error", "No perteneces a este trabajo"));
+            }
+
+            // Obtener y mapear el historial a DTOs
+            List<HistorialEvento> historial = customTrabajoDetailsService.obtenerHistorial(id);
+            List<HistorialEventoDTO> historialDTO = historial.stream()
+                    .map(HistorialEventoDTO::fromEntity)
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(Map.of(
+                    "trabajoId", id,
+                    "nombreTrabajo", trabajo.getNombreTrabajo(),
+                    "totalEventos", historialDTO.size(),
+                    "eventos", historialDTO
+            ));
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", "Error al obtener el historial"));
+        }
+    }
+
 
 }

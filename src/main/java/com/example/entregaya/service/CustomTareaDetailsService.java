@@ -178,7 +178,8 @@ public class CustomTareaDetailsService {
                 tarea.getNombre(),
                 tarea.getTrabajo().getId(),
                 tarea.getTrabajo().getNombreTrabajo(),
-                nuevoEstado ? "COMPLETADA" : "PENDIENTE",
+                nuevoEstado ? TareaEventoDTO.TipoEvento.COMPLETADA : TareaEventoDTO.TipoEvento.INCOMPLETADA,
+                null,  // detalles
                 realizadoPor,
                 LocalDateTime.now()
         );
