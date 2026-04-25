@@ -165,7 +165,7 @@ public class TareaController {
         model.addAttribute("tareaConEtiqueta", tareaConEtiqueta);
         model.addAttribute("trabajoId", trabajoId);
  
-        return "trabajos/tareas/detalle_tarea";
+        return "trabajos/tareas/detalle tarea";
     }
  
     @PostMapping("/{tareaId}/clonar")
