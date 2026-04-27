@@ -22,231 +22,72 @@
             --radius: 12px;
         }
 
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: var(--bg);
-            min-height: 100vh;
-            color: var(--text);
-        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); min-height: 100vh; color: var(--text); }
 
-        header {
-            background: var(--dark);
-            padding: 14px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .header-brand {
-            font-family: 'Segoe UI', sans-serif;
-            font-size: 1rem;
-            font-weight: 800;
-            color: #fff;
-            letter-spacing: 0.5px;
-            text-decoration: none;
-            display: inline-block;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        .header-brand:hover {
-            opacity: 0.9;
-        }
-        .header-brand:visited {
-            color: #fff;
-        }
-
-        .header-brand span {
-            background: linear-gradient(90deg, var(--accent), var(--accent2));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+        header { background: var(--dark); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+        .header-brand { font-family: 'Segoe UI', sans-serif; font-size: 1rem; font-weight: 800; color: #fff; letter-spacing: 0.5px; text-decoration: none; display: inline-block; cursor: pointer; transition: opacity 0.2s; }
+        .header-brand:hover { opacity: 0.9; }
+        .header-brand:visited { color: #fff; }
+        .header-brand span { background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
         .header-sub { font-size: 0.78rem; color: #7a7d8a; font-weight: 300; }
 
-        .wrapper {
-            max-width: 760px;
-            margin: 32px auto;
-            padding: 0 16px;
-            animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both;
-        }
-        @keyframes fadeUp {
-            from { opacity:0; transform:translateY(18px); }
-            to { opacity:1; transform:translateY(0); }
-        }
+        .wrapper { max-width: 760px; margin: 32px auto; padding: 0 16px; animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
 
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.83rem;
-            color: var(--muted);
-            text-decoration: none;
-            margin-bottom: 18px;
-            transition: color 0.2s;
-        }
+        .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 0.83rem; color: var(--muted); text-decoration: none; margin-bottom: 18px; transition: color 0.2s; }
         .back-link:hover { color: var(--accent2); }
 
-        .card {
-            background: var(--surface);
-            border-radius: 16px;
-            border: 1px solid var(--border);
-            overflow: hidden;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
-        }
-        .card-stripe {
-            height: 4px;
-            background: linear-gradient(90deg, var(--accent), var(--accent2));
-        }
+        .card { background: var(--surface); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.06); }
+        .card-stripe { height: 4px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
 
-        .task-header {
-            padding: 20px 24px 18px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 12px;
-        }
-        .task-title {
-            font-family: 'Segoe UI', sans-serif;
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--text);
-        }
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 5px 12px;
-            border-radius: 999px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-        .status-badge.progress {
-            background: #eff6ff;
-            color: var(--progress);
-            border: 1px solid #bfdbfe;
-        }
-        .status-badge.progress::before {
-            content: '';
-            width: 7px; height: 7px;
-            border-radius: 50%;
-            background: var(--progress);
-            animation: pulse 1.4s infinite;
-        }
-        @keyframes pulse {
-            0%,100% { opacity:1; transform:scale(1); }
-            50% { opacity:0.5; transform:scale(1.4); }
-        }
+        .task-header { padding: 20px 24px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+        .task-title { font-family: 'Segoe UI', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--text); }
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 500; white-space: nowrap; flex-shrink: 0; }
+        .status-badge.progress { background: #eff6ff; color: var(--progress); border: 1px solid #bfdbfe; }
+        .status-badge.progress::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--progress); animation: pulse 1.4s infinite; }
+        @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(1.4); } }
 
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-        }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; }
         @media (max-width: 540px) { .info-grid { grid-template-columns: 1fr; } }
 
-        .info-block {
-            padding: 18px 24px;
-            border-bottom: 1px solid var(--border);
-        }
+        .info-block { padding: 18px 24px; border-bottom: 1px solid var(--border); }
         .info-block:nth-child(odd) { border-right: 1px solid var(--border); }
         .info-block.full { grid-column: 1 / -1; border-right: none; border-bottom: none; }
+        /* HU-40: bloque ancho con borde inferior */
+        .info-block.full-with-border { grid-column: 1 / -1; border-right: none; }
 
-        .info-label {
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: var(--muted);
-            margin-bottom: 6px;
-        }
+        .info-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 6px; }
         .info-value { font-size: 0.92rem; color: var(--text); }
         .info-value.highlight { font-size: 1rem; font-weight: 500; }
 
-        .date-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            background: #fff1f0;
-            color: #dc2626;
-            border: 1px solid #fecaca;
+        .date-tag { display: inline-flex; align-items: center; gap: 5px; background: #fff1f0; color: #dc2626; border: 1px solid #fecaca; padding: 3px 10px; border-radius: 6px; font-size: 0.83rem; font-weight: 500; }
+
+        /* HU-40: badges de etiqueta */
+        .etiquetas-list { display: flex; flex-wrap: wrap; gap: 6px; }
+        .etiqueta-chip {
+            display: inline-block;
             padding: 3px 10px;
-            border-radius: 6px;
-            font-size: 0.83rem;
-            font-weight: 500;
-        }
-
-        .section {
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--border);
-        }
-        .comment-label {
-            font-size: 0.7rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: var(--muted);
-            margin-bottom: 8px;
-        }
-        textarea {
-            width: 100%;
-            min-height: 90px;
-            background: var(--surface2);
-            border: 1.5px solid var(--border);
-            border-radius: var(--radius);
-            padding: 12px 14px;
-            font-family: 'Segoe UI', sans-serif;
-            font-size: 0.88rem;
-            color: var(--text);
-            resize: vertical;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        textarea::placeholder { color: #c4c1ba; }
-        textarea:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(244,165,53,0.12);
-        }
-
-        .action-bar {
-            padding: 18px 24px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-        .btn {
-            padding: 10px 18px;
-            border-radius: 8px;
-            font-family: 'Segoe UI', sans-serif;
-            font-size: 0.88rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
-            border: none;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .btn:hover { transform: translateY(-1px); }
-        .btn-complete {
-            background: linear-gradient(135deg, var(--accent), var(--accent2));
             color: #fff;
-            box-shadow: 0 4px 14px rgba(244,165,53,0.3);
         }
+        .sin-etiquetas { font-size: 0.85rem; color: var(--muted); font-style: italic; }
+
+        .section { padding: 20px 24px; border-bottom: 1px solid var(--border); }
+        .comment-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 8px; }
+        textarea { width: 100%; min-height: 90px; background: var(--surface2); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 12px 14px; font-family: 'Segoe UI', sans-serif; font-size: 0.88rem; color: var(--text); resize: vertical; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+        textarea::placeholder { color: #c4c1ba; }
+        textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(244,165,53,0.12); }
+
+        .action-bar { padding: 18px 24px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .btn { padding: 10px 18px; border-radius: 8px; font-family: 'Segoe UI', sans-serif; font-size: 0.88rem; font-weight: 500; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s, background 0.15s; border: none; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+        .btn:hover { transform: translateY(-1px); }
+        .btn-complete { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; box-shadow: 0 4px 14px rgba(244,165,53,0.3); }
         .btn-complete:hover { box-shadow: 0 6px 20px rgba(244,165,53,0.45); }
-        .btn-edit {
-            background: var(--surface2);
-            color: var(--text);
-            border: 1.5px solid var(--border);
-        }
+        .btn-edit { background: var(--surface2); color: var(--text); border: 1.5px solid var(--border); }
         .btn-edit:hover { background: #ece9e3; }
-        .btn-back {
-            background: transparent;
-            color: var(--muted);
-            border: 1.5px solid var(--border);
-        }
+        .btn-back { background: transparent; color: var(--muted); border: 1.5px solid var(--border); }
         .btn-back:hover { color: var(--text); background: #f0ede7; }
     </style>
 </head>
@@ -271,18 +112,20 @@
         <div class="info-grid">
             <div class="info-block">
                 <div class="info-label">Responsable</div>
-                <div class="info-value highlight" th:text="${tarea.responsables.size()} > 0 ? ${tarea.responsables.iterator().next().username} : 'Sin asignar'">Juan</div>
+                <div class="info-value highlight"
+                     th:text="${tarea.responsables.size()} > 0 ? ${tarea.responsables.iterator().next().username} : 'Sin asignar'">
+                    Juan
+                </div>
             </div>
             <div class="info-block">
                 <div class="info-label">Trabajo asociado</div>
-                <div class="info-value" th:text="${tarea.trabajo.nombreTrabajo}">Informe de Estructuras de Datos</div>
+                <div class="info-value" th:text="${tarea.trabajo.nombreTrabajo}">Informe</div>
             </div>
             <div class="info-block">
                 <div class="info-label">Urgencia</div>
                 <!-- HU-29 (#317): Badge de urgencia del decorador -->
                 <div class="info-value">
-                    <span class="badge-urgencia"
-                          th:style="'background-color: ' + ${tareaConEtiqueta.colorEtiqueta()} + '; color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; display: inline-block;'"
+                    <span th:style="'background-color: ' + ${tareaConEtiqueta.colorEtiqueta()} + '; color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; display: inline-block;'"
                           th:text="${tareaConEtiqueta.etiquetaUrgencia()}">Normal</span>
                 </div>
             </div>
@@ -290,11 +133,60 @@
                 <div class="info-label">Dificultad</div>
                 <div class="info-value" th:text="${tarea.dificultad.name()}">Media</div>
             </div>
+            <div class="info-block">
+                <div class="info-label">Fecha límite</div>
+                <div class="info-value" th:if="${tarea.fechaFinal}">
+                    <span class="date-tag" th:text="'⏰ ' + ${#temporals.format(tarea.fechaFinal, 'dd/MM/yyyy')}">⏰ 05/04/2026</span>
+                </div>
+                <div class="info-value" th:unless="${tarea.fechaFinal}">Sin fecha definida</div>
+            </div>
+            <div class="info-block">
+                <div class="info-label">Estado</div>
+                <div class="info-value">
+                    <span th:if="${tarea.isCompletada}"
+                          style="background:#d4edda;color:#155724;padding:4px 10px;border-radius:6px;font-size:0.82rem;font-weight:600;">
+                        ✓ Completada
+                    </span>
+                    <span th:unless="${tarea.isCompletada}"
+                          style="background:#f0f0f0;color:#555;padding:4px 10px;border-radius:6px;font-size:0.82rem;font-weight:600;">
+                        Pendiente
+                    </span>
+                </div>
+            </div>
+
+            <!-- HU-40: Etiquetas del equipo (bloque ancho) -->
+            <div class="info-block full-with-border">
+                <div class="info-label">Etiquetas</div>
+                <div class="info-value">
+                    <div class="etiquetas-list" th:if="${tarea.etiquetas != null and not #lists.isEmpty(tarea.etiquetas)}">
+                        <!--
+                            Thymeleaf no soporta acceso dinámico a listas por índice en th:style,
+                            por lo que se aplica un color fijo por posición usando th:classappend
+                            y cinco clases CSS predefinidas.
+                        -->
+                        <span th:each="et, it : ${tarea.etiquetas}"
+                              class="etiqueta-chip"
+                              th:classappend="${it.index == 0} ? 'color-0' :
+                                             (${it.index == 1} ? 'color-1' :
+                                             (${it.index == 2} ? 'color-2' :
+                                             (${it.index == 3} ? 'color-3' : 'color-4')))"
+                              th:text="${et}">
+                        </span>
+                    </div>
+                    <span class="sin-etiquetas"
+                          th:if="${tarea.etiquetas == null or #lists.isEmpty(tarea.etiquetas)}">
+                        Sin etiquetas
+                    </span>
+                </div>
+            </div>
 
             <!-- Descripción -->
             <div class="info-block full">
                 <div class="info-label">Descripción</div>
-                <div class="info-value" th:text="${tarea.descripcion != null ? tarea.descripcion : 'Sin descripción'}">Sin descripción</div>
+                <div class="info-value"
+                     th:text="${tarea.descripcion != null ? tarea.descripcion : 'Sin descripción'}">
+                    Sin descripción
+                </div>
             </div>
         </div>
 
@@ -304,10 +196,9 @@
 
             <!-- Lista de comentarios existentes -->
             <div id="comentariosList" style="margin-bottom: 20px;">
-                <div th:if="${tarea.comentarios != null && tarea.comentarios.size() > 0}">
+                <div th:if="${tarea.comentarios != null and tarea.comentarios.size() > 0}">
                     <div th:each="comentario : ${tarea.comentarios}"
                          style="background: var(--surface2); padding: 12px 14px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--accent);">
-
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
                             <div style="font-weight: 600; color: var(--text);" th:text="${comentario.autor.username}">Usuario</div>
                             <div style="font-size: 0.75rem; color: var(--muted);"
@@ -315,13 +206,12 @@
                                 01/01/2026 10:30
                             </div>
                         </div>
-
                         <div style="color: var(--text); font-size: 0.9rem;" th:text="${comentario.contenido}">
                             Contenido del comentario
                         </div>
                     </div>
                 </div>
-                <div th:if="${tarea.comentarios == null || tarea.comentarios.size() == 0}"
+                <div th:if="${tarea.comentarios == null or tarea.comentarios.size() == 0}"
                      style="text-align: center; color: var(--muted); padding: 20px; font-size: 0.9rem;">
                     No hay comentarios aún. Sé el primero en comentar.
                 </div>
@@ -331,35 +221,39 @@
             <form th:action="@{/trabajos/{id}/tareas/{tareaId}/comentario(id=${trabajoId}, tareaId=${tarea.id})}"
                   method="post"
                   style="display: flex; gap: 10px; align-items: flex-end;">
-
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-
                 <textarea name="contenido"
                           placeholder="Agrega un comentario o nota sobre esta tarea…"
                           style="flex: 1; min-height: 80px; resize: none;"
                           required></textarea>
-
-                <button type="submit"
-                        class="btn btn-complete"
-                        style="padding: 10px 16px; white-space: nowrap;">
+                <button type="submit" class="btn btn-complete" style="padding: 10px 16px; white-space: nowrap;">
                     💬 Comentar
                 </button>
             </form>
         </div>
-
 
         <div class="action-bar">
             <a th:href="@{/trabajos/{id}(id=${trabajoId})}" class="btn btn-back">← Volver</a>
             <a th:href="@{/trabajos/{trabajoId}/tareas/{tareaId}/editar(trabajoId=${trabajoId}, tareaId=${tarea.id})}"
                class="btn btn-edit"
                sec:authorize="hasRole('EDITOR') or hasRole('ADMIN') or hasRole('LIDER')">✏ Editar</a>
-            <form th:action="@{/trabajos/{id}/tareas/{tareaId}/completar(id=${trabajoId}, tareaId=${tarea.id})}" method="post" style="display:inline;">
+            <form th:action="@{/trabajos/{id}/tareas/{tareaId}/completar(id=${trabajoId}, tareaId=${tarea.id})}"
+                  method="post" style="display:inline;">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                 <button type="submit" class="btn btn-complete" id="completeBtn">✓ Marcar como completado</button>
             </form>
         </div>
     </div>
 </div>
+
+<style>
+    /* HU-40: colores de chips por posición (compatibles con Thymeleaf th:classappend) */
+    .etiqueta-chip.color-0 { background: #f4a535; }
+    .etiqueta-chip.color-1 { background: #3498db; }
+    .etiqueta-chip.color-2 { background: #27ae60; }
+    .etiqueta-chip.color-3 { background: #9b59b6; }
+    .etiqueta-chip.color-4 { background: #e74c3c; }
+</style>
 
 <script>
     function setPriority(el) {
