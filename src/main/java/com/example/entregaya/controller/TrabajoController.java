@@ -1,6 +1,8 @@
 package com.example.entregaya.controller;
 
-
+import com.example.entregaya.dto.HistorialEventoDTO;
+import com.example.entregaya.model.HistorialEvento;
+import java.util.stream.Collectors;
 import com.example.entregaya.dto.MiembroRolDTO;
 import com.example.entregaya.dto.TareaConEtiquetaDTO;
 import com.example.entregaya.model.ColaboradorTrabajo;
@@ -10,7 +12,11 @@ import com.example.entregaya.model.User;
 import com.example.entregaya.service.CustomInvitacionDetailsService;
 import com.example.entregaya.service.CustomTrabajoDetailsService;
 import com.example.entregaya.service.CustomTareaDetailsService;
+import com.example.entregaya.service.PdfExportService;
+import com.example.entregaya.strategy.Lideroeditorstrategy;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -33,12 +39,19 @@ public class TrabajoController {
     private final CustomTrabajoDetailsService customTrabajoDetailsService;
     private final CustomTareaDetailsService customTareaDetailsService;
     private final CustomInvitacionDetailsService customInvitacionDetailsService;
+    private final PdfExportService pdfExportService;
+    private final Lideroeditorstrategy lideroeditorstrategy;
 
     public TrabajoController(CustomTrabajoDetailsService customTrabajoDetailsService,
-                             CustomTareaDetailsService customTareaDetailsService, CustomInvitacionDetailsService customInvitacionDetailsService) {
+                             CustomTareaDetailsService customTareaDetailsService,
+                             CustomInvitacionDetailsService customInvitacionDetailsService,
+                             PdfExportService pdfExportService,
+                             Lideroeditorstrategy lideroeditorstrategy) {
         this.customTrabajoDetailsService = customTrabajoDetailsService;
         this.customTareaDetailsService = customTareaDetailsService;
         this.customInvitacionDetailsService = customInvitacionDetailsService;
+        this.pdfExportService = pdfExportService;
+        this.lideroeditorstrategy = lideroeditorstrategy;
     }
 
     @GetMapping
@@ -472,5 +485,110 @@ public class TrabajoController {
             return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
         }
     }
+
+    /**
+     * HU-39 (#399): Endpoint para exportar las tareas de un trabajo a PDF.
+     * Solo accesible para usuarios con rol LIDER o EDITOR.
+     * El archivo se descarga con el nombre: trabajo_{id}_tareas.pdf
+     */
+    @GetMapping("/{id}/exportar-pdf")
+    public ResponseEntity<byte[]> exportarPdf(@PathVariable Long id,
+                                               @AuthenticationPrincipal UserDetails user) {
+        // Validar permisos: solo LIDER o EDITOR
+        if (!customTrabajoDetailsService.verificarPermiso(id, user.getUsername(), lideroeditorstrategy)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        try {
+            Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
+            List<Tarea> tareas = customTareaDetailsService.tareas(id);
+
+            byte[] pdfBytes = pdfExportService.generarPdfTareas(trabajo, tareas);
+
+            String nombreArchivo = "trabajo_" + id + "_tareas.pdf";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", nombreArchivo);
+            headers.setContentLength(pdfBytes.length);
+
+            return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * HU-30: Obtiene el historial cronológico de eventos del trabajo.
+     * Accesible solo para miembros del trabajo.
+     * Retorna eventos ordenados de más reciente a más antiguo.
+     */
+    @GetMapping("/{id}/historial")
+    public String verHistorial(@PathVariable Long id, Model model,
+                               @AuthenticationPrincipal UserDetails user) {
+        try {
+            // Verificar que el usuario sea miembro del trabajo
+            Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
+            boolean esMiembro = trabajo.getColaboradores().stream()
+                    .anyMatch(c -> c.getUser().getUsername().equals(user.getUsername()));
+
+            if (!esMiembro) {
+                throw new SecurityException("No perteneces a este trabajo");
+            }
+
+            // Obtener el historial
+            List<HistorialEvento> historial = customTrabajoDetailsService.obtenerHistorial(id);
+
+            model.addAttribute("trabajo", trabajo);
+            model.addAttribute("historial", historial);
+
+            return "trabajos/historial";
+
+        } catch (SecurityException e) {
+            model.addAttribute("error", e.getMessage());
+            return "redirect:/trabajos";
+        } catch (Exception e) {
+            model.addAttribute("error", "No se pudo cargar el historial");
+            return "redirect:/trabajos";
+        }
+    }
+
+    /**
+     * HU-30: Endpoint REST que retorna el historial en JSON
+     */
+    @GetMapping("/{id}/historial/json")
+    @ResponseBody
+    public ResponseEntity<?> obtenerHistorialJson(@PathVariable Long id,
+                                                  @AuthenticationPrincipal UserDetails user) {
+        try {
+            // Verificar que el usuario sea miembro del trabajo
+            Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
+            boolean esMiembro = trabajo.getColaboradores().stream()
+                    .anyMatch(c -> c.getUser().getUsername().equals(user.getUsername()));
+
+            if (!esMiembro) {
+                return ResponseEntity.status(403).body(Map.of("error", "No perteneces a este trabajo"));
+            }
+
+            // Obtener y mapear el historial a DTOs
+            List<HistorialEvento> historial = customTrabajoDetailsService.obtenerHistorial(id);
+            List<HistorialEventoDTO> historialDTO = historial.stream()
+                    .map(HistorialEventoDTO::fromEntity)
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(Map.of(
+                    "trabajoId", id,
+                    "nombreTrabajo", trabajo.getNombreTrabajo(),
+                    "totalEventos", historialDTO.size(),
+                    "eventos", historialDTO
+            ));
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", "Error al obtener el historial"));
+        }
+    }
+
 
 }

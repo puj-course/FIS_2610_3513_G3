@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Entrega Ya — Estadísticas</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto; background: #f6f7f9; color: #222; display: flex; min-height: 100vh; }
+
+        .sidebar { width: 220px; background: #1f1f1f; min-height: 100vh; position: fixed; top: 0; left: 0; display: flex; flex-direction: column; }
+        .sidebar-brand { font-size: 1rem; font-weight: 700; color: white; padding: 18px; border-bottom: 1px solid #333; }
+        .sidebar-brand span { color: #e67e22; }
+        .sidebar-nav { list-style: none; padding: 10px 0; flex: 1; }
+        .sidebar-nav li a { display: block; padding: 10px 18px; color: #aaa; text-decoration: none; font-size: 0.9rem; }
+        .sidebar-nav li a:hover, .sidebar-nav li a.active { background: #2a2a2a; color: white; }
+        .sidebar-footer { padding: 16px; border-top: 1px solid #333; }
+        .sidebar-user { color: #aaa; font-size: 0.85rem; margin-bottom: 10px; }
+        .btn-logout { background: none; border: 1px solid #444; color: #aaa; font-size: 0.85rem; padding: 6px 10px; width: 100%; cursor: pointer; }
+        .btn-logout:hover { border-color: #c0392b; color: #c0392b; }
+
+        .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; }
+        .topbar { background: white; border-bottom: 1px solid #e5e5e5; height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; font-size: 0.9rem; }
+        .topbar-title { font-weight: 600; }
+        .content { padding: 32px; width: 100%; }
+
+        h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 28px; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 36px; }
+
+        .stat-card { background: white; border: 1px solid #e2e2e2; border-radius: 8px; padding: 24px; text-align: center; transition: all 0.2s ease; }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .stat-num { font-size: 2.5rem; font-weight: 700; margin-bottom: 6px; }
+        .stat-label { font-size: 0.85rem; color: #777; }
+        .stat-num.blue   { color: #3498db; }
+        .stat-num.green  { color: #27ae60; }
+        .stat-num.red    { color: #e74c3c; }
+        .stat-num.orange { color: #e67e22; }
+
+        .progress-section { background: white; border: 1px solid #e2e2e2; border-radius: 8px; padding: 28px; }
+        .progress-section h2 { font-size: 1rem; font-weight: 600; margin-bottom: 16px; }
+        .progress-bar-wrap { background: #f0f0f0; border-radius: 999px; height: 18px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #e67e22, #27ae60); transition: width 0.6s ease; }
+        .progress-label { margin-top: 10px; font-size: 0.9rem; color: #555; text-align: right; }
+    </style>
+</head>
+
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+    <div class="sidebar-brand">ENTREGA <span>YA</span></div>
+    <ul class="sidebar-nav">
+        <li><a th:href="@{/dashboard}">Dashboard</a></li>
+        <li><a th:href="@{/trabajos}">Mis trabajos</a></li>
+        <li><a th:href="@{/trabajos/nuevo}">Nuevo trabajo</a></li>
+        <li><a th:href="@{/estadisticas}" class="active">Estadísticas</a></li>
+        <li><a th:href="@{/perfil}">Mi perfil</a></li>
+    </ul>
+    <div class="sidebar-footer">
+        <div class="sidebar-user" sec:authentication="name">usuario</div>
+        <form th:action="@{/logout}" method="post">
+            <button class="btn-logout" type="submit">Cerrar sesión</button>
+        </form>
+    </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+    <div class="topbar">
+        <span class="topbar-title">Estadísticas personales</span>
+    </div>
+
+    <div class="content">
+        <h1>Mi rendimiento</h1>
+
+        <!-- Tarjetas de métricas -->
+        <div class="stats-grid">
+
+            <div class="stat-card">
+                <div class="stat-num blue" th:text="${stats.totalTareas}">0</div>
+                <div class="stat-label">Total de tareas</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-num green" th:text="${stats.tareasCompletadas}">0</div>
+                <div class="stat-label">Tareas completadas</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card" style="border-color: #fc8181; background: #fff5f5;">
+                    <div class="stat-num red" th:text="${stats.tareasVencidas}">0</div>
+                    <div class="stat-label">Tareas vencidas</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-num orange" th:text="${stats.tasaCompletitud} + '%'">0%</div>
+                <div class="stat-label">Tasa de completitud</div>
+            </div>
+
+        </div>
+
+        <!-- Barra de progreso global -->
+        <div class="progress-section">
+            <h2>Progreso general</h2>
+            <div class="progress-bar-wrap">
+                <div class="progress-bar-fill"
+                     th:style="'width:' + ${stats.tasaCompletitud} + '%'"></div>
+            </div>
+            <div class="progress-label"
+                 th:text="${stats.tasaCompletitud} + '% completado'">0% completado</div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
