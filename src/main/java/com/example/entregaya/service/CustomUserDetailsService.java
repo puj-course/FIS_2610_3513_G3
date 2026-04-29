@@ -133,4 +133,25 @@ public class CustomUserDetailsService implements UserDetailsService {
         return userRepository.findByUsername(username);
     }
 
+    public void actualizarTelegramChatId(String username, String chatId) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // Si está vacío, permitir guardarlo como null
+        if (chatId == null || chatId.trim().isEmpty()) {
+            user.setTelegramChatId(null);
+        } else {
+            // Validar longitud máxima
+            if (chatId.length() > 20) {
+                throw new IllegalArgumentException("El ID de Telegram no puede exceder 20 caracteres.");
+            }
+            // Validar que sea diferente al actual
+            if (chatId.equals(user.getTelegramChatId())) {
+                throw new IllegalArgumentException("El nuevo ID debe ser diferente al actual.");
+            }
+            user.setTelegramChatId(chatId);
+        }
+        userRepository.save(user);
+    }
+
 }
