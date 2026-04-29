@@ -23,7 +23,10 @@ public class PerfilController {
     @GetMapping("/perfil")
     public String perfil(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         userDetailsService.findByUsername(userDetails.getUsername())
-                .ifPresent(user -> model.addAttribute("emailActual", user.getEmail()));
+                .ifPresent(user -> {
+                    model.addAttribute("emailActual", user.getEmail());
+                    model.addAttribute("telegramChatIdActual", user.getTelegramChatId());
+                });
         return "perfil";
     }
 
@@ -67,6 +70,23 @@ public class PerfilController {
             redirectAttributes.addFlashAttribute("successEmail", "Correo actualizado correctamente.");
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("errorEmail", e.getMessage());
+        }
+        return "redirect:/perfil";
+    }
+
+    @PostMapping("/perfil/actualizar-telegram")
+    public String actualizarTelegram(@RequestParam("telegramChatId") String telegramChatId,
+                                     @AuthenticationPrincipal UserDetails userDetails,
+                                     RedirectAttributes redirectAttributes) {
+        try {
+            userDetailsService.actualizarTelegramChatId(userDetails.getUsername(), telegramChatId);
+            if (telegramChatId == null || telegramChatId.trim().isEmpty()) {
+                redirectAttributes.addFlashAttribute("successTelegram", "Telegram Chat ID eliminado. Las notificaciones externas han sido desactivadas.");
+            } else {
+                redirectAttributes.addFlashAttribute("successTelegram", "Telegram Chat ID guardado correctamente.");
+            }
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorTelegram", e.getMessage());
         }
         return "redirect:/perfil";
     }

@@ -133,4 +133,16 @@ public class CustomUserDetailsService implements UserDetailsService {
         return userRepository.findByUsername(username);
     }
 
+    // Actualizar Telegram Chat ID (HU-43)
+    public void actualizarTelegramChatId(String username, String chatId) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        String valor = (chatId == null || chatId.trim().isEmpty()) ? null : chatId.trim();
+        if (valor != null && valor.length() > 20) {
+            throw new IllegalArgumentException("El Telegram Chat ID no puede superar los 20 caracteres.");
+        }
+        user.setTelegramChatId(valor);
+        userRepository.save(user);
+    }
+
 }
