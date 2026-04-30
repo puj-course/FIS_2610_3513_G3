@@ -10,7 +10,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 @Service
-public class TelegramNotificacionService {
+public class    TelegramNotificacionService {
     private static final Logger log = LoggerFactory.getLogger(TelegramNotificacionService.class);
 
     @Value("${telegram.bot.token}")

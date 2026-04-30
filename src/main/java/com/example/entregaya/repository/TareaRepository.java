@@ -15,15 +15,14 @@ public interface TareaRepository extends JpaRepository<Tarea, Long> {
     @Query(value = "SELECT * FROM tarea WHERE trabajo_id = :id", nativeQuery = true)
     List<Tarea> buscarPorTrabajoNativo(@Param("id") Long id);
 
-<<<<<<< HEAD
-=======
+
 
     @Query("SELECT DISTINCT t FROM Tarea t JOIN t.etiquetas e " +
            "WHERE t.trabajo.id = :trabajoId AND LOWER(e) = LOWER(:etiqueta)")
     List<Tarea> findByTrabajoIdAndEtiqueta(@Param("trabajoId") Long trabajoId,
                                            @Param("etiqueta")  String etiqueta);
 
->>>>>>> develop
+
     @Query("SELECT t FROM Tarea t WHERE t.fechaFinal BETWEEN :ahora AND :limite AND t.completada = false AND t.recordatorioEnviado = false")
     List<Tarea> findTareasProximasAVencer(
             @Param("ahora") LocalDateTime ahora,
