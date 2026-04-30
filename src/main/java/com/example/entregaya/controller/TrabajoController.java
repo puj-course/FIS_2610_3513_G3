@@ -519,8 +519,6 @@ public class TrabajoController {
         }
     }
 
-<<<<<<< HEAD
-=======
     /**
      * HU-30: Obtiene el historial cronológico de eventos del trabajo.
      * Accesible solo para miembros del trabajo.
@@ -628,5 +626,4 @@ public class TrabajoController {
         }
     }
 
->>>>>>> origin/develop
 }
