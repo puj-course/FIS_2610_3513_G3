@@ -1,5 +1,6 @@
 package com.example.entregaya.service;
 
+import com.example.entregaya.model.HistorialEvento;
 import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
 import com.example.entregaya.model.User;
@@ -38,8 +39,11 @@ public class PdfExportService {
     private static final float TITLE_FONT_SIZE = 16;
     private static final float SUBTITLE_FONT_SIZE = 11;
     
-    // Anchos de columnas (suman el ancho útil de la página)
+    // Anchos de columnas para tabla de tareas
     private static final float[] COL_WIDTHS = {160, 70, 70, 120, 95}; // nombre, estado, dificultad, responsable, fecha
+    
+    // Anchos de columnas para tabla de historial (HU-46 #450)
+    private static final float[] HIST_COL_WIDTHS = {110, 185, 100, 120}; // tipo, descripcion, usuario, fecha
     
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final DateTimeFormatter DATETIME_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -315,5 +319,225 @@ public class PdfExportService {
         if (texto == null) return "-";
         if (texto.length() <= maxLength) return texto;
         return texto.substring(0, maxLength - 3) + "...";
+    }
+
+    // ========================================================================
+    // HU-46 (#450): Exportar historial de eventos a PDF
+    // ========================================================================
+
+    /**
+     * HU-46 (#450): Genera un PDF con el historial de eventos de un trabajo.
+     *
+     * El PDF incluye:
+     * - Nombre del trabajo
+     * - Fecha de exportación
+     * - Tabla con: tipo de evento, descripción, usuario y fecha
+     * - Mensaje informativo si el historial está vacío
+     *
+     * @param trabajo El trabajo cuyo historial se exportará
+     * @param eventos Lista de eventos del historial
+     * @return byte[] con el contenido del PDF generado
+     * @throws IOException si ocurre un error al generar el PDF
+     */
+    public byte[] generarPdfHistorial(Trabajo trabajo, List<HistorialEvento> eventos) throws IOException {
+        try (PDDocument document = new PDDocument();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+
+            PDPage page = new PDPage(PDRectangle.LETTER);
+            document.addPage(page);
+
+            PDPageContentStream content = new PDPageContentStream(document, page);
+            float yPosition = page.getMediaBox().getHeight() - MARGIN;
+            float pageWidth = page.getMediaBox().getWidth() - 2 * MARGIN;
+
+            // === TÍTULO ===
+            yPosition = escribirTituloHistorial(content, trabajo, yPosition);
+
+            // === FECHA DE EXPORTACIÓN ===
+            yPosition = escribirFechaExportacion(content, yPosition);
+
+            // === LÍNEA SEPARADORA ===
+            yPosition -= 10;
+            content.setLineWidth(0.5f);
+            content.moveTo(MARGIN, yPosition);
+            content.lineTo(MARGIN + pageWidth, yPosition);
+            content.stroke();
+            yPosition -= 20;
+
+            if (eventos == null || eventos.isEmpty()) {
+                // === SIN EVENTOS ===
+                yPosition = escribirSinEventos(content, yPosition);
+            } else {
+                // === TABLA DE EVENTOS ===
+                yPosition = dibujarTablaHistorial(document, content, eventos, yPosition, page);
+            }
+
+            // === PIE DE PÁGINA ===
+            escribirPiePagina(content, page);
+
+            content.close();
+            document.save(out);
+            return out.toByteArray();
+        }
+    }
+
+    /**
+     * Escribe el título del PDF de historial.
+     */
+    private float escribirTituloHistorial(PDPageContentStream content, Trabajo trabajo, float y) throws IOException {
+        content.beginText();
+        content.setFont(PDType1Font.HELVETICA_BOLD, TITLE_FONT_SIZE);
+        content.newLineAtOffset(MARGIN, y);
+        content.showText("Historial de Eventos");
+        content.endText();
+        y -= 22;
+
+        content.beginText();
+        content.setFont(PDType1Font.HELVETICA, SUBTITLE_FONT_SIZE);
+        content.newLineAtOffset(MARGIN, y);
+        String nombreTrabajo = truncar(trabajo.getNombreTrabajo(), 70);
+        content.showText("Trabajo: " + nombreTrabajo);
+        content.endText();
+        y -= 18;
+
+        return y;
+    }
+
+    /**
+     * Escribe mensaje cuando el historial está vacío.
+     */
+    private float escribirSinEventos(PDPageContentStream content, float y) throws IOException {
+        content.beginText();
+        content.setFont(PDType1Font.HELVETICA_OBLIQUE, 11);
+        content.newLineAtOffset(MARGIN, y);
+        content.showText("Este trabajo no tiene eventos registrados en el historial.");
+        content.endText();
+        y -= 20;
+        return y;
+    }
+
+    /**
+     * Dibuja la tabla de eventos del historial con paginación automática.
+     */
+    private float dibujarTablaHistorial(PDDocument document, PDPageContentStream content,
+                                         List<HistorialEvento> eventos, float yStart, PDPage currentPage) throws IOException {
+        float y = yStart;
+        PDPageContentStream cs = content;
+
+        // === ENCABEZADOS ===
+        y = dibujarEncabezadosHistorial(cs, y);
+
+        // === FILAS DE EVENTOS ===
+        for (HistorialEvento evento : eventos) {
+            if (y < MARGIN + 40) {
+                escribirPiePagina(cs, currentPage);
+                cs.close();
+
+                currentPage = new PDPage(PDRectangle.LETTER);
+                document.addPage(currentPage);
+                cs = new PDPageContentStream(document, currentPage);
+                y = currentPage.getMediaBox().getHeight() - MARGIN;
+
+                y = dibujarEncabezadosHistorial(cs, y);
+            }
+
+            y = dibujarFilaEvento(cs, evento, y);
+        }
+
+        // Línea final de la tabla
+        float tableWidth = 0;
+        for (float w : HIST_COL_WIDTHS) tableWidth += w;
+        cs.setLineWidth(0.5f);
+        cs.moveTo(MARGIN, y);
+        cs.lineTo(MARGIN + tableWidth, y);
+        cs.stroke();
+
+        // Total de eventos
+        y -= 20;
+        cs.beginText();
+        cs.setFont(PDType1Font.HELVETICA_BOLD, FONT_SIZE);
+        cs.newLineAtOffset(MARGIN, y);
+        cs.showText("Total de eventos: " + eventos.size());
+        cs.endText();
+
+        if (cs != content) {
+            escribirPiePagina(cs, currentPage);
+            cs.close();
+        }
+
+        return y;
+    }
+
+    /**
+     * Dibuja los encabezados de la tabla de historial.
+     */
+    private float dibujarEncabezadosHistorial(PDPageContentStream cs, float y) throws IOException {
+        String[] headers = {"Tipo", "Descripcion", "Usuario", "Fecha"};
+        float tableWidth = 0;
+        for (float w : HIST_COL_WIDTHS) tableWidth += w;
+
+        cs.setNonStrokingColor(0.85f, 0.85f, 0.85f);
+        cs.addRect(MARGIN, y - HEADER_HEIGHT, tableWidth, HEADER_HEIGHT);
+        cs.fill();
+        cs.setNonStrokingColor(0, 0, 0);
+
+        cs.setLineWidth(0.5f);
+        cs.addRect(MARGIN, y - HEADER_HEIGHT, tableWidth, HEADER_HEIGHT);
+        cs.stroke();
+
+        float xPos = MARGIN;
+        for (int i = 0; i < headers.length; i++) {
+            cs.beginText();
+            cs.setFont(PDType1Font.HELVETICA_BOLD, HEADER_FONT_SIZE);
+            cs.newLineAtOffset(xPos + 5, y - 16);
+            cs.showText(headers[i]);
+            cs.endText();
+
+            if (i < headers.length - 1) {
+                xPos += HIST_COL_WIDTHS[i];
+                cs.moveTo(xPos, y);
+                cs.lineTo(xPos, y - HEADER_HEIGHT);
+                cs.stroke();
+            }
+        }
+
+        return y - HEADER_HEIGHT;
+    }
+
+    /**
+     * Dibuja una fila con los datos de un evento del historial.
+     */
+    private float dibujarFilaEvento(PDPageContentStream cs, HistorialEvento evento, float y) throws IOException {
+        float tableWidth = 0;
+        for (float w : HIST_COL_WIDTHS) tableWidth += w;
+
+        cs.setLineWidth(0.3f);
+        cs.addRect(MARGIN, y - ROW_HEIGHT, tableWidth, ROW_HEIGHT);
+        cs.stroke();
+
+        String tipo = evento.getTipoEvento() != null ? evento.getTipoEvento().getDescripcionDefault() : "-";
+        String descripcion = truncar(evento.getDescripcion() != null ? evento.getDescripcion() : "-", 35);
+        String usuario = truncar(evento.getUsuarioAccion() != null ? evento.getUsuarioAccion() : "-", 18);
+        String fecha = evento.getFechaEvento() != null ? evento.getFechaEvento().format(DATETIME_FMT) : "-";
+
+        String[] valores = {truncar(tipo, 20), descripcion, usuario, fecha};
+
+        float xPos = MARGIN;
+        for (int i = 0; i < valores.length; i++) {
+            cs.beginText();
+            cs.setFont(PDType1Font.HELVETICA, FONT_SIZE);
+            cs.newLineAtOffset(xPos + 5, y - 14);
+            cs.showText(valores[i]);
+            cs.endText();
+
+            if (i < valores.length - 1) {
+                xPos += HIST_COL_WIDTHS[i];
+                cs.moveTo(xPos, y);
+                cs.lineTo(xPos, y - ROW_HEIGHT);
+                cs.stroke();
+            }
+        }
+
+        return y - ROW_HEIGHT;
     }
 }
