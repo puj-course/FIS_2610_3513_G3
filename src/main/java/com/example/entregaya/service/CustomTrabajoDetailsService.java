@@ -1,5 +1,7 @@
 package com.example.entregaya.service;
 
+import com.example.entregaya.model.HistorialEvento;
+import com.example.entregaya.repository.HistorialEventoRepository;
 import com.example.entregaya.dto.MiembroRolDTO;
 import com.example.entregaya.dto.TrabajoEventoDTO;
 import com.example.entregaya.model.ColaboradorTrabajo;
@@ -19,25 +21,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class CustomTrabajoDetailsService {
+public class CustomTrabajoDetailsService{
     private final UserRepository userRepository;
     private final TrabajoRepository trabajoRepository;
     private final ColaboradorTrabajoRepository colaboradorTrabajoRepository;
     private final Sololiderstrategy sololiderstrategy;
     // ── Lista de observers para eventos de trabajo ──
     private final List<TrabajoObserver> observers = new ArrayList<>();
-
+    private final HistorialEventoRepository historialEventoRepository;
 
     public CustomTrabajoDetailsService(TrabajoRepository trabajoRepository,
                                        UserRepository userRepository,
                                        ColaboradorTrabajoRepository colaboradorTrabajoRepository,
                                        Sololiderstrategy sololiderstrategy,
-                                       List<TrabajoObserver> observers) {
+                                       List<TrabajoObserver> observers,
+                                       HistorialEventoRepository historialEventoRepository) {
         this.userRepository = userRepository;
         this.trabajoRepository = trabajoRepository;
         this.colaboradorTrabajoRepository = colaboradorTrabajoRepository;
         this.sololiderstrategy = sololiderstrategy;
-        this.observers.addAll(observers);  // Spring inyecta todos los TrabajoObserver
+        this.observers.addAll(observers);
+        this.historialEventoRepository = historialEventoRepository;
     }
 
     // ── Gestión de observers ──
@@ -289,7 +293,7 @@ public class CustomTrabajoDetailsService {
      *    hasta encontrar uno libre: "(copia)", "(copia) 2", "(copia) 3"...
      *  - El creador (username) queda como único miembro con rol LIDER.
      *
-     * @param trabajoId id del trabajo a clonar
+     * @param id id del trabajo a clonar
      * @param username  usuario autenticado que solicita la clonación
      * @return el nuevo Trabajo persistido
      * @throws IllegalArgumentException si el trabajo no existe
@@ -318,4 +322,12 @@ public class CustomTrabajoDetailsService {
         return trabajoRepository.save(copia);
     }
 
+
+    public List<HistorialEvento> obtenerHistorial(Long trabajoId) {
+        // Validar que el trabajo exista
+        if (!trabajoRepository.existsById(trabajoId)) {
+            throw new IllegalArgumentException("El trabajo no existe");
+        }
+        return historialEventoRepository.findByTrabajoIdOrderByFechaDesc(trabajoId);
+    }
 }
