@@ -8,7 +8,10 @@ import static org.junit.jupiter.api.Assertions.*;
 // Tests para PermisoStrategy - Patron Strategy HU-23 #287
 class PermisoStrategyTest {
 
-    // NORMAL (CP11): Lider en LideroEditorStrategy
+    // CP11 - NORMAL: Acceso Autorizado
+    // Se justifica para confirmar que el rol Líder tiene permisos completos en la estrategia compartida.
+    // Estrategia: LiderOEditor, Rol: LIDER
+    // Resultado Esperado: Retorna true.
     @Test
     void CP11_LideroEditorStrategy_ConRolLider_RetornaTrue() {
         // Arrange
@@ -23,24 +26,12 @@ class PermisoStrategyTest {
         assertTrue(tienePermiso, "LIDER debe tener permiso en LideroEditorStrategy");
     }
 
-    // NORMAL (CP12): Editor en LideroEditorStrategy
+    // CP12 - NEGATIVA: Denegación por Rol
+    // Se justifica para garantizar que un Colaborador no pueda realizar acciones de edición.
+    // Estrategia: LiderOEditor, Rol: COLABORADOR
+    // Resultado Esperado: Retorna false.
     @Test
-    void CP12_LideroEditorStrategy_ConRolEditor_RetornaTrue() {
-        // Arrange
-        Permisostrategy estrategia = new Lideroeditorstrategy();
-        ColaboradorTrabajo colaborador = new ColaboradorTrabajo();
-        colaborador.setRol(ColaboradorTrabajo.Rol.EDITOR);
-
-        // Act
-        boolean tienePermiso = estrategia.tienePermiso(colaborador);
-
-        // Assert
-        assertTrue(tienePermiso, "EDITOR debe tener permiso en LideroEditorStrategy");
-    }
-
-    // NEGATIVA (CP13): Colaborador en LideroEditorStrategy
-    @Test
-    void CP13_LideroEditorStrategy_ConRolColaborador_RetornaFalse() {
+    void CP12_LideroEditorStrategy_ConRolColaborador_RetornaFalse() {
         // Arrange
         Permisostrategy estrategia = new Lideroeditorstrategy();
         ColaboradorTrabajo colaborador = new ColaboradorTrabajo();
@@ -53,24 +44,12 @@ class PermisoStrategyTest {
         assertFalse(tienePermiso, "COLABORADOR no debe tener permiso en LideroEditorStrategy");
     }
 
-    // NORMAL (CP14): Lider en SoloLiderStrategy
+    // CP13 - NEGATIVA: Restricción Crítica
+    // Se justifica para validar que solo el Líder pueda realizar acciones de alta sensibilidad.
+    // Estrategia: SoloLider, Rol: EDITOR
+    // Resultado Esperado: Retorna false.
     @Test
-    void CP14_SoloLiderStrategy_ConRolLider_RetornaTrue() {
-        // Arrange
-        Permisostrategy estrategia = new Sololiderstrategy();
-        ColaboradorTrabajo colaborador = new ColaboradorTrabajo();
-        colaborador.setRol(ColaboradorTrabajo.Rol.LIDER);
-
-        // Act
-        boolean tienePermiso = estrategia.tienePermiso(colaborador);
-
-        // Assert
-        assertTrue(tienePermiso, "LIDER debe tener permiso en SoloLiderStrategy");
-    }
-
-    // NEGATIVA (CP15): Editor en SoloLiderStrategy (exclusividad de permisos criticos)
-    @Test
-    void CP15_SoloLiderStrategy_ConRolEditor_RetornaFalse() {
+    void CP13_SoloLiderStrategy_ConRolEditor_RetornaFalse() {
         // Arrange
         Permisostrategy estrategia = new Sololiderstrategy();
         ColaboradorTrabajo colaborador = new ColaboradorTrabajo();
@@ -83,24 +62,12 @@ class PermisoStrategyTest {
         assertFalse(tienePermiso, "EDITOR no debe tener permiso en SoloLiderStrategy");
     }
 
-    // NEGATIVA (CP15b): Colaborador en SoloLiderStrategy
+    // CP14 - BORDE: Fallo Seguro (LiderOEditor)
+    // Se justifica para verificar que ante un rol nulo, el sistema deniegue el acceso por defecto.
+    // Rol: null
+    // Resultado Esperado: Retorna false.
     @Test
-    void CP15b_SoloLiderStrategy_ConRolColaborador_RetornaFalse() {
-        // Arrange
-        Permisostrategy estrategia = new Sololiderstrategy();
-        ColaboradorTrabajo colaborador = new ColaboradorTrabajo();
-        colaborador.setRol(ColaboradorTrabajo.Rol.COLABORADOR);
-
-        // Act
-        boolean tienePermiso = estrategia.tienePermiso(colaborador);
-
-        // Assert
-        assertFalse(tienePermiso, "COLABORADOR no debe tener permiso en SoloLiderStrategy");
-    }
-
-    // BORDE: Rol Null en LideroEditorStrategy (Fail-safe)
-    @Test
-    void BORDE_LideroEditorStrategy_ConRolNull_RetornaFalse() {
+    void CP14_LideroEditorStrategy_ConRolNull_RetornaFalse() {
         // Arrange
         Permisostrategy estrategia = new Lideroeditorstrategy();
         ColaboradorTrabajo colaborador = new ColaboradorTrabajo();
@@ -113,22 +80,12 @@ class PermisoStrategyTest {
         assertFalse(tienePermiso, "Un rol null no deberia tener permisos (fail-safe)");
     }
 
-    // BORDE: Colaborador Null en LideroEditorStrategy
+    // CP15 - BORDE: Fallo Seguro (SoloLider)
+    // Se justifica para asegurar que la seguridad sea estricta incluso ante datos de entrada incompletos.
+    // Rol: null
+    // Resultado Esperado: Retorna false.
     @Test
-    void BORDE_LideroEditorStrategy_ConColaboradorNull_RetornaFalse() {
-        // Arrange
-        Permisostrategy estrategia = new Lideroeditorstrategy();
-
-        // Act
-        boolean tienePermiso = estrategia.tienePermiso(null);
-
-        // Assert
-        assertFalse(tienePermiso, "Un colaborador null no deberia tener permisos (fail-safe)");
-    }
-
-    // BORDE: Rol Null en SoloLiderStrategy (Fail-safe)
-    @Test
-    void BORDE_SoloLiderStrategy_ConRolNull_RetornaFalse() {
+    void CP15_SoloLiderStrategy_ConRolNull_RetornaFalse() {
         // Arrange
         Permisostrategy estrategia = new Sololiderstrategy();
         ColaboradorTrabajo colaborador = new ColaboradorTrabajo();
@@ -139,18 +96,5 @@ class PermisoStrategyTest {
 
         // Assert
         assertFalse(tienePermiso, "Un rol null no deberia tener permisos (fail-safe)");
-    }
-
-    // BORDE: Colaborador Null en SoloLiderStrategy
-    @Test
-    void BORDE_SoloLiderStrategy_ConColaboradorNull_RetornaFalse() {
-        // Arrange
-        Permisostrategy estrategia = new Sololiderstrategy();
-
-        // Act
-        boolean tienePermiso = estrategia.tienePermiso(null);
-
-        // Assert
-        assertFalse(tienePermiso, "Un colaborador null no deberia tener permisos (fail-safe)");
     }
 }
