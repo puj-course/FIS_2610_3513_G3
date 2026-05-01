@@ -91,14 +91,14 @@ public class NotificacionController {
     @ResponseBody
     public ResponseEntity<Integer> marcarTodasLeidas(
             @AuthenticationPrincipal UserDetails userDetails) {
-
         User user = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         List<Notificacion> pendientes =
                 notificacionRepository.findByDestinatarioAndLeidaFalse(user);
-
+        
         pendientes.forEach(n -> n.setLeida(true));
+
         notificacionRepository.saveAll(pendientes);
 
         return ResponseEntity.ok(pendientes.size());
