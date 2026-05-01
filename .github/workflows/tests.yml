@@ -20,10 +20,11 @@ permissions:
   checks: write
   pull-requests: write
 
-# Forzar codificación UTF-8 para evitar errores con caracteres especiales
+# Forzar UTF-8 a nivel de JVM (afecta a todos los procesos Java, incluidos plugins de Maven)
 env:
   LANG: en_US.UTF-8
   LC_ALL: en_US.UTF-8
+  JAVA_TOOL_OPTIONS: "-Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8"
   MAVEN_OPTS: "-Dfile.encoding=UTF-8"
 
 jobs:
@@ -42,16 +43,25 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      # Reemplaza caracteres Unicode especiales que rompen el filtering de Maven en CI.
+      # Esto modifica solo la copia del runner, NO el repositorio.
+      - name: Sanitizar application.properties (solo en el runner)
+        run: |
+          if [ -f src/main/resources/application.properties ]; then
+            sed -i 's/─/-/g; s/│/|/g; s/┌/+/g; s/┐/+/g; s/└/+/g; s/┘/+/g' src/main/resources/application.properties
+            echo "Archivo sanitizado en el runner."
+          fi
+
       - name: Compilar el proyecto
-        run: mvn -B compile -Dfile.encoding=UTF-8 -Dproject.build.sourceEncoding=UTF-8
+        run: mvn -B compile -Dproject.build.sourceEncoding=UTF-8
 
       - name: Ejecutar pruebas unitarias
-        run: mvn -B test -Dfile.encoding=UTF-8 -Dproject.build.sourceEncoding=UTF-8
+        run: mvn -B test -Dproject.build.sourceEncoding=UTF-8
 
       - name: Generar reporte HTML de pruebas (Surefire)
         if: always()
         continue-on-error: true
-        run: mvn -B surefire-report:report-only -Dfile.encoding=UTF-8
+        run: mvn -B surefire-report:report-only
 
       - name: Publicar resumen de resultados en la UI de GitHub
         if: always()
