@@ -8,99 +8,86 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Tests para TareaBuilder - Patron Builder HU-21 #268
+// Pruebas manuales de TareaBuilder HU-21 #268
+
 class TareaBuilderTest {
 
-    // CP01 - NORMAL: Se justifica para validar que el builder crea una tarea valida con todos los parametros correctos.
-    // Entrada: nombre="Sprint 1", fechas validas
-    // Resultados Esperados: Objeto Tarea creado correctamente.
+    // Caso 1: nombre vacío lanza IllegalStateException
     @Test
-    void CP01_Build_ConDatosValidos_RetornaTareaCorrecta() {
-        // Arrange
-        LocalDateTime inicio = LocalDateTime.of(2026, 5, 1, 10, 0);
-        LocalDateTime fin = LocalDateTime.of(2026, 5, 10, 10, 0);
+    void build_debeRechazar_nombreVacio() {
+        TareaBuilder builder = new TareaBuilder()
+                .nombre("")
+                .descripcion("Sin nombre");
+
+        IllegalStateException ex = assertThrows(
+                IllegalStateException.class, builder::build);
+
+        assertTrue(ex.getMessage().contains("nombre"),
+                "El mensaje debe mencionar 'nombre'");
+    }
+
+    // Caso 1b: nombre nulo tambien lanza IllegalStateException
+    @Test
+    void build_debeRechazar_nombreNulo() {
+        TareaBuilder builder = new TareaBuilder()
+                .descripcion("Sin nombre");
+
+        assertThrows(IllegalStateException.class, builder::build);
+    }
+
+    // Caso 2: fechaFinal anterior a fechaInicio lanza IllegalStateException
+    @Test
+    void build_debeRechazar_fechaFinalAnteriorAInicio() {
+        LocalDateTime inicio = LocalDateTime.of(2025, 6, 10, 9, 0);
+        LocalDateTime finalAnterior = LocalDateTime.of(2025, 6, 5, 9, 0);
+
+        TareaBuilder builder = new TareaBuilder()
+                .nombre("Tarea con fechas cruzadas")
+                .fechaInicio(inicio)
+                .fechaFinal(finalAnterior);
+
+        IllegalStateException ex = assertThrows(
+                IllegalStateException.class, builder::build);
+
+        assertTrue(ex.getMessage().contains("fecha"),
+                "El mensaje debe mencionar 'fecha'");
+    }
+
+    // Caso 3: datos validos completos retorna Tarea correctamente configurada
+    @Test
+    void build_debeRetornar_tareaValida() {
+        LocalDateTime inicio = LocalDateTime.of(2025, 6, 1, 9, 0);
+        LocalDateTime fin    = LocalDateTime.of(2025, 6, 15, 18, 0);
         Trabajo trabajo = new Trabajo();
 
-        // Act
         Tarea tarea = new TareaBuilder()
-                .nombre("Sprint 1")
-                .descripcion("Sprint inicial")
+                .nombre("Diseño UI")
+                .descripcion("Mockups en Figma")
                 .fechaInicio(inicio)
                 .fechaFinal(fin)
-                .dificultad(Tarea.Dificultad.MEDIA)
+                .dificultad(Tarea.Dificultad.ALTA)
                 .trabajo(trabajo)
                 .build();
 
-        // Assert
         assertNotNull(tarea);
-        assertEquals("Sprint 1", tarea.getNombre());
+        assertEquals("Diseño UI", tarea.getNombre());
+        assertEquals("Mockups en Figma", tarea.getDescripcion());
         assertEquals(inicio, tarea.getFechaInicio());
         assertEquals(fin, tarea.getFechaFinal());
+        assertEquals(Tarea.Dificultad.ALTA, tarea.getDificultad());
+        assertSame(trabajo, tarea.getTrabajo());
+        assertNotNull(tarea.getResponsables());
     }
 
-    // CP02 - NEGATIVA: Nombre Nulo. Se justifica para prevenir errores de integridad al evitar que se instancien tareas sin nombre.
-    // Entrada: conNombre(null)
-    // Resultados Esperados: Lanza IllegalStateException.
+    // Caso 3b: sin fechas no lanza excepcion son opcionales
     @Test
-    void CP02_Build_ConNombreNull_LanzaExcepcion() {
-        // Arrange
-        TareaBuilder builder = new TareaBuilder();
-
-        // Act & Assert
-        assertThrows(IllegalStateException.class,
-                () -> builder.nombre(null).build());
-    }
-
-    // CP03 - BORDE: Nombre en Blanco. Se justifica para asegurar que nombres compuestos solo por espacios no sean aceptados como validos.
-    // Entrada: conNombre("   ")
-    // Resultados Esperados: Lanza IllegalStateException.
-    @Test
-    void CP03_Build_ConNombreEnBlanco_LanzaExcepcion() {
-        // Arrange
-        TareaBuilder builder = new TareaBuilder();
-
-        // Act & Assert
-        assertThrows(IllegalStateException.class,
-                () -> builder.nombre("   ").build());
-    }
-
-    // CP04 - NEGATIVA: Cronologia Invalida. Se justifica para proteger la logica de negocio impidiendo que una tarea termine antes de empezar.
-    // Entrada: inicio = manana, fin = ayer
-    // Resultados Esperados: Lanza IllegalStateException.
-    @Test
-    void CP04_Build_ConCronologiaInvalida_LanzaExcepcion() {
-        // Arrange
-        LocalDateTime inicio = LocalDateTime.of(2026, 5, 10, 10, 0);
-        LocalDateTime fin = LocalDateTime.of(2026, 5, 1, 10, 0);
-
-        // Act & Assert
-        Exception exception = assertThrows(IllegalStateException.class, () ->
-                new TareaBuilder()
-                        .nombre("Tarea con fechas cruzadas")
-                        .fechaInicio(inicio)
-                        .fechaFinal(fin)
-                        .build());
-
-        assertTrue(exception.getMessage().contains("fecha"));
-    }
-
-    // CP05 - BORDE: Duracion Cero. Se justifica para verificar si el sistema permite hitos o tareas que ocurren en un instante exacto.
-    // Entrada: inicio == fin
-    // Resultados Esperados: Objeto creado (Duracion 0s).
-    @Test
-    void CP05_Build_ConDuracionCero_PermiteCreacion() {
-        // Arrange
-        LocalDateTime instante = LocalDateTime.of(2026, 5, 1, 12, 0);
-
-        // Act
+    void build_debeAceptar_sinFechas() {
         Tarea tarea = new TareaBuilder()
-                .nombre("Hito Instantaneo")
-                .fechaInicio(instante)
-                .fechaFinal(instante)
+                .nombre("Tarea sin fechas")
                 .build();
 
-        // Assert
         assertNotNull(tarea);
-        assertEquals(tarea.getFechaInicio(), tarea.getFechaFinal());
+        assertNull(tarea.getFechaInicio());
+        assertNull(tarea.getFechaFinal());
     }
 }
