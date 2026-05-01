@@ -60,15 +60,6 @@ jobs:
             -Dsurefire.failIfNoSpecifiedTests=false \
             || true
 
-      - name: Publicar resultados de tests en GitHub
-        uses: dorny/tests-reporter@v1
-        if: always()
-        with:
-          name: Resultados JUnit
-          path: target/surefire-reports/TEST-*.xml
-          reporter: java-junit
-          fail-on-error: false
-
       - name: Generar reporte HTML del plan de pruebas
         if: always()
         run: python3 .github/scripts/generar_reporte.py
