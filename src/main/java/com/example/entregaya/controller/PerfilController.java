@@ -23,9 +23,13 @@ public class PerfilController {
     @GetMapping("/perfil")
     public String perfil(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         userDetailsService.findByUsername(userDetails.getUsername())
-                .ifPresent(user -> model.addAttribute("emailActual", user.getEmail()));
+                .ifPresent(user -> {
+                    model.addAttribute("emailActual", user.getEmail());
+                    model.addAttribute("telegramChatIdActual", user.getTelegramChatId());
+                });
         return "perfil";
     }
+
 
     @PostMapping("/perfil/actualizar-username")
     public String actualizarUsername(@RequestParam("nuevoUsername") String nuevoUsername,
@@ -70,5 +74,19 @@ public class PerfilController {
         }
         return "redirect:/perfil";
     }
+
+    @PostMapping("/perfil/actualizar-telegram")
+    public String actualizarTelegram(@RequestParam("chatIdTelegram") String chatIdTelegram,
+                                     @AuthenticationPrincipal UserDetails userDetails,
+                                     RedirectAttributes redirectAttributes) {
+        try {
+            userDetailsService.actualizarTelegramChatId(userDetails.getUsername(), chatIdTelegram);
+            redirectAttributes.addFlashAttribute("successTelegram", "ID de Telegram actualizado correctamente.");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorTelegram", e.getMessage());
+        }
+        return "redirect:/perfil";
+    }
+
 
 }

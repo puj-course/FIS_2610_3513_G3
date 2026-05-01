@@ -590,5 +590,40 @@ public class TrabajoController {
         }
     }
 
+    /**
+     * HU-46 (#451): Endpoint para exportar el historial de eventos a PDF.
+     * Solo accesible para miembros del trabajo.
+     * Descarga como: historial-{id}.pdf
+     */
+    @GetMapping("/{id}/historial/exportar-pdf")
+    public ResponseEntity<byte[]> exportarHistorialPdf(@PathVariable Long id,
+                                                        @AuthenticationPrincipal UserDetails user) {
+        try {
+            Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
+
+            // Verificar que el usuario sea miembro del trabajo
+            boolean esMiembro = trabajo.getColaboradores().stream()
+                    .anyMatch(c -> c.getUser().getUsername().equals(user.getUsername()));
+
+            if (!esMiembro) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            List<HistorialEvento> historial = customTrabajoDetailsService.obtenerHistorial(id);
+            byte[] pdfBytes = pdfExportService.generarPdfHistorial(trabajo, historial);
+
+            String nombreArchivo = "historial-" + id + ".pdf";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", nombreArchivo);
+            headers.setContentLength(pdfBytes.length);
+
+            return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 
 }
