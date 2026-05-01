@@ -153,11 +153,11 @@ rama       = os.environ.get("GITHUB_REF_NAME", "local")
 run_num    = os.environ.get("GITHUB_RUN_NUMBER", "-")
 
 STATUS_INFO = {
-    "PASADO":       ("Pasado",       "#e6f4ea", "#1e7e34", "&#10003;"),
-    "FALLIDO":      ("Fallido",      "#fce8e6", "#c62828", "&#10007;"),
-    "ERROR":        ("Error",        "#fff3e0", "#e65100", "&#9888;"),
-    "OMITIDO":      ("Omitido",      "#f5f5f5", "#757575", "&#8212;"),
-    "NO EJECUTADO": ("No ejecutado", "#ede7f6", "#4527a0", "?"),
+    "PASADO":       ("Pasado",       "#e6f4ea", "#1e7e34"),
+    "FALLIDO":      ("Fallido",      "#fce8e6", "#c62828"),
+    "ERROR":        ("Error",        "#fff3e0", "#e65100"),
+    "OMITIDO":      ("Omitido",      "#f5f5f5", "#757575"),
+    "NO EJECUTADO": ("No ejecutado", "#ede7f6", "#4527a0"),
 }
 TIPO_COLOR = {
     "Normal":   "#e3f2fd",
@@ -169,14 +169,19 @@ TIPO_COLOR = {
 rows = ""
 for cp_id, meta in PLAN.items():
     r = results[cp_id]
-    label, bg, fg, icon = STATUS_INFO.get(r["status"], ("?", "#fff", "#000", "?"))
+    label, bg, fg = STATUS_INFO.get(r["status"], ("?", "#fff", "#000"))
     tipo_bg = TIPO_COLOR.get(meta["tipo"], "#fff")
+
+    # Resultado real: "Pasado" si paso, mensaje de error si fallo, o estado si no ejecuto
     if r["status"] == "PASADO":
-        resultado_real = '<span style="color:#1e7e34;font-weight:600;">' + html.escape(meta["esperado"]) + "</span>"
+        resultado_real = "Pasado"
+        resultado_color = fg
     elif r["message"]:
-        resultado_real = '<span style="color:' + fg + ';">' + r["message"] + "</span>"
+        resultado_real = r["message"]
+        resultado_color = fg
     else:
-        resultado_real = '<span style="color:' + fg + ';">' + label + "</span>"
+        resultado_real = label
+        resultado_color = fg
 
     rows += (
         "<tr>"
@@ -185,8 +190,8 @@ for cp_id, meta in PLAN.items():
         + "<td style='font-family:monospace;font-size:0.85em;'>" + html.escape(meta["entrada"]) + "</td>"
         + "<td style='background:" + tipo_bg + ";text-align:center;'>" + meta["tipo"] + "</td>"
         + "<td>" + html.escape(meta["esperado"]) + "</td>"
-        + "<td style='background:" + bg + ";'><span style='color:" + fg + ";font-weight:700;'>" + icon + " " + label + "</span>"
-        + ("<br><small>" + resultado_real + "</small>" if r["status"] != "PASADO" else "")
+        + "<td style='background:" + bg + ";'>"
+        + "<span style='color:" + resultado_color + ";font-weight:600;'>" + html.escape(resultado_real) + "</span>"
         + "</td>"
         + "</tr>\n"
     )
@@ -199,86 +204,98 @@ page = """<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Informe de Pruebas Unitarias - EntregaYA</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',Arial,sans-serif;font-size:14px;background:#f4f6f8;color:#212121}
-header{background:linear-gradient(135deg,#00695c,#00897b);color:#fff;padding:24px 40px 20px;border-bottom:4px solid #004d40}
-header h1{font-size:1.5em;margin-bottom:8px}
-header .meta{font-size:0.84em;opacity:.9;display:flex;gap:24px;flex-wrap:wrap}
-.summary{display:flex;gap:16px;padding:24px 40px;flex-wrap:wrap}
-.card{flex:1;min-width:130px;background:#fff;border-radius:8px;padding:18px 20px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.1);border-top:4px solid #ccc}
-.card .num{font-size:2.4em;font-weight:800;line-height:1}
-.card .lbl{font-size:0.75em;text-transform:uppercase;letter-spacing:.5px;color:#555;margin-top:6px}
-.card.total{border-color:#00897b}.card.total .num{color:#00695c}
-.card.pass{border-color:#43a047}.card.pass .num{color:#1e7e34}
-.card.fail{border-color:#e53935}.card.fail .num{color:#c62828}
-.card.other{border-color:#7e57c2}.card.other .num{color:#4527a0}
-.card.pct{border-color:#fb8c00}.card.pct .num{color:#e65100;font-size:2em}
-.progress-wrap{margin:0 40px 24px}
-.progress-label{font-size:.82em;color:#555;margin-bottom:6px}
-.progress-bar{height:10px;background:#e0e0e0;border-radius:5px;overflow:hidden}
-.progress-fill{height:100%;background:linear-gradient(90deg,#43a047,#00897b);border-radius:5px}
-.section{margin:0 40px 32px;background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.1);overflow:hidden}
-.section-title{background:#00897b;color:#fff;padding:12px 20px;font-size:.95em;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
-table{width:100%;border-collapse:collapse}
-thead tr{background:#e0f2f1;border-bottom:2px solid #80cbc4}
-thead th{padding:12px 14px;text-align:left;font-size:.82em;font-weight:700;text-transform:uppercase;color:#00695c;white-space:nowrap}
-tbody tr{border-bottom:1px solid #eceff1}
-tbody tr:hover{background:#f9fbe7}
-tbody td{padding:11px 14px;vertical-align:top;font-size:.88em;line-height:1.5}
-.cp-id{font-weight:800;color:#00695c;font-size:.95em;white-space:nowrap}
-.legend{margin:0 40px 32px;display:flex;gap:20px;flex-wrap:wrap;font-size:.80em;color:#555}
-.legend-item{display:flex;align-items:center;gap:6px}
-.dot{width:12px;height:12px;border-radius:3px;display:inline-block}
-footer{text-align:center;padding:20px;font-size:.75em;color:#9e9e9e;border-top:1px solid #e0e0e0;margin-top:16px}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; background: #f4f6f8; color: #212121; }
+
+header { background: #00695c; color: #fff; padding: 20px 32px; }
+header h1 { font-size: 1.3em; margin-bottom: 6px; }
+header .meta { font-size: 0.82em; opacity: .85; display: flex; gap: 20px; flex-wrap: wrap; }
+
+.summary { display: flex; gap: 12px; padding: 20px 32px; flex-wrap: wrap; }
+.card { flex: 1; min-width: 120px; background: #fff; border-radius: 6px; padding: 14px 16px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.1); border-top: 3px solid #ccc; }
+.card .num { font-size: 2em; font-weight: 800; line-height: 1; }
+.card .lbl { font-size: 0.72em; text-transform: uppercase; letter-spacing: .5px; color: #555; margin-top: 5px; }
+.card.total { border-color: #00897b; } .card.total .num { color: #00695c; }
+.card.pass  { border-color: #43a047; } .card.pass  .num { color: #1e7e34; }
+.card.fail  { border-color: #e53935; } .card.fail  .num { color: #c62828; }
+.card.other { border-color: #7e57c2; } .card.other .num { color: #4527a0; }
+.card.pct   { border-color: #fb8c00; } .card.pct   .num { color: #e65100; font-size: 1.7em; }
+
+.progress-wrap { margin: 0 32px 20px; }
+.progress-label { font-size: .81em; color: #555; margin-bottom: 5px; }
+.progress-bar { height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; }
+.progress-fill { height: 100%; background: #43a047; border-radius: 4px; }
+
+.section { margin: 0 32px 28px; background: #fff; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,.1); overflow: hidden; }
+.section-title { background: #00897b; color: #fff; padding: 10px 18px; font-size: .88em; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+
+table { width: 100%; border-collapse: collapse; }
+thead tr { background: #e0f2f1; border-bottom: 2px solid #80cbc4; }
+thead th { padding: 10px 12px; text-align: left; font-size: .78em; font-weight: 700; text-transform: uppercase; color: #00695c; white-space: nowrap; }
+tbody tr { border-bottom: 1px solid #eceff1; }
+tbody tr:hover { background: #f9fbe7; }
+tbody td { padding: 10px 12px; vertical-align: top; font-size: .86em; line-height: 1.5; }
+.cp-id { font-weight: 800; color: #00695c; white-space: nowrap; }
+
+.legend { margin: 0 32px 28px; display: flex; gap: 16px; flex-wrap: wrap; font-size: .78em; color: #555; align-items: center; }
+.dot { width: 11px; height: 11px; border-radius: 2px; display: inline-block; border: 1px solid rgba(0,0,0,.15); }
+.legend-item { display: flex; align-items: center; gap: 5px; }
+
+footer { text-align: center; padding: 16px; font-size: .72em; color: #9e9e9e; border-top: 1px solid #e0e0e0; }
 </style>
 </head>
 <body>
 <header>
-  <h1>Informe de Ejecucion de Pruebas Unitarias - EntregaYA</h1>
+  <h1>Informe de Pruebas Unitarias - EntregaYA</h1>
   <div class="meta">
     <span>Generado: """ + now + """</span>
     <span>Rama: """ + rama + """</span>
     <span>Ejecucion: #""" + run_num + """</span>
   </div>
 </header>
+
 <div class="summary">
-  <div class="card total"><div class="num">""" + str(total) + """</div><div class="lbl">Total de casos</div></div>
+  <div class="card total"><div class="num">""" + str(total) + """</div><div class="lbl">Total</div></div>
   <div class="card pass"><div class="num">""" + str(pasados) + """</div><div class="lbl">Exitosos</div></div>
   <div class="card fail"><div class="num">""" + str(fallidos) + """</div><div class="lbl">Fallidos</div></div>
   <div class="card other"><div class="num">""" + str(omitidos) + """</div><div class="lbl">Otros</div></div>
   <div class="card pct"><div class="num">""" + str(porcentaje) + """%</div><div class="lbl">Tasa de exito</div></div>
 </div>
+
 <div class="progress-wrap">
   <div class="progress-label">Progreso: <strong>""" + str(pasados) + "/" + str(total) + """ casos exitosos</strong></div>
   <div class="progress-bar"><div class="progress-fill" style="width:""" + str(porcentaje) + """%;"></div></div>
 </div>
+
 <div class="section">
-  <div class="section-title">Plan de Pruebas - Casos de Prueba Ejecutados</div>
+  <div class="section-title">Plan de Pruebas</div>
   <table>
     <thead>
       <tr>
-        <th>Caso de Prueba</th>
+        <th>Caso</th>
         <th>Descripcion</th>
         <th>Entrada de Datos</th>
-        <th>Tipo de Prueba</th>
-        <th>Resultados Esperados</th>
-        <th>Resultados Reales</th>
+        <th>Tipo</th>
+        <th>Resultado Esperado</th>
+        <th>Resultado Real</th>
       </tr>
     </thead>
     <tbody>
 """ + rows + """    </tbody>
   </table>
 </div>
+
 <div class="legend">
-  <strong>Leyenda:</strong>
-  <div class="legend-item"><div class="dot" style="background:#e6f4ea;border:1px solid #43a047"></div> Pasado</div>
-  <div class="legend-item"><div class="dot" style="background:#fce8e6;border:1px solid #e53935"></div> Fallido</div>
-  <div class="legend-item"><div class="dot" style="background:#fff3e0;border:1px solid #fb8c00"></div> Error</div>
-  <div class="legend-item"><div class="dot" style="background:#ede7f6;border:1px solid #7e57c2"></div> No ejecutado</div>
+  <strong>Estado:</strong>
+  <div class="legend-item"><div class="dot" style="background:#e6f4ea"></div> Pasado</div>
+  <div class="legend-item"><div class="dot" style="background:#fce8e6"></div> Fallido / Error</div>
+  <div class="legend-item"><div class="dot" style="background:#ede7f6"></div> No ejecutado</div>
+  <strong style="margin-left:8px">Tipo:</strong>
   <div class="legend-item"><div class="dot" style="background:#e3f2fd"></div> Normal</div>
   <div class="legend-item"><div class="dot" style="background:#fce8e6"></div> Negativa</div>
   <div class="legend-item"><div class="dot" style="background:#fff8e1"></div> Borde</div>
 </div>
+
 <footer>Generado automaticamente por el pipeline CI/CD - Proyecto EntregaYA 2026</footer>
 </body>
 </html>"""
@@ -288,4 +305,4 @@ with open("target/test-report/informe-pruebas.html", "w", encoding="utf-8") as f
     f.write(page)
 
 print("Reporte generado: target/test-report/informe-pruebas.html")
-print("Total: " + str(total) + " | Pasados: " + str(pasados) + " | Fallidos: " + str(fallidos) + " | Tasa: " + str(porcentaje) + "%")
+print(f"Total: {total} | Pasados: {pasados} | Fallidos: {fallidos} | Tasa: {porcentaje}%")
