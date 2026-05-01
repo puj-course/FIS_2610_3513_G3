@@ -141,6 +141,8 @@
         }
         .back-button {
             margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
         }
     </style>
 </head>
@@ -159,6 +161,11 @@
     <div class="back-button">
         <a th:href="@{/trabajos/{id}(id=${trabajo.id})}" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left"></i> Volver al Trabajo
+        </a>
+        <!-- HU-46 (#454): Botón exportar historial a PDF -->
+        <a th:href="@{/trabajos/{id}/historial/exportar-pdf(id=${trabajo.id})}"
+           class="btn btn-outline-danger">
+            <i class="fas fa-file-pdf"></i> Exportar historial PDF
         </a>
     </div>
 
