@@ -79,4 +79,28 @@ public class NotificacionController {
         notificacionRepository.save(notificacion);
         return ResponseEntity.ok().build();
     }
+
+    /**
+     * Marca todas las notificaciones no leídas del usuario
+     * autenticado como leídas en una sola operación.
+     * Solo afecta notificaciones del usuario en sesión — sin parámetros externos.
+     *
+     * @return 200 OK con el número de notificaciones actualizadas.
+     */
+    @PatchMapping("/leer-todas")
+    @ResponseBody
+    public ResponseEntity<Integer> marcarTodasLeidas(
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        User user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        List<Notificacion> pendientes =
+                notificacionRepository.findByDestinatarioAndLeidaFalse(user);
+
+        pendientes.forEach(n -> n.setLeida(true));
+        notificacionRepository.saveAll(pendientes);
+
+        return ResponseEntity.ok(pendientes.size());
+    }
 }

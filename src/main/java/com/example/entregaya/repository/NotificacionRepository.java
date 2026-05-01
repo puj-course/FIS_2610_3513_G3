@@ -13,4 +13,7 @@ public interface NotificacionRepository extends JpaRepository<Notificacion, Long
 
     // Solo no leídas
     List<Notificacion> findByDestinatarioAndLeidaFalseOrderByFechaCreacionDesc(User destinatario);
+
+    //obtener solo no leidas sin ordenamiento para marcar todas
+    List<Notificacion> findByDestinatarioAndLeidaFalse(User user);
 }
