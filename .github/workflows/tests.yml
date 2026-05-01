@@ -20,6 +20,12 @@ permissions:
   checks: write
   pull-requests: write
 
+env:
+  LANG: en_US.UTF-8
+  LC_ALL: en_US.UTF-8
+  JAVA_TOOL_OPTIONS: "-Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8"
+  MAVEN_OPTS: "-Dfile.encoding=UTF-8"
+
 jobs:
   test:
     name: Ejecutar pruebas unitarias y generar reporte
@@ -36,11 +42,25 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      # Elimina TODOS los bytes no-ASCII del archivo (sin importar la codificación
+      # original). Solo modifica la copia del runner, NO el repositorio.
+      - name: Sanitizar application.properties (solo en el runner)
+        run: |
+          FILE=src/main/resources/application.properties
+          if [ -f "$FILE" ]; then
+            echo "=== Antes de sanitizar ==="
+            cat "$FILE" || true
+            LC_ALL=C tr -cd '\11\12\15\40-\176' < "$FILE" > "${FILE}.tmp"
+            mv "${FILE}.tmp" "$FILE"
+            echo "=== Despues de sanitizar ==="
+            cat "$FILE"
+          fi
+
       - name: Compilar el proyecto
-        run: mvn -B compile
+        run: mvn -B compile -Dproject.build.sourceEncoding=UTF-8
 
       - name: Ejecutar pruebas unitarias
-        run: mvn -B test
+        run: mvn -B test -Dproject.build.sourceEncoding=UTF-8
 
       - name: Generar reporte HTML de pruebas (Surefire)
         if: always()
