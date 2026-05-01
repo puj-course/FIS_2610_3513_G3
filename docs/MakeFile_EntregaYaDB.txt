@@ -21,10 +21,8 @@ CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
     username VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE,
-    telegram_chat_id VARCHAR(20)
+    email VARCHAR(255) UNIQUE
 );
-
 
 --Creacion de la tabla trabajo, representa un proyecto
 CREATE TABLE trabajo (
@@ -111,8 +109,6 @@ CREATE TABLE notificacion (
         REFERENCES users(id)
         ON DELETE CASCADE
 );
-<<<<<<< HEAD
-=======
 
 -- Tabla para almacenar etiquetas
 CREATE TABLE tarea_etiquetas (
@@ -132,4 +128,3 @@ ON tarea_etiquetas(etiqueta);
 -- Índice para joins rápidos con tarea
 CREATE INDEX idx_tarea_etiquetas_tarea_id
 ON tarea_etiquetas(tarea_id);
->>>>>>> develop

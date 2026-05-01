@@ -252,38 +252,9 @@
     }
 
     async function marcarTodasLeidas() {
-        try {
-            const res = await fetch('/notificaciones/leer-todas', {
-                method: 'PATCH',
-                headers: { [obtenerHeaderCSRF()]: obtenerTokenCSRF() }
-            });
-            if (res.ok) {
-                const cantidad = await res.json();
-                // Limpiar visualmente todas las tarjetas no leídas
-                document.querySelectorAll('.notif-card.no-leida').forEach(card => {
-                    card.classList.remove('no-leida');
-                    const btn = card.querySelector('.btn-leer');
-                    if (btn) btn.remove();
-                    const dot = card.querySelector('.notif-dot');
-                    if (dot) dot.remove();
-                    const noLeidaSpan = card.querySelector('span[style*="f4a535"]');
-                    if (noLeidaSpan) {
-                        noLeidaSpan.style.color = '#ccc';
-                        noLeidaSpan.textContent = '· Leída';
-                    }
-                });
-                // Limpiar badge y botón del header
-                const badge = document.querySelector('.badge-count');
-                if (badge) badge.remove();
-                const btnAll = document.querySelector('.btn-mark-all');
-                if (btnAll) btnAll.remove();
-
-                showToast(`${cantidad} notificaciones marcadas como leídas`, 'success');
-            } else {
-                showToast('No se pudieron actualizar las notificaciones', 'error');
-            }
-        } catch (e) {
-            showToast('Error de conexión', 'error');
+        const botones = document.querySelectorAll('.btn-leer[data-id]');
+        for (const btn of botones) {
+            await marcarLeida(btn);
         }
     }
 
