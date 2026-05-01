@@ -20,7 +20,6 @@ permissions:
   checks: write
   pull-requests: write
 
-# Forzar UTF-8 a nivel de JVM (afecta a todos los procesos Java, incluidos plugins de Maven)
 env:
   LANG: en_US.UTF-8
   LC_ALL: en_US.UTF-8
@@ -43,13 +42,19 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      # Reemplaza caracteres Unicode especiales que rompen el filtering de Maven en CI.
-      # Esto modifica solo la copia del runner, NO el repositorio.
+      # Convierte application.properties a ASCII puro, eliminando todos los caracteres
+      # Unicode que rompen el filtering de Maven en CI. NO toca el repositorio.
       - name: Sanitizar application.properties (solo en el runner)
         run: |
-          if [ -f src/main/resources/application.properties ]; then
-            sed -i 's/─/-/g; s/│/|/g; s/┌/+/g; s/┐/+/g; s/└/+/g; s/┘/+/g' src/main/resources/application.properties
-            echo "Archivo sanitizado en el runner."
+          FILE=src/main/resources/application.properties
+          if [ -f "$FILE" ]; then
+            echo "=== Antes de sanitizar ==="
+            cat "$FILE"
+            iconv -f UTF-8 -t ASCII//TRANSLIT "$FILE" -o "${FILE}.tmp" || \
+              iconv -f UTF-8 -t ASCII//IGNORE "$FILE" -o "${FILE}.tmp"
+            mv "${FILE}.tmp" "$FILE"
+            echo "=== Después de sanitizar ==="
+            cat "$FILE"
           fi
 
       - name: Compilar el proyecto
