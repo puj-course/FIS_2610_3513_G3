@@ -96,9 +96,9 @@ public class NotificacionController {
 
         List<Notificacion> pendientes =
                 notificacionRepository.findByDestinatarioAndLeidaFalse(user);
-        
-        pendientes.forEach(n -> n.setLeida(true));
 
+        pendientes.forEach(n -> n.setLeida(true));
+        
         notificacionRepository.saveAll(pendientes);
 
         return ResponseEntity.ok(pendientes.size());
