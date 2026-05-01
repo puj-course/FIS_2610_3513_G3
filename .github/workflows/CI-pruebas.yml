@@ -1,0 +1,408 @@
+name: CI - Pruebas Unitarias EntregaYA
+
+# ─────────────────────────────────────────────────────────────
+# GITFLOW: ejecuta en ramas de integración (develop) y
+# en Pull Requests hacia develop y main.
+# Las ramas de feature individuales pueden hacer push directo
+# a develop mediante el workflow de automerge ya existente.
+# ─────────────────────────────────────────────────────────────
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+    branches:
+      - develop
+      - main
+
+permissions:
+  contents: read
+  checks: write        # necesario para publicar resultados de tests en la UI de GitHub
+
+jobs:
+  # ══════════════════════════════════════════════════════════
+  # JOB 1: Compilar y ejecutar pruebas unitarias
+  # ══════════════════════════════════════════════════════════
+  test:
+    name: Ejecutar Pruebas Unitarias
+    runs-on: ubuntu-22.04
+
+    steps:
+      # 1. Obtener el código fuente
+      - name: Descargar código fuente
+        uses: actions/checkout@v4
+
+      # 2. Configurar Java 17 (versión del proyecto)
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      # 3. Configurar application.properties para pruebas (sin BD real)
+      - name: Crear configuración de pruebas
+        run: |
+          mkdir -p src/test/resources
+          cat > src/test/resources/application-test.properties << 'EOF'
+          spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+          spring.datasource.driver-class-name=org.h2.Driver
+          spring.datasource.username=sa
+          spring.datasource.password=
+          spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+          spring.jpa.hibernate.ddl-auto=create-drop
+          spring.security.user.name=test
+          spring.security.user.password=test
+          telegram.bot.token=dummy
+          telegram.bot.chat-id=dummy
+          EOF
+
+      # 4. Añadir H2 al pom.xml para pruebas (scope test)
+      - name: Inyectar dependencia H2 para pruebas
+        run: |
+          # Inserta H2 antes del cierre de </dependencies> si aún no está
+          if ! grep -q 'com.h2database' pom.xml; then
+            sed -i 's|</dependencies>|    <dependency>\n            <groupId>com.h2database</groupId>\n            <artifactId>h2</artifactId>\n            <scope>test</scope>\n        </dependency>\n    </dependencies>|' pom.xml
+          fi
+
+      # 5. Ejecutar pruebas con Maven Surefire
+      #    -Dspring.profiles.active=test evita conectarse a PostgreSQL real
+      #    --no-transfer-progress reduce ruido en los logs del pipeline
+      - name: Ejecutar pruebas con Maven
+        run: |
+          mvn test \
+            -Dspring.profiles.active=test \
+            --no-transfer-progress \
+            -Dsurefire.failIfNoSpecifiedTests=false \
+            || true   # continúa aunque haya fallos para generar el reporte
+
+      # 6. Publicar resultados de pruebas en la interfaz de GitHub
+      - name: Publicar resultados de tests en GitHub
+        uses: dorny/tests-reporter@v1
+        if: always()
+        with:
+          name: Resultados JUnit
+          path: target/surefire-reports/TEST-*.xml
+          reporter: java-junit
+          fail-on-error: false
+
+      # 7. Generar reporte HTML alineado al plan de pruebas
+      - name: Generar reporte HTML del plan de pruebas
+        if: always()
+        run: |
+          python3 << 'PYEOF'
+          import xml.etree.ElementTree as ET
+          import glob, os, html, datetime
+
+          # ── Metadatos del plan de pruebas ────────────────────────────
+          PLAN = {
+            "CP01": {
+              "descripcion": "Builder con datos válidos: crea una Tarea correcta",
+              "entrada": "nombre=\"Sprint 1\", fechas válidas, dificultad=MEDIA",
+              "tipo": "Normal",
+              "esperado": "Objeto Tarea creado; nombre e instante de inicio iguales a los provistos",
+              "patron": "Builder (HU-21)"
+            },
+            "CP02": {
+              "descripcion": "Builder con nombre null lanza excepción",
+              "entrada": "nombre = null",
+              "tipo": "Negativa",
+              "esperado": "IllegalStateException",
+              "patron": "Builder (HU-21)"
+            },
+            "CP03": {
+              "descripcion": "Builder con nombre en blanco lanza excepción",
+              "entrada": "nombre = \"   \" (solo espacios)",
+              "tipo": "Borde",
+              "esperado": "IllegalStateException",
+              "patron": "Builder (HU-21)"
+            },
+            "CP04": {
+              "descripcion": "Builder con cronología inválida (fin < inicio)",
+              "entrada": "inicio = 2026-05-10, fin = 2026-05-01",
+              "tipo": "Negativa",
+              "esperado": "IllegalStateException (mensaje contiene 'fecha')",
+              "patron": "Builder (HU-21)"
+            },
+            "CP05": {
+              "descripcion": "Builder con duración cero (inicio == fin)",
+              "entrada": "inicio == fin = 2026-05-01T12:00",
+              "tipo": "Borde",
+              "esperado": "Tarea creada con fechaInicio == fechaFinal",
+              "patron": "Builder (HU-21)"
+            },
+            "CP06": {
+              "descripcion": "Factory resuelve tarea completada → CompletadaDecorator",
+              "entrada": "completada = true, fechaFinal = ayer",
+              "tipo": "Normal",
+              "esperado": "Instancia de CompletadaDecorator, etiqueta = 'Completada'",
+              "patron": "Decorator (HU-29)"
+            },
+            "CP07": {
+              "descripcion": "Factory resuelve tarea vencida → VencidaDecorator",
+              "entrada": "completada = false, fechaFinal = ayer",
+              "tipo": "Negativa",
+              "esperado": "Instancia de VencidaDecorator, color = #ef4444",
+              "patron": "Decorator (HU-29)"
+            },
+            "CP08": {
+              "descripcion": "Factory: límite de urgencia exacto (+2 días) → UrgenteDecorator",
+              "entrada": "completada = false, fechaFinal = hoy +2 días",
+              "tipo": "Borde",
+              "esperado": "Instancia de UrgenteDecorator, etiqueta = 'Urgente'",
+              "patron": "Decorator (HU-29)"
+            },
+            "CP09": {
+              "descripcion": "Factory: límite de proximidad exacto (+7 días) → ProximaDecorator",
+              "entrada": "completada = false, fechaFinal = hoy +7 días",
+              "tipo": "Borde",
+              "esperado": "Instancia de ProximaDecorator, etiqueta = 'Próxima'",
+              "patron": "Decorator (HU-29)"
+            },
+            "CP10": {
+              "descripcion": "TareaInfoBase con tarea null lanza excepción",
+              "entrada": "tarea = null",
+              "tipo": "Negativa",
+              "esperado": "IllegalArgumentException",
+              "patron": "Decorator (HU-29)"
+            },
+            "CP11": {
+              "descripcion": "LiderOEditorStrategy con rol LIDER retorna true",
+              "entrada": "Estrategia = LiderOEditor, Rol = LIDER",
+              "tipo": "Normal",
+              "esperado": "true",
+              "patron": "Strategy (HU-23)"
+            },
+            "CP12": {
+              "descripcion": "LiderOEditorStrategy con rol COLABORADOR retorna false",
+              "entrada": "Estrategia = LiderOEditor, Rol = COLABORADOR",
+              "tipo": "Negativa",
+              "esperado": "false",
+              "patron": "Strategy (HU-23)"
+            },
+            "CP13": {
+              "descripcion": "SoloLiderStrategy con rol EDITOR retorna false",
+              "entrada": "Estrategia = SoloLider, Rol = EDITOR",
+              "tipo": "Negativa",
+              "esperado": "false",
+              "patron": "Strategy (HU-23)"
+            },
+            "CP14": {
+              "descripcion": "LiderOEditorStrategy con rol null retorna false (fail-safe)",
+              "entrada": "Estrategia = LiderOEditor, Rol = null",
+              "tipo": "Borde",
+              "esperado": "false",
+              "patron": "Strategy (HU-23)"
+            },
+            "CP15": {
+              "descripcion": "SoloLiderStrategy con rol null retorna false (fail-safe)",
+              "entrada": "Estrategia = SoloLider, Rol = null",
+              "tipo": "Borde",
+              "esperado": "false",
+              "patron": "Strategy (HU-23)"
+            },
+          }
+
+          # ── Leer resultados de Surefire XML ──────────────────────────
+          results = {}  # cp_id → {status, message}
+
+          for xml_file in glob.glob("target/surefire-reports/TEST-*.xml"):
+              tree = ET.parse(xml_file)
+              root = tree.getroot()
+              for tc in root.findall(".//testcase"):
+                  name = tc.get("name", "")
+                  # Extraer CP id del nombre del método (e.g. CP01_Build_...)
+                  cp_id = None
+                  for key in PLAN:
+                      if name.upper().startswith(key):
+                          cp_id = key
+                          break
+                  if cp_id is None:
+                      continue
+
+                  failure = tc.find("failure")
+                  error   = tc.find("error")
+                  skipped = tc.find("skipped")
+
+                  if skipped is not None:
+                      results[cp_id] = {"status": "OMITIDO", "message": ""}
+                  elif failure is not None:
+                      msg = (failure.get("message") or failure.text or "").strip()
+                      results[cp_id] = {"status": "FALLIDO", "message": html.escape(msg[:300])}
+                  elif error is not None:
+                      msg = (error.get("message") or error.text or "").strip()
+                      results[cp_id] = {"status": "ERROR", "message": html.escape(msg[:300])}
+                  else:
+                      results[cp_id] = {"status": "PASADO", "message": ""}
+
+          # Marcar los que no se encontraron en el XML
+          for cp_id in PLAN:
+              if cp_id not in results:
+                  results[cp_id] = {"status": "NO EJECUTADO", "message": "No se encontró en los reportes Surefire"}
+
+          # ── Estadísticas ─────────────────────────────────────────────
+          total    = len(PLAN)
+          pasados  = sum(1 for v in results.values() if v["status"] == "PASADO")
+          fallidos = sum(1 for v in results.values() if v["status"] in ("FALLIDO","ERROR"))
+          omitidos = total - pasados - fallidos
+
+          # ── Colores ──────────────────────────────────────────────────
+          STATUS_STYLE = {
+              "PASADO":       ("✅ PASADO",       "#d1fae5", "#065f46"),
+              "FALLIDO":      ("❌ FALLIDO",       "#fee2e2", "#991b1b"),
+              "ERROR":        ("⚠️ ERROR",         "#fef3c7", "#92400e"),
+              "OMITIDO":      ("⏭ OMITIDO",        "#f3f4f6", "#374151"),
+              "NO EJECUTADO": ("❓ NO EJECUTADO",  "#ede9fe", "#4c1d95"),
+          }
+          TIPO_STYLE = {
+              "Normal":   "#dbeafe",
+              "Negativa": "#fee2e2",
+              "Borde":    "#fef3c7",
+          }
+
+          now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
+
+          # ── Construir tabla de casos ──────────────────────────────────
+          rows = ""
+          for cp_id, meta in PLAN.items():
+              r = results.get(cp_id, {"status": "NO EJECUTADO", "message": ""})
+              label, bg, fg = STATUS_STYLE.get(r["status"], ("?", "#fff", "#000"))
+              tipo_bg = TIPO_STYLE.get(meta["tipo"], "#fff")
+              msg_html = f'<br><span style="font-size:0.78em;color:#b91c1c;">{r["message"]}</span>' if r["message"] else ""
+              rows += f"""
+              <tr>
+                <td style="font-weight:700;color:#1e3a5f;">{cp_id}</td>
+                <td>{html.escape(meta["descripcion"])}</td>
+                <td style="font-size:0.85em;color:#374151;">{html.escape(meta["entrada"])}</td>
+                <td style="background:{tipo_bg};text-align:center;font-size:0.85em;">{meta["tipo"]}</td>
+                <td style="font-size:0.85em;">{html.escape(meta["esperado"])}</td>
+                <td style="font-size:0.80em;color:#6b7280;">{meta["patron"]}</td>
+                <td style="background:{bg};color:{fg};font-weight:600;text-align:center;">
+                  {label}{msg_html}
+                </td>
+              </tr>"""
+
+          html_report = f"""<!DOCTYPE html>
+          <html lang="es">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Informe de Ejecución de Pruebas – EntregaYA</title>
+            <style>
+              * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+              body {{ font-family: 'Segoe UI', Arial, sans-serif; background:#f0f4f8; color:#1a202c; }}
+              header {{ background:linear-gradient(135deg,#1e3a5f,#2563eb); color:#fff; padding:28px 40px; }}
+              header h1 {{ font-size:1.7em; margin-bottom:4px; }}
+              header p  {{ font-size:0.9em; opacity:.85; }}
+              .container {{ max-width:1300px; margin:30px auto; padding:0 20px; }}
+              /* ─── Tarjetas resumen ─── */
+              .cards {{ display:flex; gap:16px; margin-bottom:28px; flex-wrap:wrap; }}
+              .card {{ flex:1; min-width:140px; background:#fff; border-radius:10px;
+                       padding:20px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,.08); }}
+              .card .num {{ font-size:2.2em; font-weight:800; }}
+              .card .lbl {{ font-size:0.82em; color:#6b7280; margin-top:4px; text-transform:uppercase; }}
+              .card.total  .num {{ color:#1e3a5f; }}
+              .card.pass   .num {{ color:#059669; }}
+              .card.fail   .num {{ color:#dc2626; }}
+              .card.skip   .num {{ color:#7c3aed; }}
+              /* ─── Tabla ─── */
+              .table-wrap {{ background:#fff; border-radius:12px;
+                             box-shadow:0 2px 10px rgba(0,0,0,.08); overflow:auto; }}
+              table {{ width:100%; border-collapse:collapse; font-size:0.88em; }}
+              thead tr {{ background:#1e3a5f; color:#fff; }}
+              thead th {{ padding:12px 14px; text-align:left; white-space:nowrap; }}
+              tbody tr {{ border-bottom:1px solid #e5e7eb; }}
+              tbody tr:hover {{ background:#f9fafb; }}
+              tbody td {{ padding:10px 14px; vertical-align:top; }}
+              /* ─── Leyenda ─── */
+              .legend {{ display:flex; gap:12px; flex-wrap:wrap; margin-top:18px; font-size:0.82em; }}
+              .litem {{ display:flex; align-items:center; gap:6px; }}
+              .dot {{ width:12px; height:12px; border-radius:50%; }}
+              footer {{ text-align:center; font-size:0.78em; color:#9ca3af; padding:30px; }}
+            </style>
+          </head>
+          <body>
+            <header>
+              <h1>📋 Informe de Ejecución de Pruebas Unitarias</h1>
+              <p>Proyecto: <strong>EntregaYA</strong> &nbsp;|&nbsp; Generado: {now} &nbsp;|&nbsp; Branch: <code>${{GITHUB_REF_NAME}}</code></p>
+            </header>
+
+            <div class="container">
+              <!-- Tarjetas resumen -->
+              <div class="cards">
+                <div class="card total"><div class="num">{total}</div><div class="lbl">Total casos</div></div>
+                <div class="card pass"> <div class="num">{pasados}</div><div class="lbl">Exitosos ✅</div></div>
+                <div class="card fail"> <div class="num">{fallidos}</div><div class="lbl">Fallidos ❌</div></div>
+                <div class="card skip"> <div class="num">{omitidos}</div><div class="lbl">Otros ❓</div></div>
+              </div>
+
+              <!-- Tabla de casos de prueba -->
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Caso de Prueba</th>
+                      <th>Descripción</th>
+                      <th>Entrada de Datos</th>
+                      <th>Tipo de Prueba</th>
+                      <th>Resultados Esperados</th>
+                      <th>Patrón / HU</th>
+                      <th>Resultados Reales</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows}
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Leyenda -->
+              <div class="legend">
+                <div class="litem"><div class="dot" style="background:#d1fae5;border:1px solid #059669"></div> Pasado</div>
+                <div class="litem"><div class="dot" style="background:#fee2e2;border:1px solid #dc2626"></div> Fallido</div>
+                <div class="litem"><div class="dot" style="background:#fef3c7;border:1px solid #d97706"></div> Error / Borde</div>
+                <div class="litem"><div class="dot" style="background:#ede9fe;border:1px solid #7c3aed"></div> No ejecutado</div>
+                <div class="litem"><div class="dot" style="background:#dbeafe"></div> Tipo Normal</div>
+                <div class="litem"><div class="dot" style="background:#fee2e2"></div> Tipo Negativa</div>
+                <div class="litem"><div class="dot" style="background:#fef3c7"></div> Tipo Borde</div>
+              </div>
+            </div>
+            <footer>Generado automáticamente por el pipeline CI · EntregaYA © 2026</footer>
+          </body>
+          </html>"""
+
+          os.makedirs("target/test-report", exist_ok=True)
+          with open("target/test-report/informe-pruebas.html", "w", encoding="utf-8") as f:
+              f.write(html_report)
+
+          print(f"Reporte generado: target/test-report/informe-pruebas.html")
+          print(f"Total: {total} | Pasados: {pasados} | Fallidos: {fallidos} | Otros: {omitidos}")
+          PYEOF
+
+      # 8. Subir el reporte HTML como artefacto del pipeline
+      - name: Subir reporte HTML como artefacto
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: informe-pruebas-html
+          path: target/test-report/informe-pruebas.html
+          retention-days: 30
+
+      # 9. Subir también los reportes XML/TXT de Surefire como artefacto de respaldo
+      - name: Subir reportes Surefire como artefacto
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: surefire-reports
+          path: target/surefire-reports/
+          retention-days: 30
+
+      # 10. Forzar fallo del pipeline si alguna prueba falló
+      #     (paso separado para que los artefactos siempre se generen primero)
+      - name: Verificar resultado final de pruebas
+        run: |
+          mvn test \
+            -Dspring.profiles.active=test \
+            --no-transfer-progress \
+            -Dsurefire.failIfNoSpecifiedTests=false
