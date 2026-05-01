@@ -42,18 +42,17 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      # Convierte application.properties a ASCII puro, eliminando todos los caracteres
-      # Unicode que rompen el filtering de Maven en CI. NO toca el repositorio.
+      # Elimina TODOS los bytes no-ASCII del archivo (sin importar la codificación
+      # original). Solo modifica la copia del runner, NO el repositorio.
       - name: Sanitizar application.properties (solo en el runner)
         run: |
           FILE=src/main/resources/application.properties
           if [ -f "$FILE" ]; then
             echo "=== Antes de sanitizar ==="
-            cat "$FILE"
-            iconv -f UTF-8 -t ASCII//TRANSLIT "$FILE" -o "${FILE}.tmp" || \
-              iconv -f UTF-8 -t ASCII//IGNORE "$FILE" -o "${FILE}.tmp"
+            cat "$FILE" || true
+            LC_ALL=C tr -cd '\11\12\15\40-\176' < "$FILE" > "${FILE}.tmp"
             mv "${FILE}.tmp" "$FILE"
-            echo "=== Después de sanitizar ==="
+            echo "=== Despues de sanitizar ==="
             cat "$FILE"
           fi
 
