@@ -7,6 +7,10 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import org.springframework.format.annotation.DateTimeFormat;
+import com.example.entregaya.model.HistorialEvento;
+import java.util.ArrayList;
+import java.util.List;
+
 
 @Entity
 @Table(name = "trabajo")
@@ -153,5 +157,18 @@ public class Trabajo implements TrabajoPrototype {
 
     public void setTareas(Set<Tarea> tareas) {
         this.tareas = tareas;
+    }
+
+    @OneToMany(mappedBy = "trabajo", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("fechaEvento DESC")
+    private List<HistorialEvento> historialEventos = new ArrayList<>();
+
+    // Getter y setter
+    public List<HistorialEvento> getHistorialEventos() {
+        return historialEventos;
+    }
+
+    public void setHistorialEventos(List<HistorialEvento> historialEventos) {
+        this.historialEventos = historialEventos;
     }
 }

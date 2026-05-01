@@ -64,8 +64,13 @@ public class CustomInvitacionDetailsService {
     public void aceptar(Long invitacionId, String username) {
         Invitacion inv = findAndValidate(invitacionId, username);
         inv.setEstado(Invitacion.Estado.ACEPTADA);
-        inv.getTrabajo().agregarColaborador(inv.getDestinatario());
-        trabajoRepository.save(inv.getTrabajo());
+
+        // CAMBIO: Usar agregarColaborador() que dispara el observer
+        customTrabajoDetailsService.agregarColaborador(
+                inv.getTrabajo().getId(),
+                inv.getDestinatario().getUsername()
+        );
+
         invitacionRepository.save(inv);
     }
 

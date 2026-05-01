@@ -102,4 +102,36 @@ public class DashboardFacade {
                 notificacionesNoLeidas
         );
     }
+
+    /**
+     * HU-37: Estadísticas personales del usuario autenticado.
+     * Calcula total de tareas, completadas, vencidas y tasa de completitud.
+     */
+    public Map<String, Object> getEstadisticasPersonales(String username) {
+
+        List<Trabajo> trabajos = customTrabajoDetailsService.listarPorUsuario(username);
+
+        List<com.example.entregaya.model.Tarea> todasLasTareas = trabajos.stream()
+                .flatMap(t -> customTareaDetailsService.tareas(t.getId()).stream())
+                .toList();
+
+        long total       = todasLasTareas.size();
+        long completadas = todasLasTareas.stream()
+                .filter(com.example.entregaya.model.Tarea::getIsCompletada)
+                .count();
+        long vencidas    = todasLasTareas.stream()
+                .filter(t -> !t.getIsCompletada()
+                        && t.getFechaFinal() != null
+                        && t.getFechaFinal().isBefore(LocalDateTime.now()))
+                .count();
+        double tasa = total == 0 ? 0.0
+                : Math.round((completadas * 100.0 / total) * 10.0) / 10.0;
+
+        return Map.of(
+                "totalTareas",       total,
+                "tareasCompletadas", completadas,
+                "tareasVencidas",    vencidas,
+                "tasaCompletitud",   tasa
+        );
+    }
 }

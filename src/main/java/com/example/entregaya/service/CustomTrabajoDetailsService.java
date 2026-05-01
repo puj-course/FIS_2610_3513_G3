@@ -1,11 +1,14 @@
 package com.example.entregaya.service;
 
+import com.example.entregaya.model.HistorialEvento;
+import com.example.entregaya.repository.HistorialEventoRepository;
 import com.example.entregaya.dto.MiembroRolDTO;
+import com.example.entregaya.dto.TrabajoEventoDTO;
 import com.example.entregaya.model.ColaboradorTrabajo;
 import com.example.entregaya.model.ColaboradorTrabajoId;
 import com.example.entregaya.model.Trabajo;
 import com.example.entregaya.model.User;
-import com.example.entregaya.strategy.Sololiderstrategy;
+import com.example.entregaya.observer.TrabajoObserver;
 import com.example.entregaya.repository.ColaboradorTrabajoRepository;
 import com.example.entregaya.repository.TrabajoRepository;
 import com.example.entregaya.repository.UserRepository;
@@ -13,22 +16,49 @@ import com.example.entregaya.strategy.Permisostrategy;
 import com.example.entregaya.strategy.Sololiderstrategy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class CustomTrabajoDetailsService {
-    private final  UserRepository userRepository;
+public class CustomTrabajoDetailsService{
+    private final UserRepository userRepository;
     private final TrabajoRepository trabajoRepository;
     private final ColaboradorTrabajoRepository colaboradorTrabajoRepository;
     private final Sololiderstrategy sololiderstrategy;
+    // ── Lista de observers para eventos de trabajo ──
+    private final List<TrabajoObserver> observers = new ArrayList<>();
+    private final HistorialEventoRepository historialEventoRepository;
 
-    public CustomTrabajoDetailsService(TrabajoRepository trabajoRepository, UserRepository userRepository,
-                                       ColaboradorTrabajoRepository colaboradorTrabajoRepository, Sololiderstrategy sololiderstrategy) {
-
+    public CustomTrabajoDetailsService(TrabajoRepository trabajoRepository,
+                                       UserRepository userRepository,
+                                       ColaboradorTrabajoRepository colaboradorTrabajoRepository,
+                                       Sololiderstrategy sololiderstrategy,
+                                       List<TrabajoObserver> observers,
+                                       HistorialEventoRepository historialEventoRepository) {
         this.userRepository = userRepository;
         this.trabajoRepository = trabajoRepository;
         this.colaboradorTrabajoRepository = colaboradorTrabajoRepository;
         this.sololiderstrategy = sololiderstrategy;
+        this.observers.addAll(observers);
+        this.historialEventoRepository = historialEventoRepository;
+    }
+
+    // ── Gestión de observers ──
+
+    public void registrarObserver(TrabajoObserver observer) {
+        observers.add(observer);
+    }
+
+    public void eliminarObserver(TrabajoObserver observer) {
+        observers.remove(observer);
+    }
+
+    /** Notifica a todos los observers registrados */
+    private void notificarObservers(TrabajoEventoDTO evento) {
+        for (TrabajoObserver observer : observers) {
+            observer.actualizar(evento);
+        }
     }
 
  // Crear un nuevo trabajo y agregar al creador como colaborador
@@ -51,18 +81,35 @@ public class CustomTrabajoDetailsService {
                 .orElseThrow(() -> new RuntimeException("Trabajo no encontrado"));
     }
 
-    // Agregar un colaborador a un trabajo existente
+    /**
+     * HU-28: Agregar un colaborador a un trabajo.
+     * Dispara evento TrabajoEventoDTO con tipoEvento = INGRESO
+     */
+    @Transactional
     public Trabajo agregarColaborador(Long trabajoId, String username) {
         Trabajo trabajo = obtenerPorId(trabajoId);
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
         trabajo.agregarColaborador(user);
-        return trabajoRepository.save(trabajo);
+        Trabajo trabajoGuardado = trabajoRepository.save(trabajo);
+
+        // HU-28: Disparar evento de ingreso
+        TrabajoEventoDTO evento = new TrabajoEventoDTO(
+                trabajoId,
+                trabajo.getNombreTrabajo(),
+                TrabajoEventoDTO.TipoEvento.INGRESO,
+                username,
+                username,  // El usuario que se unió es quien ejecuta la acción
+                LocalDateTime.now()
+        );
+        notificarObservers(evento);
+
+        return trabajoGuardado;
     }
 
     @Transactional
-    public void cambiarRol(Long trabajoId, Long userId, ColaboradorTrabajo.Rol nuevoRol){
-        // Validar que el trabajo exista
+    public void cambiarRol(Long trabajoId, Long userId, ColaboradorTrabajo.Rol nuevoRol) {
         if (!trabajoRepository.existsById(trabajoId)) {
             throw new IllegalArgumentException("El trabajo no existe");
         }
@@ -115,7 +162,7 @@ public class CustomTrabajoDetailsService {
                 .orElse(false);
     }
 
-    public void eliminar(long Id){
+    public void eliminar(long Id) {
         trabajoRepository.deleteById(Id);
     }
 
@@ -157,7 +204,21 @@ public class CustomTrabajoDetailsService {
             }
         }
 
+        // Obtener username del usuario a eliminar
+        String usernameEliminado = target.getUser().getUsername();
+
         colaboradorTrabajoRepository.delete(target);
+
+        // HU-28: Disparar evento de salida
+        TrabajoEventoDTO evento = new TrabajoEventoDTO(
+                trabajoId,
+                trabajo.getNombreTrabajo(),
+                TrabajoEventoDTO.TipoEvento.SALIDA,
+                usernameEliminado,
+                usernameQuienEjecuta,
+                LocalDateTime.now()
+        );
+        notificarObservers(evento);
     }
     /**
      * @deprecated
@@ -232,7 +293,7 @@ public class CustomTrabajoDetailsService {
      *    hasta encontrar uno libre: "(copia)", "(copia) 2", "(copia) 3"...
      *  - El creador (username) queda como único miembro con rol LIDER.
      *
-     * @param trabajoId id del trabajo a clonar
+     * @param id id del trabajo a clonar
      * @param username  usuario autenticado que solicita la clonación
      * @return el nuevo Trabajo persistido
      * @throws IllegalArgumentException si el trabajo no existe
@@ -261,4 +322,12 @@ public class CustomTrabajoDetailsService {
         return trabajoRepository.save(copia);
     }
 
+
+    public List<HistorialEvento> obtenerHistorial(Long trabajoId) {
+        // Validar que el trabajo exista
+        if (!trabajoRepository.existsById(trabajoId)) {
+            throw new IllegalArgumentException("El trabajo no existe");
+        }
+        return historialEventoRepository.findByTrabajoIdOrderByFechaDesc(trabajoId);
+    }
 }

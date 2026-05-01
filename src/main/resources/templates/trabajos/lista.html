@@ -4,6 +4,9 @@
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Entrega Ya — Mis Trabajos</title>
+
+    <meta name="_csrf"        th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: system-ui, sans-serif; background: #f7f7f5; color: #222; }
@@ -48,9 +51,19 @@
 
         .empty { text-align: center; padding: 50px; color: #888; background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; }
         .empty p { margin-bottom: 14px; }
-        .btn-clone { background: none; border: 1px solid #ccc; border-radius: 5px;
-            font-size: 0.75rem; color: #555; cursor: pointer; padding: 3px 8px; }
-        .btn-clone:hover { border-color: #f4a535; color: #f4a535; }
+        .btn-clone {
+            background: none;
+            border: 1px solid #f4a535;
+            border-radius: 5px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #f4a535;
+            cursor: pointer;
+            padding: 3px 9px;
+            transition: background 0.15s;
+        }
+        .btn-clone:hover  { background: #f4a535; color: #fff; }
+        .btn-clone:disabled { opacity: 0.5; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -94,10 +107,10 @@
             <div class="card-actions">
                 <th:block th:each="col : ${trabajo.colaboradores}"
                           th:if="${col.user.username == #authentication.name and col.rol.name() == 'LIDER'}">
-                    <button class="btn btn-sm btn-outline-secondary"
+                    <button class="btn-clone"
                             th:attr="data-id=${trabajo.id}"
                             onclick="clonarTrabajo(this)">
-                        ✦ Duplicar como plantilla
+                        ⧉ Duplicar
                     </button>
                 </th:block>
                 <a th:href="@{/trabajos/{id}(id=${trabajo.id})}" class="btn-detail">Ver detalle →</a>
@@ -125,20 +138,29 @@
     }
 
     function clonarTrabajo(btn) {
-        const id = btn.getAttribute('data-id');
-        btn.disabled = true;
-        btn.textContent = 'Clonando...';
-        fetch(`/trabajos/${id}/clonar`, { method: 'POST',
-            headers: { 'X-CSRF-TOKEN': document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] || '' }
+        const id    = btn.getAttribute('data-id');
+        const token = document.querySelector('meta[name="_csrf"]').content;
+        const header= document.querySelector('meta[name="_csrf_header"]').content;
+
+        btn.disabled    = true;
+        btn.textContent = 'Copiando...';
+
+        fetch(`/trabajos/${id}/clonar`, {
+            method: 'POST',
+            headers: { [header]: token }
         })
             .then(res => res.json())
             .then(data => {
                 if (data.id) { window.location.reload(); }
-                else { alert('Error: ' + (data.error || 'No se pudo clonar'));
-                    btn.disabled = false; btn.textContent = '✦ Duplicar'; }
+                else {
+                    alert('Error: ' + (data.error || 'No se pudo duplicar'));
+                    btn.disabled = false; btn.textContent = '⧉ Duplicar';
+                }
             })
-            .catch(() => { alert('Error de conexión');
-                btn.disabled = false; btn.textContent = '✦ Duplicar'; });
+            .catch(() => {
+                alert('Error de conexión');
+                btn.disabled = false; btn.textContent = '⧉ Duplicar';
+            });
     }
 </script>
 </body>

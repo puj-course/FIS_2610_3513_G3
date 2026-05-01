@@ -1,5 +1,7 @@
 package com.example.entregaya.model;
 
+import com.example.entregaya.builder.TareaBuilder;
+import com.example.entregaya.prototype.TareaPrototype;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -8,7 +10,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 @Entity
 @Table(name = "tarea")
-public class Tarea {
+public class Tarea implements TareaPrototype {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,12 +30,15 @@ public class Tarea {
     @Column(name = "fechafinal")
     private LocalDateTime fechaFinal;
 
+    @Column(name = "recordatorio_enviado", nullable = false)
+    private boolean recordatorioEnviado = false;
+
     // Muchas tareas a un trabajo
     @ManyToOne
     @JoinColumn(name = "trabajo_id", nullable = false)
     private Trabajo trabajo;
 
-    // Responsables de la tarea, muchos pueden ser asignados a la misma tarea
+    // Responsables de la tarea
     @ManyToMany
     @JoinTable(
             name = "tarea_responsables",
@@ -47,6 +52,10 @@ public class Tarea {
     @OrderBy("fechaCreacion DESC")
     private List<Comentario> comentarios = new ArrayList<>();
 
+    @ElementCollection
+    @CollectionTable(name = "tarea_etiquetas", joinColumns = @JoinColumn(name = "tarea_id"))
+    @Column(name = "etiqueta", length = 20)
+    private List<String> etiquetas = new ArrayList<>();
 
     // Enum de dificultad de tarea
     public enum Dificultad {
@@ -69,10 +78,11 @@ public class Tarea {
     // Estado de la tarea
     @Column(nullable = false)
     private boolean completada = false;
-    public Tarea() {
-    }
 
-    public Tarea(Long id, String nombre, String descripcion, LocalDateTime fechaInicio, LocalDateTime fechaFinal, Dificultad dificultad) {
+    public Tarea() {}
+
+    public Tarea(Long id, String nombre, String descripcion, LocalDateTime fechaInicio,
+                 LocalDateTime fechaFinal, Dificultad dificultad) {
         this.id = id;
         this.nombre = nombre;
         this.descripcion = descripcion;
@@ -98,6 +108,11 @@ public class Tarea {
 
     public Long getId() {
         return id;
+    }
+
+    public boolean isRecordatorioEnviado() { return recordatorioEnviado; }
+    public void setRecordatorioEnviado(boolean recordatorioEnviado) {
+        this.recordatorioEnviado = recordatorioEnviado;
     }
 
     public void setId(Long id) {
@@ -175,5 +190,31 @@ public class Tarea {
     public void setComentarios(List<Comentario> comentarios) {
         this.comentarios = comentarios;
     }
+
+    public List<String> getEtiquetas() { return etiquetas; }
+    public void setEtiquetas(List<String> etiquetas) { this.etiquetas = etiquetas; }
+
+    /**
+     * Copia profunda de esta tarea. Patrón GoF Prototype.
+     *
+     * Contrato:
+     *   - id -> null  (se asigna al persistir)
+     *   - nombre -> "[Copia] <nombre original>"
+     *   - completada -> false
+     *   - fechas -> null  (se reasignan si aplica)
+     *   - responsables -> nuevo HashSet con los mismos usuarios
+     *   - trabajo -> el que se pasa como argumento
+     */
+    @Override
+    public Tarea clonar(Trabajo trabajo) {
+        return new TareaBuilder()
+                .nombre("[Copia] " + this.nombre)
+                .descripcion(this.descripcion)
+                .dificultad(this.dificultad)
+                .responsables(new HashSet<>(this.responsables))
+                .trabajo(trabajo)
+                .build();
+    }
+
 
 }
