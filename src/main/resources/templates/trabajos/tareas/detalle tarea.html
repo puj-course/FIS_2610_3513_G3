@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="_csrf"        th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <title>ENTREGA YA — Detalle de Tarea</title>
 
     <style>
@@ -25,7 +27,7 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); min-height: 100vh; color: var(--text); }
 
         header { background: var(--dark); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
-        .header-brand { font-family: 'Segoe UI', sans-serif; font-size: 1rem; font-weight: 800; color: #fff; letter-spacing: 0.5px; text-decoration: none; display: inline-block; cursor: pointer; transition: opacity 0.2s; }
+        .header-brand { font-size: 1rem; font-weight: 800; color: #fff; letter-spacing: 0.5px; text-decoration: none; transition: opacity 0.2s; }
         .header-brand:hover { opacity: 0.9; }
         .header-brand:visited { color: #fff; }
         .header-brand span { background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
@@ -41,7 +43,7 @@
         .card-stripe { height: 4px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
 
         .task-header { padding: 20px 24px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-        .task-title { font-family: 'Segoe UI', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--text); }
+        .task-title { font-size: 1.25rem; font-weight: 700; color: var(--text); }
         .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 500; white-space: nowrap; flex-shrink: 0; }
         .status-badge.progress { background: #eff6ff; color: var(--progress); border: 1px solid #bfdbfe; }
         .status-badge.progress::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--progress); animation: pulse 1.4s infinite; }
@@ -53,7 +55,6 @@
         .info-block { padding: 18px 24px; border-bottom: 1px solid var(--border); }
         .info-block:nth-child(odd) { border-right: 1px solid var(--border); }
         .info-block.full { grid-column: 1 / -1; border-right: none; border-bottom: none; }
-        /* HU-40: bloque ancho con borde inferior */
         .info-block.full-with-border { grid-column: 1 / -1; border-right: none; }
 
         .info-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 6px; }
@@ -64,24 +65,79 @@
 
         /* HU-40: badges de etiqueta */
         .etiquetas-list { display: flex; flex-wrap: wrap; gap: 6px; }
-        .etiqueta-chip {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: #fff;
-        }
+        .etiqueta-chip { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; color: #fff; }
+        .etiqueta-chip.color-0 { background: #f4a535; }
+        .etiqueta-chip.color-1 { background: #3498db; }
+        .etiqueta-chip.color-2 { background: #27ae60; }
+        .etiqueta-chip.color-3 { background: #9b59b6; }
+        .etiqueta-chip.color-4 { background: #e74c3c; }
         .sin-etiquetas { font-size: 0.85rem; color: var(--muted); font-style: italic; }
 
         .section { padding: 20px 24px; border-bottom: 1px solid var(--border); }
-        .comment-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 8px; }
+        .comment-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 12px; }
+
+        /* Comentarios */
+        .comentario-card {
+            background: var(--surface2);
+            padding: 12px 14px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 3px solid var(--accent);
+        }
+        .comentario-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; gap: 8px; }
+        .comentario-autor { font-weight: 600; color: var(--text); font-size: 0.9rem; }
+        .comentario-fecha { font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+        .comentario-contenido { color: var(--text); font-size: 0.9rem; line-height: 1.5; }
+
+        /* HU-45: acciones de comentario (solo autor) */
+        .comentario-acciones { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+        .btn-comentario-editar {
+            padding: 3px 10px; background: transparent; color: #3498db;
+            border: 1px solid #3498db; border-radius: 4px; font-size: 0.72rem;
+            font-weight: 600; cursor: pointer; transition: all 0.15s;
+        }
+        .btn-comentario-editar:hover { background: #3498db; color: #fff; }
+        .btn-comentario-eliminar {
+            padding: 3px 10px; background: transparent; color: #e74c3c;
+            border: 1px solid #e74c3c; border-radius: 4px; font-size: 0.72rem;
+            font-weight: 600; cursor: pointer; transition: all 0.15s;
+        }
+        .btn-comentario-eliminar:hover { background: #e74c3c; color: #fff; }
+
+        /* HU-45: área de edición inline */
+        .comentario-edit-area { display: none; margin-top: 8px; }
+        .comentario-edit-area textarea {
+            width: 100%; min-height: 70px; padding: 8px 10px;
+            border: 1.5px solid var(--border); border-radius: 8px;
+            font-family: 'Segoe UI', sans-serif; font-size: 0.88rem;
+            color: var(--text); resize: vertical; outline: none;
+            background: var(--surface);
+        }
+        .comentario-edit-area textarea:focus { border-color: var(--accent); }
+        .comentario-edit-btns { display: flex; gap: 6px; margin-top: 6px; }
+        .btn-guardar-edicion {
+            padding: 4px 12px; background: var(--accent); color: #fff;
+            border: none; border-radius: 5px; font-size: 0.78rem; font-weight: 600; cursor: pointer;
+        }
+        .btn-guardar-edicion:hover { background: var(--accent2); }
+        .btn-cancelar-edicion {
+            padding: 4px 12px; background: #f0f0f0; color: #555;
+            border: none; border-radius: 5px; font-size: 0.78rem; font-weight: 600; cursor: pointer;
+        }
+        .btn-cancelar-edicion:hover { background: #ddd; }
+
         textarea { width: 100%; min-height: 90px; background: var(--surface2); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 12px 14px; font-family: 'Segoe UI', sans-serif; font-size: 0.88rem; color: var(--text); resize: vertical; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
         textarea::placeholder { color: #c4c1ba; }
         textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(244,165,53,0.12); }
 
+        /* Toast */
+        .toast { position: fixed; bottom: 24px; right: 24px; padding: 10px 16px; border-radius: 7px; font-size: 0.82rem; font-weight: 600; color: #fff; opacity: 0; transform: translateY(8px); transition: opacity 0.2s, transform 0.2s; z-index: 2000; pointer-events: none; }
+        .toast.show { opacity: 1; transform: none; }
+        .toast.toast-success { background: #27ae60; }
+        .toast.toast-error   { background: #e74c3c; }
+
         .action-bar { padding: 18px 24px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-        .btn { padding: 10px 18px; border-radius: 8px; font-family: 'Segoe UI', sans-serif; font-size: 0.88rem; font-weight: 500; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s, background 0.15s; border: none; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+        .btn { padding: 10px 18px; border-radius: 8px; font-size: 0.88rem; font-weight: 500; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s, background 0.15s; border: none; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
         .btn:hover { transform: translateY(-1px); }
         .btn-complete { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; box-shadow: 0 4px 14px rgba(244,165,53,0.3); }
         .btn-complete:hover { box-shadow: 0 6px 20px rgba(244,165,53,0.45); }
@@ -105,7 +161,7 @@
         <div class="card-stripe"></div>
 
         <div class="task-header">
-            <div class="task-title" th:text="'Tarea: ' + ${tarea.nombre}">Tarea: Implementación</div>
+            <div class="task-title" th:text="'Tarea: ' + ${tarea.nombre}">Tarea</div>
             <span class="status-badge progress" id="statusBadge">En progreso</span>
         </div>
 
@@ -114,16 +170,14 @@
                 <div class="info-label">Responsable</div>
                 <div class="info-value highlight"
                      th:text="${tarea.responsables.size()} > 0 ? ${tarea.responsables.iterator().next().username} : 'Sin asignar'">
-                    Juan
                 </div>
             </div>
             <div class="info-block">
                 <div class="info-label">Trabajo asociado</div>
-                <div class="info-value" th:text="${tarea.trabajo.nombreTrabajo}">Informe</div>
+                <div class="info-value" th:text="${tarea.trabajo.nombreTrabajo}"></div>
             </div>
             <div class="info-block">
                 <div class="info-label">Urgencia</div>
-                <!-- HU-29 (#317): Badge de urgencia del decorador -->
                 <div class="info-value">
                     <span th:style="'background-color: ' + ${tareaConEtiqueta.colorEtiqueta()} + '; color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; display: inline-block;'"
                           th:text="${tareaConEtiqueta.etiquetaUrgencia()}">Normal</span>
@@ -131,12 +185,12 @@
             </div>
             <div class="info-block">
                 <div class="info-label">Dificultad</div>
-                <div class="info-value" th:text="${tarea.dificultad.name()}">Media</div>
+                <div class="info-value" th:text="${tarea.dificultad.name()}"></div>
             </div>
             <div class="info-block">
                 <div class="info-label">Fecha límite</div>
                 <div class="info-value" th:if="${tarea.fechaFinal}">
-                    <span class="date-tag" th:text="'⏰ ' + ${#temporals.format(tarea.fechaFinal, 'dd/MM/yyyy')}">⏰ 05/04/2026</span>
+                    <span class="date-tag" th:text="'⏰ ' + ${#temporals.format(tarea.fechaFinal, 'dd/MM/yyyy')}"></span>
                 </div>
                 <div class="info-value" th:unless="${tarea.fechaFinal}">Sin fecha definida</div>
             </div>
@@ -154,16 +208,11 @@
                 </div>
             </div>
 
-            <!-- HU-40: Etiquetas del equipo (bloque ancho) -->
+            <!-- HU-40: Etiquetas -->
             <div class="info-block full-with-border">
                 <div class="info-label">Etiquetas</div>
                 <div class="info-value">
                     <div class="etiquetas-list" th:if="${tarea.etiquetas != null and not #lists.isEmpty(tarea.etiquetas)}">
-                        <!--
-                            Thymeleaf no soporta acceso dinámico a listas por índice en th:style,
-                            por lo que se aplica un color fijo por posición usando th:classappend
-                            y cinco clases CSS predefinidas.
-                        -->
                         <span th:each="et, it : ${tarea.etiquetas}"
                               class="etiqueta-chip"
                               th:classappend="${it.index == 0} ? 'color-0' :
@@ -185,7 +234,6 @@
                 <div class="info-label">Descripción</div>
                 <div class="info-value"
                      th:text="${tarea.descripcion != null ? tarea.descripcion : 'Sin descripción'}">
-                    Sin descripción
                 </div>
             </div>
         </div>
@@ -194,30 +242,67 @@
         <div class="section">
             <div class="comment-label">Comentarios</div>
 
-            <!-- Lista de comentarios existentes -->
             <div id="comentariosList" style="margin-bottom: 20px;">
+                <!-- Con comentarios -->
                 <div th:if="${tarea.comentarios != null and tarea.comentarios.size() > 0}">
                     <div th:each="comentario : ${tarea.comentarios}"
-                         style="background: var(--surface2); padding: 12px 14px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--accent);">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
-                            <div style="font-weight: 600; color: var(--text);" th:text="${comentario.autor.username}">Usuario</div>
-                            <div style="font-size: 0.75rem; color: var(--muted);"
-                                 th:text="${#temporals.format(comentario.fechaCreacion, 'dd/MM/yyyy HH:mm')}">
-                                01/01/2026 10:30
-                            </div>
+                         class="comentario-card"
+                         th:id="'comentario-' + ${comentario.id}"
+                         th:attr="data-comentario-id=${comentario.id},
+                                  data-trabajoid=${trabajoId},
+                                  data-tareaid=${tarea.id}">
+
+                        <div class="comentario-header">
+                            <span class="comentario-autor" th:text="${comentario.autor.username}">Usuario</span>
+                            <span class="comentario-fecha"
+                                  th:text="${#temporals.format(comentario.fechaCreacion, 'dd/MM/yyyy HH:mm')}">
+                            </span>
                         </div>
-                        <div style="color: var(--text); font-size: 0.9rem;" th:text="${comentario.contenido}">
-                            Contenido del comentario
+
+                        <div class="comentario-contenido"
+                             th:id="'contenido-' + ${comentario.id}"
+                             th:text="${comentario.contenido}">
+                        </div>
+
+                        <!-- HU-45 (#449): Botones solo para el autor -->
+                        <div class="comentario-acciones"
+                             th:if="${comentario.autor.username == #authentication.name}">
+                            <button class="btn-comentario-editar"
+                                    th:onclick="'mostrarEdicion(' + ${comentario.id} + ')'">
+                                ✏ Editar
+                            </button>
+                            <button class="btn-comentario-eliminar"
+                                    th:onclick="'eliminarComentario(' + ${comentario.id} + ', ' + ${trabajoId} + ', ' + ${tarea.id} + ')'">
+                                🗑 Eliminar
+                            </button>
+                        </div>
+
+                        <!-- HU-45: Área de edición inline (oculta por defecto) -->
+                        <div class="comentario-edit-area" th:id="'edit-area-' + ${comentario.id}">
+                            <textarea th:id="'edit-texto-' + ${comentario.id}"
+                                      th:text="${comentario.contenido}"></textarea>
+                            <div class="comentario-edit-btns">
+                                <button class="btn-guardar-edicion"
+                                        th:onclick="'guardarEdicion(' + ${comentario.id} + ', ' + ${trabajoId} + ', ' + ${tarea.id} + ')'">
+                                    Guardar
+                                </button>
+                                <button class="btn-cancelar-edicion"
+                                        th:onclick="'cancelarEdicion(' + ${comentario.id} + ')'">
+                                    Cancelar
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Sin comentarios -->
                 <div th:if="${tarea.comentarios == null or tarea.comentarios.size() == 0}"
                      style="text-align: center; color: var(--muted); padding: 20px; font-size: 0.9rem;">
                     No hay comentarios aún. Sé el primero en comentar.
                 </div>
             </div>
 
-            <!-- Formulario para nuevo comentario -->
+            <!-- Formulario nuevo comentario -->
             <form th:action="@{/trabajos/{id}/tareas/{tareaId}/comentario(id=${trabajoId}, tareaId=${tarea.id})}"
                   method="post"
                   style="display: flex; gap: 10px; align-items: flex-end;">
@@ -240,25 +325,100 @@
             <form th:action="@{/trabajos/{id}/tareas/{tareaId}/completar(id=${trabajoId}, tareaId=${tarea.id})}"
                   method="post" style="display:inline;">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                <button type="submit" class="btn btn-complete" id="completeBtn">✓ Marcar como completado</button>
+                <button type="submit" class="btn btn-complete">✓ Marcar como completado</button>
             </form>
         </div>
     </div>
 </div>
 
-<style>
-    /* HU-40: colores de chips por posición (compatibles con Thymeleaf th:classappend) */
-    .etiqueta-chip.color-0 { background: #f4a535; }
-    .etiqueta-chip.color-1 { background: #3498db; }
-    .etiqueta-chip.color-2 { background: #27ae60; }
-    .etiqueta-chip.color-3 { background: #9b59b6; }
-    .etiqueta-chip.color-4 { background: #e74c3c; }
-</style>
+<div id="toast" class="toast"></div>
 
 <script>
-    function setPriority(el) {
-        document.querySelectorAll('.priority-btn').forEach(b => b.classList.remove('active'));
-        el.classList.add('active');
+    function getCsrfToken()  { return document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || ''; }
+    function getCsrfHeader() { return document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') || 'X-CSRF-TOKEN'; }
+
+    function showToast(msg, tipo) {
+        const t = document.getElementById('toast');
+        t.textContent = (tipo === 'success' ? '✓ ' : '✕ ') + msg;
+        t.className = 'toast toast-' + tipo + ' show';
+        clearTimeout(t._timer);
+        t._timer = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    /* ── HU-45: Edición inline ── */
+    function mostrarEdicion(comentarioId) {
+        document.getElementById('edit-area-' + comentarioId).style.display = 'block';
+        document.getElementById('contenido-' + comentarioId).style.display = 'none';
+    }
+
+    function cancelarEdicion(comentarioId) {
+        document.getElementById('edit-area-' + comentarioId).style.display = 'none';
+        document.getElementById('contenido-' + comentarioId).style.display = '';
+    }
+
+    async function guardarEdicion(comentarioId, trabajoId, tareaId) {
+        const textarea = document.getElementById('edit-texto-' + comentarioId);
+        const nuevoContenido = textarea.value.trim();
+
+        if (!nuevoContenido) {
+            showToast('El comentario no puede estar vacío.', 'error');
+            return;
+        }
+
+        try {
+            const res = await fetch(
+                `/trabajos/${trabajoId}/tareas/${tareaId}/comentarios/${comentarioId}`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [getCsrfHeader()]: getCsrfToken()
+                    },
+                    body: JSON.stringify({ contenido: nuevoContenido })
+                }
+            );
+            const data = await res.json();
+
+            if (res.ok) {
+                // Actualizar el texto en la vista sin recargar
+                const contenidoEl = document.getElementById('contenido-' + comentarioId);
+                contenidoEl.textContent = nuevoContenido;
+                cancelarEdicion(comentarioId);
+                showToast('Comentario actualizado.', 'success');
+            } else {
+                showToast(data.error || 'No se pudo editar el comentario.', 'error');
+            }
+        } catch (e) {
+            showToast('Error de conexión.', 'error');
+        }
+    }
+
+    async function eliminarComentario(comentarioId, trabajoId, tareaId) {
+        if (!confirm('¿Eliminar este comentario?')) return;
+
+        try {
+            const res = await fetch(
+                `/trabajos/${trabajoId}/tareas/${tareaId}/comentarios/${comentarioId}`,
+                {
+                    method: 'DELETE',
+                    headers: { [getCsrfHeader()]: getCsrfToken() }
+                }
+            );
+            const data = await res.json();
+
+            if (res.ok) {
+                // Eliminar la tarjeta del DOM sin recargar
+                const card = document.getElementById('comentario-' + comentarioId);
+                card.style.transition = 'opacity 0.25s';
+                card.style.opacity = '0';
+                setTimeout(() => card.remove(), 250);
+                showToast('Comentario eliminado.', 'success');
+            } else {
+                showToast(data.error || 'No se pudo eliminar el comentario.', 'error');
+            }
+        } catch (e) {
+            showToast('Error de conexión.', 'error');
+        }
     }
 </script>
 </body>
