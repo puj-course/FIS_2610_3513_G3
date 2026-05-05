@@ -1,0 +1,88 @@
+name: CI - Pruebas Unitarias EntregaYA
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+    branches:
+      - develop
+      - main
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  test:
+    name: Ejecutar Pruebas Unitarias
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Descargar codigo fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Crear configuracion de pruebas
+        run: |
+          mkdir -p src/test/resources
+          cat > src/test/resources/application-test.properties << 'EOF'
+          spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+          spring.datasource.driver-class-name=org.h2.Driver
+          spring.datasource.username=sa
+          spring.datasource.password=
+          spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+          spring.jpa.hibernate.ddl-auto=create-drop
+          spring.security.user.name=test
+          spring.security.user.password=test
+          telegram.bot.token=dummy
+          telegram.bot.chat-id=dummy
+          EOF
+
+      - name: Inyectar dependencia H2 para pruebas
+        run: |
+          if ! grep -q 'com.h2database' pom.xml; then
+            sed -i 's|</dependencies>|    <dependency>\n            <groupId>com.h2database</groupId>\n            <artifactId>h2</artifactId>\n            <scope>test</scope>\n        </dependency>\n    </dependencies>|' pom.xml
+          fi
+
+      - name: Ejecutar pruebas con Maven
+        run: |
+          mvn test \
+            -Dspring.profiles.active=test \
+            --no-transfer-progress \
+            -Dsurefire.failIfNoSpecifiedTests=false \
+            || true
+
+      - name: Generar reporte HTML del plan de pruebas
+        if: always()
+        run: python3 .github/scripts/generar_reporte.py
+
+      - name: Subir reporte HTML como artefacto
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: informe-pruebas-html
+          path: target/test-report/informe-pruebas.html
+          retention-days: 30
+
+      - name: Subir reportes XML como artefacto
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: surefire-reports
+          path: target/surefire-reports/
+          retention-days: 30
+
+      - name: Verificar resultado final de pruebas
+        run: |
+          mvn test \
+            -Dspring.profiles.active=test \
+            --no-transfer-progress \
+            -Dsurefire.failIfNoSpecifiedTests=false

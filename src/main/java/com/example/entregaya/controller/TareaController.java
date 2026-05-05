@@ -1,5 +1,5 @@
 package com.example.entregaya.controller;
- 
+
 import com.example.entregaya.dto.TareaConEtiquetaDTO;
 import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
@@ -17,20 +17,20 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
- 
+
 import java.util.*;
- 
+
 @Controller
 @RequestMapping("/trabajos/{trabajoId}/tareas")
 public class TareaController {
- 
+
     private final TareaRepository tareaRepository;
     private final CustomTareaDetailsService customTareaDetailsService;
     private final CustomTrabajoDetailsService customTrabajoDetailsService;
     private final CustomComentarioDetailsService customComentarioDetailsService;
     private final UserRepository userRepository;
     private final Lideroeditorstrategy lideroeditorstrategy;
- 
+
     public TareaController(TareaRepository tareaRepository,
                            CustomTareaDetailsService customTareaDetailsService,
                            CustomTrabajoDetailsService customTrabajoDetailsService,
@@ -44,7 +44,7 @@ public class TareaController {
         this.userRepository = userRepository;
         this.lideroeditorstrategy = lideroeditorstrategy;
     }
- 
+
     @GetMapping("/nuevo")
     public String formulario(@PathVariable Long trabajoId, Model model) {
         Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(trabajoId);
@@ -54,10 +54,7 @@ public class TareaController {
         model.addAttribute("colaboradores", trabajo.getColaboradores());
         return "trabajos/tareas/CrearTarea";
     }
- 
-    /**
-     * HU-40 (Task #402): Recibe etiquetas como lista de strings desde el formulario.
-     */
+
     @PostMapping("/nueva")
     public String guardar(@PathVariable Long trabajoId,
                           @ModelAttribute Tarea tarea,
@@ -72,13 +69,13 @@ public class TareaController {
         }
         return "redirect:/trabajos/" + trabajoId;
     }
- 
+
     @PostMapping("/{tareaId}/eliminar")
     public String eliminar(@PathVariable Long trabajoId, @PathVariable Long tareaId) {
         customTareaDetailsService.eliminar(tareaId);
         return "redirect:/trabajos/" + trabajoId;
     }
- 
+
     @PostMapping("/{tareaId}/completar")
     public String completar(@PathVariable Long trabajoId,
                             @PathVariable Long tareaId,
@@ -86,7 +83,7 @@ public class TareaController {
         customTareaDetailsService.toggleCompletada(tareaId, userDetails.getUsername());
         return "redirect:/trabajos/" + trabajoId;
     }
- 
+
     @PostMapping("/{tareaId}/asignar")
     public String asignarResponsables(@PathVariable Long trabajoId,
                                       @PathVariable Long tareaId,
@@ -94,7 +91,7 @@ public class TareaController {
         customTareaDetailsService.actualizarResponsables(tareaId, responsableIds);
         return "redirect:/trabajos/" + trabajoId;
     }
- 
+
     @GetMapping("/{tareaId}/editar")
     public String formularioEditar(@PathVariable Long trabajoId,
                                    @PathVariable Long tareaId,
@@ -103,26 +100,20 @@ public class TareaController {
         if (!customTrabajoDetailsService.verificarPermiso(trabajoId, user.getUsername(), lideroeditorstrategy)) {
             return "redirect:/trabajos/" + trabajoId + "?error=noPermiso";
         }
- 
         Tarea tarea = customTareaDetailsService.findById(tareaId);
         Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(trabajoId);
- 
+
         model.addAttribute("tarea", tarea);
         model.addAttribute("trabajoId", trabajoId);
         model.addAttribute("dificultades", Tarea.Dificultad.values());
         model.addAttribute("colaboradores", trabajo.getColaboradores());
         model.addAttribute("responsablesSeleccionados",
                 tarea.getResponsables().stream().map(User::getId).toList());
-        // HU-40: pasar etiquetas existentes para pre-rellenar el formulario
         model.addAttribute("etiquetasExistentes",
                 String.join(",", tarea.getEtiquetas()));
- 
         return "trabajos/tareas/EditarTarea";
     }
- 
-    /**
-     * HU-40 (Task #402): Recibe etiquetas al editar.
-     */
+
     @PostMapping("/{tareaId}/editar")
     public String guardarEdicion(@PathVariable Long trabajoId,
                                  @PathVariable Long tareaId,
@@ -142,7 +133,7 @@ public class TareaController {
         }
         return "redirect:/trabajos/" + trabajoId;
     }
- 
+
     @PostMapping("/{tareaId}/comentario")
     public String agregarComentario(@PathVariable Long trabajoId,
                                     @PathVariable Long tareaId,
@@ -153,21 +144,72 @@ public class TareaController {
         customComentarioDetailsService.crearComentario(tareaId, usuario.getId(), contenido);
         return "redirect:/trabajos/" + trabajoId + "/tareas/" + tareaId + "/detalle";
     }
- 
+
+    /**
+     * HU-45 (#445): Editar un comentario propio.
+     * Verifica autoría en el servicio; devuelve 403 si no es el autor.
+     */
+    @PutMapping("/{tareaId}/comentarios/{comentarioId}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> editarComentario(
+            @PathVariable Long trabajoId,
+            @PathVariable Long tareaId,
+            @PathVariable Long comentarioId,
+            @RequestBody Map<String, String> body,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        String nuevoContenido = body.get("contenido");
+        if (nuevoContenido == null || nuevoContenido.isBlank()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "El contenido no puede estar vacío."));
+        }
+
+        try {
+            customComentarioDetailsService.editarComentario(
+                    comentarioId, nuevoContenido, userDetails.getUsername());
+            return ResponseEntity.ok(Map.of(
+                    "mensaje", "Comentario actualizado correctamente.",
+                    "contenido", nuevoContenido));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * HU-45 (#446): Eliminar un comentario propio.
+     * Verifica autoría en el servicio; devuelve 403 si no es el autor.
+     */
+    @DeleteMapping("/{tareaId}/comentarios/{comentarioId}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> eliminarComentario(
+            @PathVariable Long trabajoId,
+            @PathVariable Long tareaId,
+            @PathVariable Long comentarioId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        try {
+            customComentarioDetailsService.eliminarComentario(
+                    comentarioId, userDetails.getUsername());
+            return ResponseEntity.ok(Map.of("mensaje", "Comentario eliminado correctamente."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @GetMapping("/{tareaId}/detalle")
     public String verDetalleTarea(@PathVariable Long trabajoId,
                                   @PathVariable Long tareaId,
                                   Model model) {
         Tarea tarea = customTareaDetailsService.findById(tareaId);
         TareaConEtiquetaDTO tareaConEtiqueta = customTareaDetailsService.findByIdConEtiqueta(tareaId);
- 
+
         model.addAttribute("tarea", tarea);
         model.addAttribute("tareaConEtiqueta", tareaConEtiqueta);
         model.addAttribute("trabajoId", trabajoId);
- 
+
         return "trabajos/tareas/detalle tarea";
     }
- 
+
     @PostMapping("/{tareaId}/clonar")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> clonarTarea(
@@ -183,9 +225,7 @@ public class TareaController {
             response.put("dificultad", clon.getDificultad().name());
             return ResponseEntity.status(201).body(response);
         } catch (SecurityException e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.status(403).body(error);
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
         }
     }
 }
