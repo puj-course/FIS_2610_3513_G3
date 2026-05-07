@@ -23,6 +23,9 @@ public class User {
     @Column(unique = true)
     private String email;
 
+    @Column(name = "telegram_chat_id")
+    private String telegramChatId;
+
     // Relación a través de ColaboradorTrabajo
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ColaboradorTrabajo> trabajos = new HashSet<>();
