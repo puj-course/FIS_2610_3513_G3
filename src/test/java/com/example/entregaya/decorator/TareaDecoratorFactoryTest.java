@@ -16,6 +16,8 @@ class TareaDecoratorFactoryTest {
     @Test
     void CP06_Resolver_TareaCompletada_RetornaCompletadaDecorator() {
         // Arrange
+
+
         Tarea tareaCompletada = new Tarea();
         tareaCompletada.setCompletada(true);
         tareaCompletada.setFechaFinal(LocalDateTime.now().minusDays(5));
