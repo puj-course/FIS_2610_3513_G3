@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
 
 // Tests para TareaBuilder - Patron Builder HU-21 #268
+
 class TareaBuilderTest {
 
     // CP01 - NORMAL: Se justifica para validar que el builder crea una tarea valida con todos los parametros correctos.
