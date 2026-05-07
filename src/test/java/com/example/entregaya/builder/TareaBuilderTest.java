@@ -8,6 +8,8 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+// Pruebas manuales de TareaBuilder HU-21 #268
+
 // Tests para TareaBuilder - Patron Builder HU-21 #268
 
 class TareaBuilderTest {
