@@ -15,8 +15,7 @@ public class TelegramNotificacionService {
 
     @Value("${telegram.bot.token}")
     private String botToken;
-
-
+    
     @Value("${telegram.api.url}")
     private String apiUrl;
 

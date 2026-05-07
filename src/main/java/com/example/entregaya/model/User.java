@@ -96,7 +96,7 @@ public class User {
 
         this.email = email;
     }
-    
+
     public String getTelegramChatId() {
         return telegramChatId;
     }
