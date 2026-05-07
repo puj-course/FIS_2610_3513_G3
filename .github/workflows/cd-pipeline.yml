@@ -1,15 +1,18 @@
-name: CD EntregaYa
+name: CD EntregaYa – Docker
 
+# Se ejecuta en push a main O cuando se lanza manualmente
 on:
   push:
     branches: [main]
-    
+  workflow_dispatch:
+
 permissions:
   contents: write
-  
+
 jobs:
-  build:
-    name: Compilar proyecto
+  # ── Job 1: Compilar y ejecutar pruebas ──────────────────────────────────────
+  build-and-test:
+    name: Compilar proyecto y pruebas
     runs-on: ubuntu-22.04
 
     steps:
@@ -21,18 +24,110 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: maven
 
-      - name: Compilar y generar .jar
-        run: mvn clean package -DskipTests
+      - name: Compilar y ejecutar pruebas
+        run: mvn clean package
 
       - name: Verificar que el .jar existe
         run: ls target/*.jar
-  
-      - name: Obtener version del proyecto
+
+      - name: Guardar .jar como artefacto del pipeline
+        uses: actions/upload-artifact@v4
+        with:
+          name: entregaya-jar
+          path: target/*.jar
+          retention-days: 1
+
+  # ── Job 2: Construir imagen Docker y publicar en DockerHub ──────────────────
+  docker-build-push:
+    name: Construir y publicar imagen Docker
+    runs-on: ubuntu-22.04
+    needs: build-and-test   # Solo corre si el build pasó
+
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Obtener versión del proyecto
         id: version
         run: |
           VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$VERSION-$SHORT_SHA" >> $GITHUB_OUTPUT
+
+      # Configura QEMU para poder construir imágenes multi-arquitectura (amd64 + arm64)
+      - name: Configurar QEMU
+        uses: docker/setup-qemu-action@v3
+
+      # Buildx permite builds multi-plataforma y caché avanzada
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Autenticación en DockerHub usando los Secrets del repositorio
+      # Secrets requeridos: DOCKERHUB_USERNAME y DOCKERHUB_TOKEN
+      - name: Login en DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Construye y sube la imagen con dos tags:
+      #   latest → siempre apunta al último build de main
+      #   <version>-<sha> → tag inmutable para rastreo exacto
+      - name: Construir y publicar imagen
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/entregaya:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/entregaya:${{ steps.version.outputs.tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Resumen del despliegue
+        run: |
+          echo "## ✅ Imagen publicada en DockerHub" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Campo | Valor |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Imagen** | \`${{ secrets.DOCKERHUB_USERNAME }}/entregaya\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Tag versión** | \`${{ steps.version.outputs.tag }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Tag latest** | \`latest\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Autor** | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Para ejecutar la imagen:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "docker pull ${{ secrets.DOCKERHUB_USERNAME }}/entregaya:latest" >> $GITHUB_STEP_SUMMARY
+          echo "docker run -p 8081:8081 ${{ secrets.DOCKERHUB_USERNAME }}/entregaya:latest" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  # ── Job 3: Crear GitHub Release con el .jar ──────────────────────────────────
+  github-release:
+    name: Crear GitHub Release
+    runs-on: ubuntu-22.04
+    needs: build-and-test
+
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Instalar Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Obtener versión y compilar
+        id: version
+        run: |
+          mvn clean package -DskipTests
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
           echo "tag=v$VERSION-$(date +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
 
       - name: Crear GitHub Release y subir .jar
@@ -42,9 +137,14 @@ jobs:
           name: "Release ${{ steps.version.outputs.tag }}"
           body: |
             Despliegue automático generado por merge a `main`.
-            
+
             **Commit:** ${{ github.sha }}
             **Autor:** ${{ github.actor }}
+
+            ### Imagen Docker
+            ```bash
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/entregaya:latest
+            ```
           files: target/*.jar
           token: ${{ secrets.GITHUB_TOKEN }}
-        
+
