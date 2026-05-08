@@ -1,0 +1,12 @@
+.git
+.gitignore
+.idea
+*.log
+target/
+temp/
+docs/
+jupyter/
+.DS_Store
+*.md
+Makefile
+scripts/

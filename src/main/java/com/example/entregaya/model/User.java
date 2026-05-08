@@ -23,7 +23,7 @@ public class User {
     @Column(unique = true)
     private String email;
 
-    @Column(nullable = true, length = 20)
+    @Column(name = "telegram_chat_id")
     private String telegramChatId;
 
     // Relación a través de ColaboradorTrabajo
@@ -93,9 +93,9 @@ public class User {
     }
 
     public void setEmail(String email) {
-
         this.email = email;
     }
+
     public String getTelegramChatId() {
         return telegramChatId;
     }

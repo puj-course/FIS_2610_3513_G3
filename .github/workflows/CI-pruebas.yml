@@ -15,9 +15,41 @@ permissions:
   checks: write
 
 jobs:
-  test:
-    name: Ejecutar Pruebas Unitarias
+
+  # ════════════════════════════════════════════
+  # STAGE 1: Compilación
+  # ════════════════════════════════════════════
+  build:
+    name: "Stage 1 - Compilación"
     runs-on: ubuntu-22.04
+
+    steps:
+      - name: Descargar codigo fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Inyectar dependencia H2 para pruebas
+        run: |
+          if ! grep -q 'com.h2database' pom.xml; then
+            sed -i 's|</dependencies>|    <dependency>\n            <groupId>com.h2database</groupId>\n            <artifactId>h2</artifactId>\n            <scope>test</scope>\n        </dependency>\n    </dependencies>|' pom.xml
+          fi
+
+      - name: Compilar proyecto
+        run: mvn compile --no-transfer-progress
+
+  # ════════════════════════════════════════════
+  # STAGE 2: Pruebas Unitarias
+  # ════════════════════════════════════════════
+  test:
+    name: "Stage 2 - Pruebas Unitarias"
+    runs-on: ubuntu-22.04
+    needs: build
 
     steps:
       - name: Descargar codigo fuente

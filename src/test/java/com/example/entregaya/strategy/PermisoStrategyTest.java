@@ -84,6 +84,7 @@ class PermisoStrategyTest {
     // Se justifica para asegurar que la seguridad sea estricta incluso ante datos de entrada incompletos.
     // Rol: null
     // Resultado Esperado: Retorna false.
+
     @Test
     void CP15_SoloLiderStrategy_ConRolNull_RetornaFalse() {
         // Arrange
