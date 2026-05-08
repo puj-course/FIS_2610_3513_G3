@@ -1,6 +1,5 @@
 name: CD EntregaYa – Docker
 
-# Se ejecuta en push a main O cuando se lanza manualmente
 on:
   push:
     branches: [main]
@@ -10,10 +9,37 @@ permissions:
   contents: write
 
 jobs:
-  # ── Job 1: Compilar y ejecutar pruebas ──────────────────────────────────────
+  # ── Job 1: Calcular versión una sola vez y compartirla ──────────────────────
+  setup:
+    name: Calcular versión
+    runs-on: ubuntu-22.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Instalar Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Calcular versión del proyecto
+        id: version
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION-$SHORT_SHA" >> $GITHUB_OUTPUT
+
+  # ── Job 2: Compilar y ejecutar pruebas ──────────────────────────────────────
   build-and-test:
     name: Compilar proyecto y pruebas
     runs-on: ubuntu-22.04
+    needs: setup
 
     steps:
       - name: Descargar código
@@ -26,8 +52,8 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Compilar y ejecutar pruebas
-        run: mvn clean package
+      - name: Compilar y verificar cobertura
+        run: mvn clean verify
 
       - name: Verificar que el .jar existe
         run: ls target/*.jar
@@ -39,43 +65,47 @@ jobs:
           path: target/*.jar
           retention-days: 1
 
-  # ── Job 2: Construir imagen Docker y publicar en DockerHub ──────────────────
+      - name: Notificar fallo en Telegram
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d parse_mode="Markdown" \
+            -d text="❌ *CD EntregaYa – Fallo en Build/Tests*
+          
+          *Repositorio:* ${{ github.repository }}
+          *Job:* Compilar proyecto y pruebas
+          *Rama:* \`${{ github.ref_name }}\`
+          *Commit:* \`${{ github.sha }}\`
+          *Autor:* ${{ github.actor }}
+          
+          [Ver detalle del fallo](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+
+  # ── Job 3: Construir imagen Docker y publicar en DockerHub ──────────────────
   docker-build-push:
     name: Construir y publicar imagen Docker
     runs-on: ubuntu-22.04
-    needs: build-and-test   # Solo corre si el build pasó
+    needs: [setup, build-and-test]
 
     steps:
       - name: Descargar código
         uses: actions/checkout@v4
 
-      - name: Obtener versión del proyecto
-        id: version
-        run: |
-          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "tag=$VERSION-$SHORT_SHA" >> $GITHUB_OUTPUT
-
-      # Configura QEMU para poder construir imágenes multi-arquitectura (amd64 + arm64)
       - name: Configurar QEMU
         uses: docker/setup-qemu-action@v3
 
-      # Buildx permite builds multi-plataforma y caché avanzada
       - name: Configurar Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Autenticación en DockerHub usando los Secrets del repositorio
-      # Secrets requeridos: DOCKERHUB_USERNAME y DOCKERHUB_TOKEN
       - name: Login en DockerHub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Construye y sube la imagen con dos tags:
-      #   latest → siempre apunta al último build de main
-      #   <version>-<sha> → tag inmutable para rastreo exacto
       - name: Construir y publicar imagen
         uses: docker/build-push-action@v5
         with:
@@ -84,7 +114,7 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/entregaya:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/entregaya:${{ steps.version.outputs.tag }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/entregaya:${{ needs.setup.outputs.tag }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -95,7 +125,7 @@ jobs:
           echo "| Campo | Valor |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
           echo "| **Imagen** | \`${{ secrets.DOCKERHUB_USERNAME }}/entregaya\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Tag versión** | \`${{ steps.version.outputs.tag }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Tag versión** | \`${{ needs.setup.outputs.tag }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Tag latest** | \`latest\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Autor** | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
@@ -106,35 +136,46 @@ jobs:
           echo "docker run -p 8081:8081 ${{ secrets.DOCKERHUB_USERNAME }}/entregaya:latest" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
-  # ── Job 3: Crear GitHub Release con el .jar ──────────────────────────────────
+      - name: Notificar fallo en Telegram
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d parse_mode="Markdown" \
+            -d text="❌ *CD EntregaYa – Fallo al publicar imagen Docker*
+          
+          *Repositorio:* ${{ github.repository }}
+          *Job:* Construir y publicar imagen Docker
+          *Rama:* \`${{ github.ref_name }}\`
+          *Commit:* \`${{ github.sha }}\`
+          *Autor:* ${{ github.actor }}
+          
+          [Ver detalle del fallo](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+
+  # ── Job 4: Crear GitHub Release con el .jar ──────────────────────────────────
   github-release:
     name: Crear GitHub Release
     runs-on: ubuntu-22.04
-    needs: build-and-test
+    needs: [setup, build-and-test]
 
     steps:
       - name: Descargar código
         uses: actions/checkout@v4
 
-      - name: Instalar Java 17
-        uses: actions/setup-java@v4
+      - name: Descargar artefacto .jar
+        uses: actions/download-artifact@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: maven
-
-      - name: Obtener versión y compilar
-        id: version
-        run: |
-          mvn clean package -DskipTests
-          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          echo "tag=v$VERSION-$(date +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
+          name: entregaya-jar
+          path: target/
 
       - name: Crear GitHub Release y subir .jar
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: "Release ${{ steps.version.outputs.tag }}"
+          tag_name: ${{ needs.setup.outputs.tag }}
+          name: "Release ${{ needs.setup.outputs.tag }}"
           body: |
             Despliegue automático generado por merge a `main`.
 
@@ -148,3 +189,51 @@ jobs:
           files: target/*.jar
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Notificar fallo en Telegram
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d parse_mode="Markdown" \
+            -d text="❌ *CD EntregaYa – Fallo al crear GitHub Release*
+          
+          *Repositorio:* ${{ github.repository }}
+          *Job:* Crear GitHub Release
+          *Rama:* \`${{ github.ref_name }}\`
+          *Commit:* \`${{ github.sha }}\`
+          *Autor:* ${{ github.actor }}
+          
+          [Ver detalle del fallo](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+
+  # ── Job 5: Notificación de éxito en Telegram ────────────────────────────────
+  notify-success:
+    name: Notificar éxito en Telegram
+    runs-on: ubuntu-22.04
+    needs: [setup, docker-build-push, github-release]
+    if: success()
+
+    steps:
+      - name: Enviar notificación de éxito
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d parse_mode="Markdown" \
+            -d text="✅ *CD EntregaYa – Despliegue exitoso*
+          
+          *Repositorio:* ${{ github.repository }}
+          *Versión:* \`${{ needs.setup.outputs.tag }}\`
+          *Rama:* \`${{ github.ref_name }}\`
+          *Commit:* \`${{ github.sha }}\`
+          *Autor:* ${{ github.actor }}
+          
+          🐳 Imagen disponible en DockerHub:
+          \`docker pull ${DOCKERHUB_USERNAME}/entregaya:latest\`
+          
+          [Ver pipeline](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
