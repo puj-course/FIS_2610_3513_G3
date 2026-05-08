@@ -1,0 +1,119 @@
+--Esquema de la base de datos
+--Drops
+DROP TABLE IF EXISTS tarea_etiquetas CASCADE;
+DROP TABLE IF EXISTS comentario CASCADE;
+DROP TABLE IF EXISTS tarea_responsables CASCADE;
+DROP TABLE IF EXISTS tarea CASCADE;
+DROP TABLE IF EXISTS invitacion CASCADE;
+DROP TABLE IF EXISTS colaboradores CASCADE;
+DROP TABLE IF EXISTS notificacion CASCADE;
+DROP TABLE IF EXISTS trabajo CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+
+--Creacion de la tabla de usuarios
+CREATE TABLE users (
+                       id BIGSERIAL PRIMARY KEY,
+                       username VARCHAR(255) UNIQUE NOT NULL,
+                       password VARCHAR(255) NOT NULL,
+                       email VARCHAR(255) UNIQUE,
+                       telegram_chat_id VARCHAR(20)
+);
+
+--Creacion de la tabla trabajo, representa un proyecto
+CREATE TABLE trabajo (
+                         id BIGSERIAL PRIMARY KEY,
+                         nombreTrabajo VARCHAR(255) NOT NULL,
+                         descripcion VARCHAR(255),
+                         fechaInicio TIMESTAMP,
+                         fechaEntrega TIMESTAMP
+);
+
+--Creacion de la tabla Colaboradores, relaciona la tabla usuarios y trabajo
+CREATE TABLE colaboradores (
+                               trabajoid BIGINT NOT NULL,
+                               usersid BIGINT NOT NULL,
+                               rol VARCHAR(20) NOT NULL DEFAULT 'COLABORADOR',
+                               PRIMARY KEY (trabajoid, usersid),
+                               FOREIGN KEY (trabajoid) REFERENCES trabajo(id) ON DELETE CASCADE,
+                               FOREIGN KEY (usersid) REFERENCES users(id) ON DELETE CASCADE
+);
+
+--Creacion de la tabla tarea, representa actividades del proyecto
+CREATE TABLE tarea (
+                       id BIGSERIAL PRIMARY KEY,
+                       nombre VARCHAR(255) NOT NULL,
+                       descripcion VARCHAR(255) NOT NULL,
+                       fechainicio TIMESTAMP,
+                       fechafinal TIMESTAMP,
+                       trabajo_id BIGINT NOT NULL,
+                       dificultad VARCHAR(20) NOT NULL DEFAULT 'MEDIA',
+                       completada BOOLEAN NOT NULL DEFAULT FALSE,
+                       recordatorio_enviado BOOLEAN NOT NULL DEFAULT FALSE,
+                       FOREIGN KEY (trabajo_id) REFERENCES trabajo(id) ON DELETE CASCADE
+);
+
+--Creacion de la tabla tarea_responsables, relaciona tarea y usuarios
+CREATE TABLE tarea_responsables (
+                                    tarea_id BIGINT NOT NULL,
+                                    user_id BIGINT NOT NULL,
+                                    PRIMARY KEY (tarea_id, user_id),
+                                    FOREIGN KEY (tarea_id) REFERENCES tarea(id) ON DELETE CASCADE,
+                                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+--Creacion de la tabla invitacion
+CREATE TABLE invitacion (
+                            id BIGSERIAL PRIMARY KEY,
+                            trabajo_id BIGINT NOT NULL,
+                            destinatario_id BIGINT NOT NULL,
+                            remitente_id BIGINT NOT NULL,
+                            estado VARCHAR(20) NOT NULL DEFAULT 'PENDIENTE',
+                            FOREIGN KEY (trabajo_id) REFERENCES trabajo(id) ON DELETE CASCADE,
+                            FOREIGN KEY (destinatario_id) REFERENCES users(id) ON DELETE CASCADE,
+                            FOREIGN KEY (remitente_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Crear tabla comentario
+CREATE TABLE comentario (
+                            id BIGSERIAL PRIMARY KEY,
+                            contenido TEXT NOT NULL,
+                            fecha_creacion TIMESTAMP NOT NULL DEFAULT NOW(),
+                            tarea_id BIGINT NOT NULL,
+                            user_id BIGINT NOT NULL,
+                            FOREIGN KEY (tarea_id) REFERENCES tarea(id) ON DELETE CASCADE,
+                            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Crear índice para mejorar búsquedas
+CREATE INDEX idx_comentario_tarea_id ON comentario(tarea_id);
+CREATE INDEX idx_comentario_user_id ON comentario(user_id);
+
+--Crear tabla notificacion
+CREATE TABLE notificacion (
+                              id BIGSERIAL PRIMARY KEY,
+                              destinatario_id BIGINT NOT NULL,
+                              tipo VARCHAR(50) NOT NULL DEFAULT 'TAREA',
+                              mensaje VARCHAR(500) NOT NULL,
+                              leida BOOLEAN NOT NULL DEFAULT FALSE,
+                              fecha_creacion TIMESTAMP NOT NULL,
+                              CONSTRAINT fk_notificacion_usuario
+                                  FOREIGN KEY (destinatario_id)
+                                      REFERENCES users(id)
+                                      ON DELETE CASCADE
+);
+
+-- Tabla para almacenar etiquetas
+CREATE TABLE tarea_etiquetas (
+                                 tarea_id BIGINT NOT NULL,
+                                 etiqueta VARCHAR(20) NOT NULL,
+                                 CONSTRAINT fk_tarea_etiquetas_tarea
+                                     FOREIGN KEY (tarea_id)
+                                         REFERENCES tarea(id)
+                                         ON DELETE CASCADE
+);
+
+-- Índice para mejorar búsqueda por etiqueta
+CREATE INDEX idx_tarea_etiquetas_etiqueta ON tarea_etiquetas(etiqueta);
+
+-- Índice para joins rápidos con tarea
+CREATE INDEX idx_tarea_etiquetas_tarea_id ON tarea_etiquetas(tarea_id);
