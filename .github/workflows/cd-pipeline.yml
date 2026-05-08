@@ -52,7 +52,6 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      # verify en lugar de package: ejecuta tests + JaCoCo + checks de cobertura
       - name: Compilar y verificar cobertura
         run: mvn clean verify
 
@@ -68,9 +67,12 @@ jobs:
 
       - name: Notificar fallo en Telegram
         if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d parse_mode="Markdown" \
             -d text="❌ *CD EntregaYa – Fallo en Build/Tests*
           
@@ -136,9 +138,12 @@ jobs:
 
       - name: Notificar fallo en Telegram
         if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d parse_mode="Markdown" \
             -d text="❌ *CD EntregaYa – Fallo al publicar imagen Docker*
           
@@ -160,7 +165,6 @@ jobs:
       - name: Descargar código
         uses: actions/checkout@v4
 
-      # Reutiliza el .jar ya compilado por build-and-test, sin recompilar
       - name: Descargar artefacto .jar
         uses: actions/download-artifact@v4
         with:
@@ -187,9 +191,12 @@ jobs:
 
       - name: Notificar fallo en Telegram
         if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d parse_mode="Markdown" \
             -d text="❌ *CD EntregaYa – Fallo al crear GitHub Release*
           
@@ -210,9 +217,13 @@ jobs:
 
     steps:
       - name: Enviar notificación de éxito
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         run: |
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d parse_mode="Markdown" \
             -d text="✅ *CD EntregaYa – Despliegue exitoso*
           
@@ -223,6 +234,6 @@ jobs:
           *Autor:* ${{ github.actor }}
           
           🐳 Imagen disponible en DockerHub:
-          \`docker pull ${{ secrets.DOCKERHUB_USERNAME }}/entregaya:latest\`
+          \`docker pull ${DOCKERHUB_USERNAME}/entregaya:latest\`
           
           [Ver pipeline](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
