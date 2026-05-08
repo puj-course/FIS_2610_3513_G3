@@ -16,7 +16,7 @@ RUN mvn clean package -DskipTests
 
 # ── Etapa 2: Runtime ──────────────────────────────────────────────────────────
 # Imagen mínima con solo el JRE (sin Maven ni JDK), reduce el tamaño final.
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre-jammy
 
 WORKDIR /app
 
