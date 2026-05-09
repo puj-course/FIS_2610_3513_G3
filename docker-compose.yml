@@ -1,53 +1,85 @@
 version: '3.8'
 
+# ── Servicios ─────────────────────────────────────────────────────────────────
 services:
+
+  # ── Base de datos PostgreSQL ────────────────────────────────────────────────
   postgres:
     image: postgres:15
     container_name: entregaya_db
     restart: always
     environment:
-      POSTGRES_USER: entregaya_user
-      POSTGRES_PASSWORD: tu_password_real
+      POSTGRES_USER: ${DB_USER:-entregaya_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-tu_password_real}
       POSTGRES_DB: entregaya
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      # Opcional: montar un directorio local para backups
-      # - ./backups:/backups
-      # Opcional: scripts de inicialización
-      # - ./init-scripts:/docker-entrypoint-initdb.d
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
     networks:
-      - postgres_network
+      - entregaya_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-entregaya_user} -d entregaya"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── Aplicación Spring Boot ──────────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: entregaya_app
+    restart: on-failure
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/entregaya
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-entregaya_user}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-tu_password_real}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_PROFILES_ACTIVE: docker
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-SIN_CONFIGURAR}
+      SERVER_PORT: 8081
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - entregaya_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/login || exit 1"]
       interval: 30s
       timeout: 10s
+      start_period: 90s
       retries: 3
 
-  # Opcional: pgAdmin para administración web
+  # ── pgAdmin (administración web de la DB) ──────────────────────────────────
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: pgadmin_entregaya
     restart: always
     environment:
-      PGADMIN_DEFAULT_EMAIL: silver@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@entregaya.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
       PGADMIN_CONFIG_SERVER_MODE: 'False'
     ports:
       - "8080:80"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     networks:
-      - postgres_network
+      - entregaya_network
     depends_on:
       - postgres
 
+# ── Volúmenes persistentes ────────────────────────────────────────────────────
 volumes:
   postgres_data:
   pgadmin_data:
 
+# ── Red interna ───────────────────────────────────────────────────────────────
 networks:
-  postgres_network:
+  entregaya_network:
     driver: bridge

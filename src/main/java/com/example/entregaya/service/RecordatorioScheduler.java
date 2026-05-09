@@ -49,10 +49,10 @@ public class RecordatorioScheduler {
 
                 // Notificación Telegram
                 //La hu 2 integra telegramId en user
-                /*if (responsable.getTelegramChatId() != null && !responsable.getTelegramChatId().isBlank()) {
+                if (responsable.getTelegramChatId() != null && !responsable.getTelegramChatId().isBlank()) {
                     telegramService.enviarMensaje(responsable.getTelegramChatId(), mensaje);
                     log.info("[Scheduler] Telegram enviado a usuario={}", responsable.getUsername());
-                }*/
+                }
             }
             tarea.setRecordatorioEnviado(true);
             tareaRepository.save(tarea);
