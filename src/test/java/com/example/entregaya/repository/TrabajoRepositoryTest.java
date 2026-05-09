@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
+@ActiveProfiles("test")
 @DisplayName("TrabajoRepository - Tests con H2")
 class TrabajoRepositoryTest {
 
@@ -48,6 +50,7 @@ class TrabajoRepositoryTest {
         trabajo1.setDescripcion("Descripción 1");
         trabajo1.setFechaInicio(LocalDateTime.now());
         trabajo1.setFechaEntrega(LocalDateTime.now().plusDays(30));
+        entityManager.persistAndFlush(trabajo1);
         trabajo1.agregarColaborador(usuario, ColaboradorTrabajo.Rol.LIDER);
         entityManager.persistAndFlush(trabajo1);
 
@@ -56,6 +59,7 @@ class TrabajoRepositoryTest {
         trabajo2.setDescripcion("Descripción 2");
         trabajo2.setFechaInicio(LocalDateTime.now());
         trabajo2.setFechaEntrega(LocalDateTime.now().plusDays(30));
+        entityManager.persistAndFlush(trabajo2);
         trabajo2.agregarColaborador(usuario, ColaboradorTrabajo.Rol.EDITOR);
         entityManager.persistAndFlush(trabajo2);
 
@@ -87,6 +91,7 @@ class TrabajoRepositoryTest {
         trabajo.setDescripcion("Proyecto con múltiples roles");
         trabajo.setFechaInicio(LocalDateTime.now());
         trabajo.setFechaEntrega(LocalDateTime.now().plusDays(30));
+        entityManager.persistAndFlush(trabajo);
         trabajo.agregarColaborador(usuario, ColaboradorTrabajo.Rol.LIDER);
         entityManager.persistAndFlush(trabajo);
 
