@@ -87,8 +87,7 @@
             <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <!-- JUnit 5 - Explicit inclusion for testing -->
+        <!-- HU-39 (#398): Apache PDFBox para exportar tareas a PDF -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -98,13 +97,11 @@
 
     <build>
         <plugins>
-            <!-- Spring Boot Maven Plugin -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
 
-            <!-- Checkstyle Plugin - Code Style Validation (DESHABILITADO EN BUILD, usar: mvn checkstyle:check) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
@@ -116,16 +113,19 @@
                     <skip>true</skip>
                 </configuration>
                 <executions>
-                    <!-- Deshabilitado para permitir build sin errores de estilo -->
-                    <!-- Para ejecutar checkstyle manualmente: mvn checkstyle:check -->
+                    <execution>
+                        <id>validate</id>
+                        <phase>validate</phase>
+                        <goals><goal>check</goal></goals>
+                    </execution>
                 </executions>
             </plugin>
 
-            <!-- JaCoCo Plugin - Code Coverage -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.11</version>
+
                 <configuration>
                     <excludes>
                         <exclude>**/config/**</exclude>
@@ -133,6 +133,7 @@
                         <exclude>**/*Application.class</exclude>
                     </excludes>
                 </configuration>
+
                 <executions>
                     <execution>
                         <goals><goal>prepare-agent</goal></goals>
@@ -151,9 +152,9 @@
                                     <element>BUNDLE</element>
                                     <limits>
                                         <limit>
-                                            <counter>LINE</counter>
+                                            <counter>INSTRUCTION</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.10</minimum>
+                                            <minimum>0.80</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
