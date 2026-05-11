@@ -75,13 +75,11 @@ jobs:
             -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d parse_mode="Markdown" \
             -d text="❌ *CD EntregaYa – Fallo en Build/Tests*
-          
           *Repositorio:* ${{ github.repository }}
           *Job:* Compilar proyecto y pruebas
           *Rama:* \`${{ github.ref_name }}\`
           *Commit:* \`${{ github.sha }}\`
           *Autor:* ${{ github.actor }}
-          
           [Ver detalle del fallo](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
 
   # ── Job 3: Construir imagen Docker y publicar en DockerHub ──────────────────
@@ -94,20 +92,24 @@ jobs:
       - name: Descargar código
         uses: actions/checkout@v4
 
+      # FIX: SHA completo en lugar de @v3 (evita supply-chain attacks)
       - name: Configurar QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12c2d7f4d2d5a # v3.6.0
 
+      # FIX: SHA completo en lugar de @v3
       - name: Configurar Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
 
+      # FIX: SHA completo en lugar de @v3
       - name: Login en DockerHub
-        uses: docker/login-action@v3
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # FIX: SHA completo en lugar de @v5
       - name: Construir y publicar imagen
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1 # v6.16.0
         with:
           context: .
           platforms: linux/amd64,linux/arm64
@@ -118,22 +120,28 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # FIX: DOCKERHUB_USERNAME expuesto como env var, no expandido directamente en el string
       - name: Resumen del despliegue
+        env:
+          DOCKER_IMAGE_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          DEPLOY_TAG: ${{ needs.setup.outputs.tag }}
+          COMMIT_SHA: ${{ github.sha }}
+          ACTOR: ${{ github.actor }}
         run: |
           echo "## ✅ Imagen publicada en DockerHub" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Campo | Valor |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| **Imagen** | \`${{ secrets.DOCKERHUB_USERNAME }}/entregaya\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Tag versión** | \`${{ needs.setup.outputs.tag }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Imagen** | \`${DOCKER_IMAGE_USER}/entregaya\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Tag versión** | \`${DEPLOY_TAG}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Tag latest** | \`latest\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Autor** | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Commit** | \`${COMMIT_SHA}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Autor** | ${ACTOR} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Para ejecutar la imagen:" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
-          echo "docker pull ${{ secrets.DOCKERHUB_USERNAME }}/entregaya:latest" >> $GITHUB_STEP_SUMMARY
-          echo "docker run -p 8081:8081 ${{ secrets.DOCKERHUB_USERNAME }}/entregaya:latest" >> $GITHUB_STEP_SUMMARY
+          echo "docker pull ${DOCKER_IMAGE_USER}/entregaya:latest" >> $GITHUB_STEP_SUMMARY
+          echo "docker run -p 8081:8081 ${DOCKER_IMAGE_USER}/entregaya:latest" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
       - name: Notificar fallo en Telegram
@@ -146,13 +154,13 @@ jobs:
             -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d parse_mode="Markdown" \
             -d text="❌ *CD EntregaYa – Fallo al publicar imagen Docker*
-          
+
           *Repositorio:* ${{ github.repository }}
           *Job:* Construir y publicar imagen Docker
           *Rama:* \`${{ github.ref_name }}\`
           *Commit:* \`${{ github.sha }}\`
           *Autor:* ${{ github.actor }}
-          
+
           [Ver detalle del fallo](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
 
   # ── Job 4: Crear GitHub Release con el .jar ──────────────────────────────────
@@ -171,8 +179,9 @@ jobs:
           name: entregaya-jar
           path: target/
 
+      # FIX: SHA completo en lugar de @v2
       - name: Crear GitHub Release y subir .jar
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.2.2
         with:
           tag_name: ${{ needs.setup.outputs.tag }}
           name: "Release ${{ needs.setup.outputs.tag }}"
@@ -199,13 +208,11 @@ jobs:
             -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d parse_mode="Markdown" \
             -d text="❌ *CD EntregaYa – Fallo al crear GitHub Release*
-          
           *Repositorio:* ${{ github.repository }}
           *Job:* Crear GitHub Release
           *Rama:* \`${{ github.ref_name }}\`
           *Commit:* \`${{ github.sha }}\`
           *Autor:* ${{ github.actor }}
-          
           [Ver detalle del fallo](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
 
   # ── Job 5: Notificación de éxito en Telegram ────────────────────────────────
@@ -216,24 +223,26 @@ jobs:
     if: success()
 
     steps:
+      # FIX: DOCKERHUB_USERNAME como env var, no expandido en el string
       - name: Enviar notificación de éxito
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKER_IMAGE_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          DEPLOY_TAG: ${{ needs.setup.outputs.tag }}
         run: |
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d parse_mode="Markdown" \
             -d text="✅ *CD EntregaYa – Despliegue exitoso*
-          
+
           *Repositorio:* ${{ github.repository }}
-          *Versión:* \`${{ needs.setup.outputs.tag }}\`
+          *Versión:* \`${DEPLOY_TAG}\`
           *Rama:* \`${{ github.ref_name }}\`
           *Commit:* \`${{ github.sha }}\`
           *Autor:* ${{ github.actor }}
-          
+
           🐳 Imagen disponible en DockerHub:
-          \`docker pull ${DOCKERHUB_USERNAME}/entregaya:latest\`
-          
+          \`docker pull ${DOCKER_IMAGE_USER}/entregaya:latest\`
+
           [Ver pipeline](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
