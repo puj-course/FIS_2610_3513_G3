@@ -1,5 +1,8 @@
 # Startup: Scholar.ly 🧠🧠
 
+![CI - Pruebas](https://github.com/puj-course/FIS_2610_3513_G3/actions/workflows/CI-pruebas.yml/badge.svg?branch=develop)
+![Cobertura](https://img.shields.io/badge/cobertura-JaCoCo%2070%25-brightgreen)
+
 Bienvenidos a la Wiki de Scholar.ly y la aplicación EntregaYa
 
 ---
@@ -74,6 +77,38 @@ git clone https://github.com/puj-course/FIS_2610_3513_G3.git
 ```bash
 docker-compose up -d
 ```
+
+## Depuración con SonarQube
+
+Se realizó la ejecución de análisis de código utilizando SonarQube sobre el proyecto **EntregaYa**.  
+El análisis permitió identificar métricas relacionadas con seguridad, mantenibilidad, confiabilidad, cobertura de pruebas y duplicación de código, proporcionando una visión general del estado actual de calidad del software.
+
+Los resultados muestran un buen desempeño en mantenibilidad y duplicación de código, mientras que aún existen oportunidades de mejora en aspectos de seguridad, confiabilidad y cobertura de pruebas automatizadas.
+
+<img width="1542" height="736" alt="image" src="https://github.com/user-attachments/assets/845d2e75-4dbd-433b-b96f-12818860e63c" />
+
+### Resumen de métricas obtenidas
+
+| Métrica | Resultado | Estado / Observación |
+|---|---|---|
+| **Security** | 6 issues | Calificación **D**. Se espera mejorar la seguridad y reducir vulnerabilidades detectadas. |
+| **Reliability** | 2 issues | Calificación **C**. Se espera mejorar la confiabilidad del sistema y disminuir posibles errores en ejecución. |
+| **Maintainability** | 65 issues | Calificación **A**. Buen nivel de mantenibilidad del código. |
+| **Coverage** | 20.1% | Cobertura de pruebas insuficiente. |
+| **Duplications** | 0.0% | Excelente manejo de duplicación de código. |
+| **Accepted Issues** | 0 | No existen issues aceptados sin corregir. |
+| **Security Hotspots** | 8 | Existen puntos de revisión de seguridad pendientes. |
+
+### Observaciones generales
+
+- La mantenibilidad del proyecto presenta un resultado positivo con calificación **A**.
+- La duplicación de código es prácticamente inexistente, lo cual favorece la calidad y mantenibilidad.
+- Las métricas de seguridad y confiabilidad requieren mejoras para alcanzar estándares más altos de calidad.
+- La cobertura de pruebas automatizadas es baja actualmente.
+
+> **Objetivo esperado de cobertura:** alcanzar un **80% o más** de cobertura de pruebas.
+
+> **Objetivo esperado para Security y Reliability:** mejorar las calificaciones actuales hasta niveles **A o B**, reduciendo la cantidad de issues detectados.
 
 ## 🫂 Contacto 
 
