@@ -77,20 +77,29 @@ class DashboardFacadeTest {
     // Entrada: 2 trabajos, uno con progreso 100% (completado) y otro con 50%
     // Resultados Esperados: totalTrabajos == 2, completados == 1, trabajos activos == 1.
     @Test
-    @DisplayName("CP02: getDashboardData distingue correctamente trabajos activos y completados")
+    @DisplayName("CP02: GetDashboardData con trabajos activos y completados cuenta correctamente")
     void CP02_GetDashboardData_ConTrabajosActivosYCompletados_CuentaCorrectamente() {
         // Arrange
-        String username = "usuario";
-        Trabajo trabajoActivo = new Trabajo();
-        trabajoActivo.setNombreTrabajo("Activo");
+        String username = "testuser";
 
+        // Trabajo activo (progreso 50%)
+        Trabajo trabajoActivo = new Trabajo();
+        trabajoActivo.setId(1L);
+        trabajoActivo.setNombreTrabajo("Proyecto Activo");
+        trabajoActivo.setFechaEntrega(LocalDateTime.now().plusDays(10));
+
+        // Trabajo completado (progreso 100%)
         Trabajo trabajoCompleto = new Trabajo();
-        trabajoCompleto.setNombreTrabajo("Completo");
+        trabajoCompleto.setId(2L);
+        trabajoCompleto.setNombreTrabajo("Proyecto Completado");
+        trabajoCompleto.setFechaEntrega(LocalDateTime.now().minusDays(5));
 
         List<Trabajo> todos = List.of(trabajoActivo, trabajoCompleto);
         when(customTrabajoDetailsService.listarPorUsuario(username)).thenReturn(todos);
-        when(customTareaDetailsService.calcularProgreso(isNull())).thenReturn(50, 100);
-        when(customTareaDetailsService.tareas(isNull())).thenReturn(List.of());
+        when(customTareaDetailsService.calcularProgreso(1L)).thenReturn(50);
+        when(customTareaDetailsService.calcularProgreso(2L)).thenReturn(100);
+        when(customTareaDetailsService.tareas(1L)).thenReturn(List.of());
+        when(customTareaDetailsService.tareas(2L)).thenReturn(List.of());
         when(customInvitacionDetailsService.pendientesParaUsuario(username)).thenReturn(List.of());
         when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
 
@@ -99,7 +108,7 @@ class DashboardFacadeTest {
 
         // Assert
         assertEquals(2, dto.getTotalTrabajos());
-        assertEquals(1, dto.getCompletados());
+        assertEquals(1, dto.getCompletados());  // Solo 1 completado (progreso 100%)
         assertEquals(1, dto.getTrabajos().size());
     }
 

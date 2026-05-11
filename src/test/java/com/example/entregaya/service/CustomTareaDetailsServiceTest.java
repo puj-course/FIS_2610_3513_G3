@@ -16,6 +16,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -255,14 +256,18 @@ class CustomTareaDetailsServiceTest {
     @DisplayName("CP10: Normalizar etiquetas elimina duplicados y espacios")
     void CP10_validarEtiquetas_EliminaDuplicadosYEspacios() {
         // Arrange
-        List<String> etiquetas = List.of("backend", "  backend  ", "frontend", "", null);
+        List<String> etiquetas = Arrays.asList("backend", "  backend  ", "frontend", "", null);
 
         // Act
         List<String> normalizadas = customTareaDetailsService.validarEtiquetas(etiquetas);
 
         // Assert
+        assertNotNull(normalizadas);
         assertEquals(2, normalizadas.size());
         assertTrue(normalizadas.contains("backend"));
         assertTrue(normalizadas.contains("frontend"));
+        assertFalse(normalizadas.contains(null));
+        assertFalse(normalizadas.contains(""));
     }
+
 }
