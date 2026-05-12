@@ -1,6 +1,7 @@
 package com.example.entregaya.controller;
 
 import com.example.entregaya.decorator.SinFechaDecorator;
+import com.example.entregaya.dto.TareaCrearDTO;
 import com.example.entregaya.model.*;
 import com.example.entregaya.repository.TareaRepository;
 import com.example.entregaya.repository.UserRepository;
@@ -78,11 +79,13 @@ class TareaControllerExtraTest {
     @Test
     void guardar_IllegalArgumentException_RedireccionaAFormularioNuevo() {
         RedirectAttributes ra = new RedirectAttributesModelMap();
+        TareaCrearDTO dto = new TareaCrearDTO();
+        dto.setNombre("Tarea Test");
         Mockito.doThrow(new IllegalArgumentException("nombre duplicado"))
-                .when(customTareaDetailsService).crearTarea(Mockito.any(), Mockito.eq(1L),
-                        Mockito.any(), Mockito.any());
+                .when(customTareaDetailsService)
+                .crearTareaDesdeDTO(Mockito.any(), Mockito.eq(1L), Mockito.any(), Mockito.any());
 
-        String resultado = tareaController.guardar(1L, tareaBase, null, null, ra);
+        String resultado = tareaController.guardar(1L, dto, null, null, ra);
 
         Assertions.assertEquals("redirect:/trabajos/1/tareas/nuevo", resultado);
         Assertions.assertNotNull(ra.getFlashAttributes().get("error"));

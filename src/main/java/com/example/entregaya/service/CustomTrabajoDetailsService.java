@@ -1,5 +1,6 @@
 package com.example.entregaya.service;
 
+import com.example.entregaya.dto.TrabajoCrearDTO;
 import com.example.entregaya.dto.TrabajoEditarDTO;
 import com.example.entregaya.model.HistorialEvento;
 import com.example.entregaya.repository.HistorialEventoRepository;
@@ -348,5 +349,14 @@ public class CustomTrabajoDetailsService{
         trabajo.setFechaInicio(dto.getFechaInicio());
         trabajo.setFechaEntrega(dto.getFechaEntrega());
         trabajoRepository.save(trabajo);
+    }
+    public void crearTrabajoDesdeDTO(TrabajoCrearDTO dto, String username) {
+        Trabajo trabajo = new Trabajo();
+        trabajo.setNombreTrabajo(dto.getNombreTrabajo());
+        trabajo.setDescripcion(dto.getDescripcion());
+        trabajo.setFechaInicio(dto.getFechaInicio());
+        trabajo.setFechaEntrega(dto.getFechaEntrega());
+
+        crearTrabajo(trabajo, username);
     }
 }
