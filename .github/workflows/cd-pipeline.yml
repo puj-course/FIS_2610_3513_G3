@@ -5,8 +5,7 @@ on:
     branches: [main]
   workflow_dispatch:
 
-permissions:
-  contents: write
+
 
 jobs:
   # ── Job 1: Calcular versión una sola vez y compartirla ──────────────────────
@@ -168,6 +167,8 @@ jobs:
     name: Crear GitHub Release
     runs-on: ubuntu-22.04
     needs: [setup, build-and-test]
+    permissions:
+      contents: write
 
     steps:
       - name: Descargar código

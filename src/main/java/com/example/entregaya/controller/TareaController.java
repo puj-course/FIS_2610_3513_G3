@@ -1,6 +1,7 @@
 package com.example.entregaya.controller;
 
 import com.example.entregaya.dto.TareaConEtiquetaDTO;
+import com.example.entregaya.dto.TareaEditarDTO;
 import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
 import com.example.entregaya.model.User;
@@ -100,24 +101,36 @@ public class TareaController {
         if (!customTrabajoDetailsService.verificarPermiso(trabajoId, user.getUsername(), lideroeditorstrategy)) {
             return "redirect:/trabajos/" + trabajoId + "?error=noPermiso";
         }
+
         Tarea tarea = customTareaDetailsService.findById(tareaId);
         Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(trabajoId);
 
-        model.addAttribute("tarea", tarea);
+        // Mapear entidad a DTO para el formulario
+        TareaEditarDTO dto = new TareaEditarDTO();
+        dto.setNombre(tarea.getNombre());
+        dto.setDescripcion(tarea.getDescripcion());
+        dto.setFechaInicio(tarea.getFechaInicio());
+        dto.setFechaFinal(tarea.getFechaFinal());
+        dto.setDificultad(tarea.getDificultad());
+        dto.setCompletada(tarea.getIsCompletada());
+        dto.setEtiquetas(tarea.getEtiquetas());
+        dto.setResponsablesIds(tarea.getResponsables().stream().map(User::getId).toList());
+
+        model.addAttribute("tarea", dto);
+        model.addAttribute("tareaId", tareaId);
         model.addAttribute("trabajoId", trabajoId);
         model.addAttribute("dificultades", Tarea.Dificultad.values());
         model.addAttribute("colaboradores", trabajo.getColaboradores());
-        model.addAttribute("responsablesSeleccionados",
-                tarea.getResponsables().stream().map(User::getId).toList());
-        model.addAttribute("etiquetasExistentes",
-                String.join(",", tarea.getEtiquetas()));
+        model.addAttribute("responsablesSeleccionados", dto.getResponsablesIds());
+        model.addAttribute("etiquetasExistentes", String.join(",", tarea.getEtiquetas()));
         return "trabajos/tareas/EditarTarea";
     }
+
 
     @PostMapping("/{tareaId}/editar")
     public String guardarEdicion(@PathVariable Long trabajoId,
                                  @PathVariable Long tareaId,
-                                 @ModelAttribute Tarea tarea,
+                                 @ModelAttribute TareaEditarDTO tareaEditada,
                                  @RequestParam(value = "responsableIds", required = false) List<Long> responsableIds,
                                  @RequestParam(value = "etiquetas", required = false) List<String> etiquetas,
                                  @AuthenticationPrincipal UserDetails user,
@@ -125,8 +138,12 @@ public class TareaController {
         if (!customTrabajoDetailsService.verificarPermiso(trabajoId, user.getUsername(), lideroeditorstrategy)) {
             return "redirect:/trabajos/" + trabajoId + "?error=noPermiso";
         }
+
+        tareaEditada.setResponsablesIds(responsableIds != null ? responsableIds : List.of());
+        tareaEditada.setEtiquetas(etiquetas != null ? etiquetas : List.of());
+
         try {
-            customTareaDetailsService.editarTarea(tareaId, tarea, responsableIds, etiquetas);
+            customTareaDetailsService.editarTareaDesdeDTO(tareaId, tareaEditada);
         } catch (IllegalArgumentException | IllegalStateException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/trabajos/" + trabajoId + "/tareas/" + tareaId + "/editar";
