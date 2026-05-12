@@ -23,6 +23,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import com.example.entregaya.dto.TrabajoEditarDTO;
 
 /**
  * Tests adicionales para aumentar cobertura de TrabajoController.
@@ -141,7 +142,7 @@ class TrabajoControllerExtraTest {
     @Test
     void actualizarTrabajo_NoEsLider_RedireccionaConError() {
         RedirectAttributes ra = new RedirectAttributesModelMap();
-        Trabajo editado = new Trabajo();
+        TrabajoEditarDTO editado = new TrabajoEditarDTO();
         editado.setNombreTrabajo("Nuevo nombre");
         Mockito.when(customTrabajoDetailsService.esLider(1L, "colaborador")).thenReturn(false);
 
@@ -154,7 +155,7 @@ class TrabajoControllerExtraTest {
     @Test
     void actualizarTrabajo_NombreNulo_RedireccionaAEditar() {
         RedirectAttributes ra = new RedirectAttributesModelMap();
-        Trabajo editado = new Trabajo();
+        TrabajoEditarDTO editado = new TrabajoEditarDTO();
         editado.setNombreTrabajo(null);
         Mockito.when(customTrabajoDetailsService.esLider(1L, "lider")).thenReturn(true);
 
@@ -166,10 +167,10 @@ class TrabajoControllerExtraTest {
     @Test
     void actualizarTrabajo_Exitoso_RedireccionaADetalle() {
         RedirectAttributes ra = new RedirectAttributesModelMap();
-        Trabajo editado = new Trabajo();
+        TrabajoEditarDTO editado = new TrabajoEditarDTO();
         editado.setNombreTrabajo("Nombre Valido");
         Mockito.when(customTrabajoDetailsService.esLider(1L, "lider")).thenReturn(true);
-        Mockito.doNothing().when(customTrabajoDetailsService).actualizarTrabajo(1L, editado);
+        Mockito.doNothing().when(customTrabajoDetailsService).actualizarTrabajoDesdeDTO(1L, editado);
 
         String resultado = trabajoController.actualizarTrabajo(1L, editado, userLider, ra);
 
@@ -177,14 +178,13 @@ class TrabajoControllerExtraTest {
         Assertions.assertNotNull(ra.getFlashAttributes().get("success"));
     }
 
-    @Test
     void actualizarTrabajo_IllegalArgumentException_RedireccionaAEditar() {
         RedirectAttributes ra = new RedirectAttributesModelMap();
-        Trabajo editado = new Trabajo();
+        TrabajoEditarDTO editado = new TrabajoEditarDTO();
         editado.setNombreTrabajo("Nombre duplicado");
         Mockito.when(customTrabajoDetailsService.esLider(1L, "lider")).thenReturn(true);
         Mockito.doThrow(new IllegalArgumentException("nombre duplicado"))
-                .when(customTrabajoDetailsService).actualizarTrabajo(1L, editado);
+                .when(customTrabajoDetailsService).actualizarTrabajoDesdeDTO(1L, editado);
 
         String resultado = trabajoController.actualizarTrabajo(1L, editado, userLider, ra);
 
@@ -195,11 +195,11 @@ class TrabajoControllerExtraTest {
     @Test
     void actualizarTrabajo_GenericException_RedireccionaAEditar() {
         RedirectAttributes ra = new RedirectAttributesModelMap();
-        Trabajo editado = new Trabajo();
+        TrabajoEditarDTO editado = new TrabajoEditarDTO();
         editado.setNombreTrabajo("Nombre OK");
         Mockito.when(customTrabajoDetailsService.esLider(1L, "lider")).thenReturn(true);
         Mockito.doThrow(new RuntimeException("db error"))
-                .when(customTrabajoDetailsService).actualizarTrabajo(1L, editado);
+                .when(customTrabajoDetailsService).actualizarTrabajoDesdeDTO(1L, editado);
 
         String resultado = trabajoController.actualizarTrabajo(1L, editado, userLider, ra);
 

@@ -21,6 +21,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 import java.util.HashSet;
 import java.util.List;
+import com.example.entregaya.dto.TareaEditarDTO;
 
 /**
  * HU-49 - Task #495
@@ -286,12 +287,14 @@ class TareaControllerTest {
     void CP10_guardarEdicion_ConPermiso_RedireccionaAlTrabajo() {
         // Arrange
         RedirectAttributes ra = new RedirectAttributesModelMap();
+        TareaEditarDTO tareaEditadaDTO = new TareaEditarDTO();
+        tareaEditadaDTO.setNombre("Tarea Editada");
         Mockito.when(customTrabajoDetailsService.verificarPermiso(1L, "lider", lideroeditorstrategy))
                 .thenReturn(true);
 
         // Act
         String resultado = tareaController.guardarEdicion(
-                1L, 10L, tareaBase, null, null, userLider, ra);
+                1L, 10L, tareaEditadaDTO, null, null, userLider, ra);
 
         // Assert
         Assertions.assertEquals("redirect:/trabajos/1", resultado,
@@ -307,12 +310,14 @@ class TareaControllerTest {
     void CP11_guardarEdicion_SinPermiso_RedireccionaConError() {
         // Arrange
         RedirectAttributes ra = new RedirectAttributesModelMap();
+        TareaEditarDTO tareaEditadaDTO = new TareaEditarDTO();
+        tareaEditadaDTO.setNombre("Tarea Editada");
         Mockito.when(customTrabajoDetailsService.verificarPermiso(1L, "lider", lideroeditorstrategy))
                 .thenReturn(false);
 
         // Act
         String resultado = tareaController.guardarEdicion(
-                1L, 10L, tareaBase, null, null, userLider, ra);
+                1L, 10L, tareaEditadaDTO, null, null, userLider, ra);
 
         // Assert
         Assertions.assertEquals("redirect:/trabajos/1?error=noPermiso", resultado,

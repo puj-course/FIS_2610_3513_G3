@@ -22,6 +22,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import com.example.entregaya.dto.TareaEditarDTO;
 
 /**
  * Tests adicionales para cobertura de TareaController (ramas no cubiertas)
@@ -92,10 +93,12 @@ class TareaControllerExtraTest {
     @Test
     void guardarEdicion_SinPermiso_RedireccionaConError() {
         RedirectAttributes ra = new RedirectAttributesModelMap();
+        TareaEditarDTO dto = new TareaEditarDTO();
+        dto.setNombre("Tarea Test");
         Mockito.when(customTrabajoDetailsService.verificarPermiso(1L, "lider", lideroeditorstrategy))
                 .thenReturn(false);
 
-        String resultado = tareaController.guardarEdicion(1L, 1L, tareaBase, null, null, userDetails, ra);
+        String resultado = tareaController.guardarEdicion(1L, 1L, dto, null, null, userDetails, ra);
 
         Assertions.assertEquals("redirect:/trabajos/1?error=noPermiso", resultado);
     }
@@ -103,27 +106,29 @@ class TareaControllerExtraTest {
     @Test
     void guardarEdicion_IllegalArgumentException_RedireccionaAEditar() {
         RedirectAttributes ra = new RedirectAttributesModelMap();
+        TareaEditarDTO dto = new TareaEditarDTO();
+        dto.setNombre("Tarea Test");
         Mockito.when(customTrabajoDetailsService.verificarPermiso(1L, "lider", lideroeditorstrategy))
                 .thenReturn(true);
         Mockito.doThrow(new IllegalArgumentException("datos inválidos"))
-                .when(customTareaDetailsService).editarTarea(Mockito.eq(1L), Mockito.any(), Mockito.any(), Mockito.any());
+                .when(customTareaDetailsService).editarTareaDesdeDTO(Mockito.eq(1L), Mockito.any());
 
-        String resultado = tareaController.guardarEdicion(1L, 1L, tareaBase, null, null, userDetails, ra);
+        String resultado = tareaController.guardarEdicion(1L, 1L, dto, null, null, userDetails, ra);
 
         Assertions.assertEquals("redirect:/trabajos/1/tareas/1/editar", resultado);
         Assertions.assertNotNull(ra.getFlashAttributes().get("error"));
     }
 
+
     @Test
     void guardarEdicion_Exitoso_RedireccionaAlTrabajo() {
         RedirectAttributes ra = new RedirectAttributesModelMap();
+        TareaEditarDTO dto = new TareaEditarDTO();
+        dto.setNombre("Tarea Test");
         Mockito.when(customTrabajoDetailsService.verificarPermiso(1L, "lider", lideroeditorstrategy))
                 .thenReturn(true);
-        Mockito.when(customTareaDetailsService
-                .editarTarea(Mockito.eq(1L), Mockito.any(), Mockito.any(), Mockito.any()))
-                .thenReturn(tareaBase);
 
-        String resultado = tareaController.guardarEdicion(1L, 1L, tareaBase, null, null, userDetails, ra);
+        String resultado = tareaController.guardarEdicion(1L, 1L, dto, null, null, userDetails, ra);
 
         Assertions.assertEquals("redirect:/trabajos/1", resultado);
     }
