@@ -186,9 +186,7 @@ jobs:
             **Autor:** ${{ github.actor }}
 
             ### Imagen Docker
-```bash
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/entregaya:latest
-```
           files: target/*.jar
           token: ${{ secrets.GITHUB_TOKEN }}
 
