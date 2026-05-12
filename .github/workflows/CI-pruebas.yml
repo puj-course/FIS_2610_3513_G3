@@ -2,7 +2,7 @@ name: CI - Pruebas y Cobertura
 
 on:
   push:
-    branches: [ main, develop, Daniel ]
+    branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
 
