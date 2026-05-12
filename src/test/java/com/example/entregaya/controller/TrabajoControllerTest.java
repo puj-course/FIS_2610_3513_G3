@@ -21,6 +21,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import com.example.entregaya.dto.TrabajoEditarDTO;
 
 /**
  * HU-49 - Task #494
@@ -189,7 +190,7 @@ class TrabajoControllerTest {
     void CP06_actualizarTrabajo_SiEsLider_RedireccionaADetalle() {
         // Arrange
         RedirectAttributes ra = new RedirectAttributesModelMap();
-        Trabajo editado = new Trabajo();
+        TrabajoEditarDTO editado = new TrabajoEditarDTO();
         editado.setNombreTrabajo("Nombre Actualizado");
         Mockito.when(customTrabajoDetailsService.esLider(1L, "lider")).thenReturn(true);
 
@@ -295,7 +296,7 @@ class TrabajoControllerTest {
     void CP11_actualizarTrabajo_ConNombreVacio_RedireccionaAEditar() {
         // Arrange
         RedirectAttributes ra = new RedirectAttributesModelMap();
-        Trabajo editado = new Trabajo();
+        TrabajoEditarDTO editado = new TrabajoEditarDTO();
         editado.setNombreTrabajo("   ");
         Mockito.when(customTrabajoDetailsService.esLider(1L, "lider")).thenReturn(true);
 

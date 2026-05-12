@@ -1,6 +1,7 @@
 package com.example.entregaya.controller;
 
 import com.example.entregaya.dto.HistorialEventoDTO;
+import com.example.entregaya.dto.TrabajoEditarDTO;
 import com.example.entregaya.model.HistorialEvento;
 import java.util.stream.Collectors;
 import com.example.entregaya.dto.MiembroRolDTO;
@@ -90,34 +91,37 @@ public class TrabajoController {
      * @return Vista editar.html si es LIDER, redirect si no
      */
     @GetMapping("/{id}/editar")
-    public String mostrarFormularioEditar(@PathVariable long id, 
-                                          Model model, 
+    public String mostrarFormularioEditar(@PathVariable long id,
+                                          Model model,
                                           @AuthenticationPrincipal UserDetails user,
                                           RedirectAttributes redirectAttributes) {
         try {
-            // Verificar que el trabajo existe
             Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
-            
-            // VALIDACIÓN CRÍTICA: Solo LIDER puede editar
+
             if (!customTrabajoDetailsService.esLider(id, user.getUsername())) {
-                // Determinar rol del usuario para mensaje específico
                 boolean esColaborador = trabajo.getColaboradores().stream()
                         .anyMatch(col -> col.getUser().getUsername().equals(user.getUsername()));
-                
+
                 if (esColaborador) {
-                    redirectAttributes.addFlashAttribute("error", 
-                        "No tienes permisos para editar este trabajo. Solo el líder puede hacerlo.");
+                    redirectAttributes.addFlashAttribute("error",
+                            "No tienes permisos para editar este trabajo. Solo el líder puede hacerlo.");
                 } else {
-                    redirectAttributes.addFlashAttribute("error", 
-                        "No perteneces a este trabajo.");
+                    redirectAttributes.addFlashAttribute("error", "No perteneces a este trabajo.");
                 }
                 return "redirect:/trabajos/" + id;
             }
-            
-            // Usuario es LIDER - permitir acceso al formulario
-            model.addAttribute("trabajo", trabajo);
+
+            // Mapear entidad a DTO para el formulario
+            TrabajoEditarDTO dto = new TrabajoEditarDTO();
+            dto.setNombreTrabajo(trabajo.getNombreTrabajo());
+            dto.setDescripcion(trabajo.getDescripcion());
+            dto.setFechaInicio(trabajo.getFechaInicio());
+            dto.setFechaEntrega(trabajo.getFechaEntrega());
+
+            model.addAttribute("trabajo", dto);
+            model.addAttribute("trabajoId", id);
             return "trabajos/editar";
-            
+
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", "El trabajo no existe o no tienes acceso a él.");
             return "redirect:/trabajos";
@@ -140,34 +144,29 @@ public class TrabajoController {
      */
     @PostMapping("/{id}/editar")
     public String actualizarTrabajo(@PathVariable long id,
-                                   @ModelAttribute Trabajo trabajoEditado,
-                                   @AuthenticationPrincipal UserDetails user,
-                                   RedirectAttributes redirectAttributes) {
+                                    @ModelAttribute TrabajoEditarDTO trabajoEditado,
+                                    @AuthenticationPrincipal UserDetails user,
+                                    RedirectAttributes redirectAttributes) {
         try {
-            // VALIDACIÓN CRÍTICA: Solo LIDER puede editar
             if (!customTrabajoDetailsService.esLider(id, user.getUsername())) {
-                redirectAttributes.addFlashAttribute("error", 
-                    "No tienes permisos para editar este trabajo. Solo el líder puede hacerlo.");
+                redirectAttributes.addFlashAttribute("error",
+                        "No tienes permisos para editar este trabajo. Solo el líder puede hacerlo.");
                 return "redirect:/trabajos/" + id;
             }
-            
-            // Validar que el nombre no esté vacío
+
             if (trabajoEditado.getNombreTrabajo() == null || trabajoEditado.getNombreTrabajo().trim().isEmpty()) {
                 redirectAttributes.addFlashAttribute("error", "El nombre del trabajo no puede estar vacío.");
                 return "redirect:/trabajos/" + id + "/editar";
             }
-            
-            // Actualizar el trabajo (incluye validación de nombre único)
-            customTrabajoDetailsService.actualizarTrabajo(id, trabajoEditado);
-            
+
+            customTrabajoDetailsService.actualizarTrabajoDesdeDTO(id, trabajoEditado);
+
             redirectAttributes.addFlashAttribute("success", "Trabajo actualizado correctamente.");
             return "redirect:/trabajos/" + id;
-            
+
         } catch (IllegalArgumentException e) {
-            // Error de validación (nombre duplicado, etc.)
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/trabajos/" + id + "/editar";
-            
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error al actualizar el trabajo.");
             return "redirect:/trabajos/" + id + "/editar";

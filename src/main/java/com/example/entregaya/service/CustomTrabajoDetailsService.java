@@ -1,5 +1,6 @@
 package com.example.entregaya.service;
 
+import com.example.entregaya.dto.TrabajoEditarDTO;
 import com.example.entregaya.model.HistorialEvento;
 import com.example.entregaya.repository.HistorialEventoRepository;
 import com.example.entregaya.dto.MiembroRolDTO;
@@ -330,5 +331,22 @@ public class CustomTrabajoDetailsService{
             throw new IllegalArgumentException("El trabajo no existe");
         }
         return historialEventoRepository.findByTrabajoIdOrderByFechaDesc(trabajoId);
+    }
+    public void actualizarTrabajoDesdeDTO(long id, TrabajoEditarDTO dto) {
+        Trabajo trabajo = trabajoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Trabajo no encontrado"));
+
+        // Validar nombre único si cambió
+        if (!trabajo.getNombreTrabajo().equals(dto.getNombreTrabajo())) {
+            if (trabajoRepository.existsByNombreTrabajo(dto.getNombreTrabajo())) {
+                throw new IllegalArgumentException("Ya existe un trabajo con ese nombre.");
+            }
+        }
+
+        trabajo.setNombreTrabajo(dto.getNombreTrabajo());
+        trabajo.setDescripcion(dto.getDescripcion());
+        trabajo.setFechaInicio(dto.getFechaInicio());
+        trabajo.setFechaEntrega(dto.getFechaEntrega());
+        trabajoRepository.save(trabajo);
     }
 }
