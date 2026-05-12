@@ -1,6 +1,7 @@
 package com.example.entregaya.controller;
 
 import com.example.entregaya.dto.TareaConEtiquetaDTO;
+import com.example.entregaya.dto.TareaCrearDTO;
 import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
 import com.example.entregaya.repository.TareaRepository;
@@ -216,15 +217,13 @@ class TareaControllerTest {
     // Resultado esperado: "redirect:/trabajos/1"
     @Test
     void CP07_guardar_ConTareaValida_RedireccionaAlTrabajo() {
-        // Arrange
         RedirectAttributes ra = new RedirectAttributesModelMap();
+        TareaCrearDTO dto = new TareaCrearDTO();
+        dto.setNombre("Tarea Test");
 
-        // Act
-        String resultado = tareaController.guardar(1L, tareaBase, null, null, ra);
+        String resultado = tareaController.guardar(1L, dto, null, null, ra);
 
-        // Assert
-        Assertions.assertEquals("redirect:/trabajos/1", resultado,
-                "guardar() exitoso debe redirigir a '/trabajos/1'");
+        Assertions.assertEquals("redirect:/trabajos/1", resultado);
     }
 
 
@@ -234,20 +233,17 @@ class TareaControllerTest {
     // Resultado esperado: "redirect:/trabajos/1/tareas/nuevo"
     @Test
     void CP08_guardar_ConExcepcion_RedireccionaAFormulario() {
-        // Arrange
         RedirectAttributes ra = new RedirectAttributesModelMap();
+        TareaCrearDTO dto = new TareaCrearDTO();
+        dto.setNombre("Tarea Test");
         Mockito.doThrow(new IllegalArgumentException("Nombre duplicado"))
                 .when(customTareaDetailsService)
-                .crearTarea(Mockito.any(), Mockito.eq(1L), Mockito.any(), Mockito.any());
+                .crearTareaDesdeDTO(Mockito.any(), Mockito.eq(1L), Mockito.any(), Mockito.any());
 
-        // Act
-        String resultado = tareaController.guardar(1L, tareaBase, null, null, ra);
+        String resultado = tareaController.guardar(1L, dto, null, null, ra);
 
-        // Assert
-        Assertions.assertEquals("redirect:/trabajos/1/tareas/nuevo", resultado,
-                "guardar() con error debe redirigir al formulario de creación");
-        Assertions.assertNotNull(ra.getFlashAttributes().get("error"),
-                "Debe existir el atributo flash 'error'");
+        Assertions.assertEquals("redirect:/trabajos/1/tareas/nuevo", resultado);
+        Assertions.assertNotNull(ra.getFlashAttributes().get("error"));
     }
 
 

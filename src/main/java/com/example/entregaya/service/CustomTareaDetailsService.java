@@ -4,6 +4,7 @@ import com.example.entregaya.builder.TareaBuilder;
 import com.example.entregaya.decorator.TareaDecoratorFactory;
 import com.example.entregaya.decorator.TareaInfo;
 import com.example.entregaya.dto.TareaConEtiquetaDTO;
+import com.example.entregaya.dto.TareaCrearDTO;
 import com.example.entregaya.dto.TareaEditarDTO;
 import com.example.entregaya.dto.TareaEventoDTO;
 import com.example.entregaya.model.Tarea;
@@ -283,5 +284,16 @@ public class CustomTareaDetailsService {
         }
 
         tareaRepository.save(tarea);
+    }
+    public void crearTareaDesdeDTO(TareaCrearDTO dto, Long trabajoId,
+                                   List<Long> responsableIds, List<String> etiquetas) {
+        Tarea tarea = new Tarea();
+        tarea.setNombre(dto.getNombre());
+        tarea.setDescripcion(dto.getDescripcion());
+        tarea.setFechaInicio(dto.getFechaInicio());
+        tarea.setFechaFinal(dto.getFechaFinal());
+        tarea.setDificultad(dto.getDificultad() != null ? dto.getDificultad() : Tarea.Dificultad.MEDIA);
+
+        crearTarea(tarea, trabajoId, responsableIds, etiquetas);
     }
 }

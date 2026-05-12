@@ -1,6 +1,7 @@
 package com.example.entregaya.controller;
 
 import com.example.entregaya.dto.TareaConEtiquetaDTO;
+import com.example.entregaya.dto.TareaCrearDTO;
 import com.example.entregaya.dto.TareaEditarDTO;
 import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
@@ -58,12 +59,12 @@ public class TareaController {
 
     @PostMapping("/nueva")
     public String guardar(@PathVariable Long trabajoId,
-                          @ModelAttribute Tarea tarea,
+                          @ModelAttribute TareaCrearDTO tareaDTO,
                           @RequestParam(value = "responsableIds", required = false) List<Long> responsableIds,
                           @RequestParam(value = "etiquetas", required = false) List<String> etiquetas,
                           RedirectAttributes redirectAttributes) {
         try {
-            customTareaDetailsService.crearTarea(tarea, trabajoId, responsableIds, etiquetas);
+            customTareaDetailsService.crearTareaDesdeDTO(tareaDTO, trabajoId, responsableIds, etiquetas);
         } catch (IllegalArgumentException | IllegalStateException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/trabajos/" + trabajoId + "/tareas/nuevo";
