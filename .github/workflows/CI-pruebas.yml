@@ -221,23 +221,26 @@ jobs:
 
       - name: Consultar Quality Gate y bloquear si falla
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          PROJECT_KEY="puj-course_FIS_2610_3513_G3"
-
-          QG_STATUS=$(curl -s -u "$SONAR_TOKEN:" \
-            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=$PROJECT_KEY" \
-            | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
-
-          echo "📊 Quality Gate Status: $QG_STATUS"
-
-          if [ "$QG_STATUS" != "OK" ]; then
-            echo "❌ Quality Gate FAILED - Bloqueando pipeline"
-            echo "🔗 Ver detalles en: https://sonarcloud.io/dashboard?id=$PROJECT_KEY"
-            exit 1
-          else
-            echo "✅ Quality Gate PASSED"
-          fi
+            PROJECT_KEY="puj-course_FIS_2610_3513_G3"
+            
+            RESPONSE=$(curl -s -u "$SONAR_TOKEN:" \
+              "https://sonarcloud.io/api/qualitygates/project_status?projectKey=$PROJECT_KEY")
+            
+            echo "Respuesta: $RESPONSE"
+            
+            QG_STATUS=$(echo "$RESPONSE" | jq -r '.projectStatus.status')
+            
+            echo "📊 Quality Gate Status: $QG_STATUS"
+            
+            if [ "$QG_STATUS" != "OK" ]; then
+              echo "❌ Quality Gate FAILED - Bloqueando pipeline"
+              echo "🔗 Ver detalles en: https://sonarcloud.io/dashboard?id=$PROJECT_KEY"
+              exit 1
+            else
+              echo "✅ Quality Gate PASSED"
+            fi
 
       - name: Subir badge de SonarQube
         if: always()
