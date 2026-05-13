@@ -13,6 +13,7 @@ import com.example.entregaya.service.CustomTrabajoDetailsService;
 import com.example.entregaya.service.CustomTareaDetailsService;
 import com.example.entregaya.service.PdfExportService;
 import com.example.entregaya.strategy.Lideroeditorstrategy;
+import org.hibernate.Hibernate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -185,8 +186,8 @@ public class TrabajoController {
         // HU-29 (#317): Obtener tareas con etiquetas de urgencia para display en la vista
         List<TareaConEtiquetaDTO> tareasConEtiquetas = customTareaDetailsService.tareasConEtiquetas(id);
 
-        trabajo.getColaboradores().size();
-        tareas.forEach(t -> t.getResponsables().size());
+        Hibernate.initialize(trabajo.getColaboradores());
+        tareas.forEach(t -> Hibernate.initialize(t.getResponsables()));
 
         // Calcular estadísticas
         long completadas = tareas.stream().filter(Tarea::getIsCompletada).count();
