@@ -1,5 +1,6 @@
 package com.example.entregaya.controller;
 
+import com.example.entregaya.dto.TrabajoCrearDTO;
 import com.example.entregaya.model.ColaboradorTrabajo;
 import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
@@ -123,12 +124,12 @@ class TrabajoControllerTest {
     // Resultado esperado: "redirect:/trabajos"
     @Test
     void CP03_guardar_Exitoso_RedireccionaATrabajos() {
-        // Act
-        String resultado = trabajoController.guardar(trabajoBase, userLider);
+        TrabajoCrearDTO dto = new TrabajoCrearDTO();
+        dto.setNombreTrabajo("Trabajo Test");
 
-        // Assert
-        Assertions.assertEquals("redirect:/trabajos", resultado,
-                "guardar() debe redirigir a '/trabajos'");
+        String resultado = trabajoController.guardar(dto, userLider);
+
+        Assertions.assertEquals("redirect:/trabajos", resultado);
     }
 
     // CP04 – GET /{id}/editar con LIDER: retorna vista "trabajos/editar"

@@ -1,11 +1,9 @@
 package com.example.entregaya.controller;
 
-import com.example.entregaya.dto.HistorialEventoDTO;
-import com.example.entregaya.dto.TrabajoEditarDTO;
+import com.example.entregaya.dto.*;
 import com.example.entregaya.model.HistorialEvento;
 import java.util.stream.Collectors;
-import com.example.entregaya.dto.MiembroRolDTO;
-import com.example.entregaya.dto.TareaConEtiquetaDTO;
+
 import com.example.entregaya.model.ColaboradorTrabajo;
 import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
@@ -74,8 +72,9 @@ public class TrabajoController {
         return "trabajos/formulario";
     }
     @PostMapping("/nuevo")
-    public String guardar(@ModelAttribute Trabajo trabajo, @AuthenticationPrincipal UserDetails user) {
-        customTrabajoDetailsService.crearTrabajo(trabajo,user.getUsername());
+    public String guardar(@ModelAttribute TrabajoCrearDTO trabajoDTO,
+                          @AuthenticationPrincipal UserDetails user) {
+        customTrabajoDetailsService.crearTrabajoDesdeDTO(trabajoDTO, user.getUsername());
         return "redirect:/trabajos";
     }
 
