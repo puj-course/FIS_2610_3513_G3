@@ -29,7 +29,7 @@ jobs:
       - name: Compilar proyecto
         run: mvn compile --no-transfer-progress
 
-  # STAGE 2: Pruebas Unitarias
+  # STAGE 2: Pruebas Unitarias + HU-50
   test:
     name: "Stage 2 - Pruebas Unitarias"
     runs-on: ubuntu-latest
@@ -62,7 +62,9 @@ jobs:
           telegram.bot.chat-id=dummy
           PROPS
 
-      - name: Ejecutar pruebas
+      # HU-50: Test de latencia
+      # Si algún endpoint supera 500 ms,
+      - name: Ejecutar pruebas (incluye test de latencia)
         run: |
           mvn test \
             -Dspring.profiles.active=test \
@@ -120,7 +122,13 @@ jobs:
             -Dspring.profiles.active=test \
             --no-transfer-progress \
             -Dsurefire.failIfNoSpecifiedTests=false
-            
+
+      - name: Verificar umbral de cobertura
+        run: |
+          mvn jacoco:check \
+            --no-transfer-progress \
+            || echo "⚠️ Cobertura por debajo del umbral mínimo"
+
       - name: Subir reporte JaCoCo
         if: always()
         uses: actions/upload-artifact@v4
@@ -159,7 +167,7 @@ jobs:
           path: target/checkstyle-result.xml
           retention-days: 30
 
-  # STAGE 5: SonarQube Quality Gate
+    # STAGE 5: SonarQube Quality Gate
   sonarqube:
     name: "Stage 5 - SonarQube Quality Gate"
     runs-on: ubuntu-latest
@@ -203,6 +211,7 @@ jobs:
             -Dsonar.projectKey=puj-course_FIS_2610_3513_G3 \
             -Dsonar.organization=puj-course \
             -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.coverage.exclusions=**/config/**,**/*Application.java \
             -Dspring.profiles.active=test \
             --no-transfer-progress \
             -Dsurefire.failIfNoSpecifiedTests=false

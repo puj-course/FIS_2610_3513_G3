@@ -1,0 +1,303 @@
+name: SonarCloud - Exportar Issues
+
+on:
+  # Ejecutar manualmente desde GitHub
+  workflow_dispatch:
+
+  # O ejecutar cada semana (lunes 10:00 AM UTC)
+  schedule:
+    - cron: '0 10 * * 1'
+
+jobs:
+  export-issues:
+    name: Exportar y clasificar issues de SonarCloud
+    runs-on: ubuntu-latest
+
+    steps:
+      # Paso 1: Descargar el código del repositorio
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Paso 2: Instalar PowerShell (en Linux)
+      - name: Install PowerShell
+        run: |
+          apt-get update
+          apt-get install -y powershell
+
+      # Paso 3: Crear directorio para reportes
+      - name: Create reports directory
+        run: |
+          mkdir -p docs/reporte
+          ls -la docs/reporte
+
+      # Paso 4: Exportar issues desde SonarCloud
+      - name: Export issues from SonarCloud
+        shell: pwsh
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          # Variables
+          $ORGANIZATION = "puj-course"
+          $PROJECT_KEY = "puj-course_entregaya"
+          $SONAR_URL = "https://sonarcloud.io"
+          $REPORTS_PATH = "docs/reporte"
+          $OUTPUT_FILE = "$REPORTS_PATH/sonarcloud-issues-raw.json"
+          
+          # Headers
+          $headers = @{
+              "Authorization" = "Bearer $env:SONAR_TOKEN"
+              "Content-Type" = "application/json"
+          }
+          
+          Write-Host "============================================================" -ForegroundColor Cyan
+          Write-Host "EXPORTAR ISSUES DE SONARCLOUD" -ForegroundColor Cyan
+          Write-Host "============================================================" -ForegroundColor Cyan
+          Write-Host ""
+          Write-Host "Organizacion: $ORGANIZATION" -ForegroundColor Green
+          Write-Host "Proyecto: $PROJECT_KEY" -ForegroundColor Green
+          Write-Host "Archivo: $OUTPUT_FILE" -ForegroundColor Green
+          Write-Host ""
+          
+          # API
+          $api_url = "$SONAR_URL/api/issues/search?componentKeys=$PROJECT_KEY&maxResults=500"
+          
+          Write-Host "Conectando a: $api_url" -ForegroundColor Yellow
+          Write-Host ""
+          
+          try {
+              Write-Host "Descargando issues..." -ForegroundColor Yellow
+              $response = Invoke-RestMethod -Uri $api_url -Headers $headers -Method Get
+          
+              # Guardar JSON
+              $response | ConvertTo-Json -Depth 10 | Out-File -FilePath $OUTPUT_FILE -Encoding UTF8
+          
+              Write-Host "Exito: Archivo guardado" -ForegroundColor Green
+              Write-Host "Total: $($response.issues.Count) issues" -ForegroundColor Cyan
+              Write-Host ""
+              Write-Host "Resumen por severidad:" -ForegroundColor Cyan
+          
+              $severities = @("BLOCKER", "CRITICAL", "MAJOR", "MINOR", "INFO")
+              $total = $response.issues.Count
+          
+              foreach ($severity in $severities) {
+                  $count = ($response.issues | Where-Object { $_.severity -eq $severity } | Measure-Object).Count
+                  $percentage = if ($total -gt 0) { [math]::Round(($count / $total) * 100, 2) } else { 0 }
+                  Write-Host "$severity .... : $count ($percentage%)" -ForegroundColor White
+              }
+          
+          } catch {
+              Write-Host "ERROR: Fallo la conexion" -ForegroundColor Red
+              Write-Host "Mensaje: $_" -ForegroundColor Red
+              exit 1
+          }
+
+      # Paso 5: Procesar y clasificar
+      - name: Process and classify issues
+        shell: pwsh
+        run: |
+          $REPORTS_PATH = "docs/reporte"
+          $INPUT_FILE = "$REPORTS_PATH/sonarcloud-issues-raw.json"
+          $OUTPUT_FILE = "$REPORTS_PATH/sonarcloud-issues-classified.json"
+          
+          Write-Host ""
+          Write-Host "============================================================" -ForegroundColor Cyan
+          Write-Host "PROCESAR ISSUES" -ForegroundColor Cyan
+          Write-Host "============================================================" -ForegroundColor Cyan
+          Write-Host ""
+          
+          # Leer JSON
+          $issues = Get-Content $INPUT_FILE | ConvertFrom-Json
+          
+          # Clasificar
+          $classified = @{
+              BLOCKER = @()
+              CRITICAL = @()
+              MAJOR = @()
+              MINOR = @()
+              INFO = @()
+          }
+          
+          foreach ($issue in $issues.issues) {
+              $classified[$issue.severity] += $issue
+          }
+          
+          # Crear reporte
+          $report = @{
+              timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+              total_issues = $issues.issues.Count
+              summary = @{
+                  BLOCKER = $classified["BLOCKER"].Count
+                  CRITICAL = $classified["CRITICAL"].Count
+                  MAJOR = $classified["MAJOR"].Count
+                  MINOR = $classified["MINOR"].Count
+                  INFO = $classified["INFO"].Count
+              }
+              issues_by_severity = $classified
+          }
+          
+          # Guardar
+          $report | ConvertTo-Json -Depth 10 | Out-File -FilePath $OUTPUT_FILE -Encoding UTF8
+          
+          Write-Host "Procesamiento completado" -ForegroundColor Green
+          Write-Host ""
+          Write-Host "Resultado:" -ForegroundColor Cyan
+          Write-Host "BLOCKER ... : $($report.summary.BLOCKER)" -ForegroundColor Red
+          Write-Host "CRITICAL .. : $($report.summary.CRITICAL)" -ForegroundColor Red
+          Write-Host "MAJOR ..... : $($report.summary.MAJOR)" -ForegroundColor Yellow
+          Write-Host "MINOR ..... : $($report.summary.MINOR)" -ForegroundColor Cyan
+          Write-Host "INFO ...... : $($report.summary.INFO)" -ForegroundColor Blue
+          Write-Host "TOTAL: $($report.total_issues)" -ForegroundColor Green
+
+      # Paso 6: Generar reporte Markdown
+      - name: Generate Markdown report
+        shell: pwsh
+        run: |
+          $REPORTS_PATH = "docs/reporte"
+          $INPUT_FILE = "$REPORTS_PATH/sonarcloud-issues-classified.json"
+          $OUTPUT_FILE = "$REPORTS_PATH/issues-report.md"
+          
+          Write-Host ""
+          Write-Host "============================================================" -ForegroundColor Cyan
+          Write-Host "GENERAR REPORTE MARKDOWN" -ForegroundColor Cyan
+          Write-Host "============================================================" -ForegroundColor Cyan
+          Write-Host ""
+          
+          $data = Get-Content $INPUT_FILE | ConvertFrom-Json
+          
+          function Get-Percentage {
+              param([int]$value, [int]$total)
+              if ($total -eq 0) { return "0" }
+              return [math]::Round(($value / $total) * 100, 2)
+          }
+          
+          $percent_blocker = Get-Percentage $data.summary.BLOCKER $data.total_issues
+          $percent_critical = Get-Percentage $data.summary.CRITICAL $data.total_issues
+          $percent_major = Get-Percentage $data.summary.MAJOR $data.total_issues
+          $percent_minor = Get-Percentage $data.summary.MINOR $data.total_issues
+          $percent_info = Get-Percentage $data.summary.INFO $data.total_issues
+          
+          $markdown = @"
+          # Reporte de Issues - SonarCloud
+          
+          **Proyecto:** entregaya
+          **Organizacion:** puj-course
+          **Fecha:** $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
+          **Total de Issues:** $($data.total_issues)
+          
+          ---
+          
+          ## RESUMEN EJECUTIVO
+          
+          | Severidad | Cantidad | Porcentaje | Prioridad |
+          |-----------|----------|-----------|-----------|
+          | BLOCKER | $($data.summary.BLOCKER) | $percent_blocker% | URGENTE |
+          | CRITICAL | $($data.summary.CRITICAL) | $percent_critical% | URGENTE |
+          | MAJOR | $($data.summary.MAJOR) | $percent_major% | PROXIMO SPRINT |
+          | MINOR | $($data.summary.MINOR) | $percent_minor% | BACKLOG |
+          | INFO | $($data.summary.INFO) | $percent_info% | DOCUMENTAR |
+          
+          ---
+          
+          ## ISSUES BLOCKER (RESOLVER INMEDIATAMENTE)
+          
+          Total: $($data.summary.BLOCKER)
+          
+          "@
+          
+          if ($data.summary.BLOCKER -gt 0) {
+              $markdown += "`n| # | Clave | Tipo | Linea | Componente | Descripcion |`n"
+              $markdown += "|---|-------|------|-------|-----------|-------------|`n"
+          
+              $counter = 1
+              foreach ($issue in $data.issues_by_severity.BLOCKER) {
+                  $desc = if ($issue.message.Length -gt 50) { 
+                      $issue.message.Substring(0, 50) + "..." 
+                  } else { 
+                      $issue.message 
+                  }
+                  $markdown += "| $counter | $($issue.key) | $($issue.type) | $($issue.line) | $($issue.component) | $desc |`n"
+                  $counter++
+              }
+          } else {
+              $markdown += "`nNo hay issues BLOCKER. Excelente!`n"
+          }
+          
+          $markdown += @"
+          
+          ---
+          
+          ## ISSUES CRITICAL (RESOLVER ANTES DEL RELEASE)
+          
+          Total: $($data.summary.CRITICAL)
+          
+          "@
+          
+          if ($data.summary.CRITICAL -gt 0) {
+              $markdown += "`n| # | Clave | Tipo | Linea | Componente | Descripcion |`n"
+              $markdown += "|---|-------|------|-------|-----------|-------------|`n"
+          
+              $counter = 1
+              foreach ($issue in $data.issues_by_severity.CRITICAL) {
+                  $desc = if ($issue.message.Length -gt 50) { 
+                      $issue.message.Substring(0, 50) + "..." 
+                  } else { 
+                      $issue.message 
+                  }
+                  $markdown += "| $counter | $($issue.key) | $($issue.type) | $($issue.line) | $($issue.component) | $desc |`n"
+                  $counter++
+              }
+          } else {
+              $markdown += "`nNo hay issues CRITICAL. Muy bien!`n"
+          }
+          
+          $markdown += @"
+          
+          ---
+          
+          ## PLAN DE ACCION
+          
+          ### SEMANA 1: BLOCKER
+          - Resolver BLOCKER inmediatamente
+          - Asignar al equipo
+          - Deadline agresivo
+          
+          ### SEMANA 2-3: CRITICAL
+          - Integrar en sprint actual
+          - Priorizar sobre features
+          - Comenzar implementacion
+          
+          ### SPRINT ACTUAL: MAJOR
+          - Planificar resolucion
+          - Estimar esfuerzo
+          - Asignar responsables
+          
+          ### FUTURO: MINOR E INFO
+          - Documentar para futuros sprints
+          - Evaluar impacto
+          - Agregar a backlog
+          
+          ---
+          
+          ## ENLACE A SONARCLOUD
+          
+          https://sonarcloud.io/project/overview?id=puj-course_entregaya
+          
+          ---
+          
+          Generado automaticamente: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
+          "@
+          
+          $markdown | Out-File -FilePath $OUTPUT_FILE -Encoding UTF8
+          
+          Write-Host "Reporte generado: $OUTPUT_FILE" -ForegroundColor Green
+
+      # Paso 7: Commit y Push (si hay cambios)
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add docs/reporte/
+          git commit -m "docs: Update SonarCloud issues report" || true
+          git push
