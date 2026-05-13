@@ -4,6 +4,8 @@ import com.example.entregaya.builder.TareaBuilder;
 import com.example.entregaya.decorator.TareaDecoratorFactory;
 import com.example.entregaya.decorator.TareaInfo;
 import com.example.entregaya.dto.TareaConEtiquetaDTO;
+import com.example.entregaya.dto.TareaCrearDTO;
+import com.example.entregaya.dto.TareaEditarDTO;
 import com.example.entregaya.dto.TareaEventoDTO;
 import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
@@ -261,5 +263,37 @@ public class CustomTareaDetailsService {
         Trabajo trabajo = trabajoRepository.findById(trabajoId)
                 .orElseThrow(() -> new RuntimeException("Trabajo no encontrado"));
         return tareaRepository.save(original.clonar(trabajo));
+    }
+    public void editarTareaDesdeDTO(long id, TareaEditarDTO dto) {
+        Tarea tarea = tareaRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Tarea no encontrada"));
+
+        tarea.setNombre(dto.getNombre());
+        tarea.setDescripcion(dto.getDescripcion());
+        tarea.setFechaInicio(dto.getFechaInicio());
+        tarea.setFechaFinal(dto.getFechaFinal());
+        tarea.setDificultad(dto.getDificultad());
+        tarea.setCompletada(dto.isCompletada());
+        tarea.setEtiquetas(dto.getEtiquetas() != null ? dto.getEtiquetas() : List.of());
+
+        if (dto.getResponsablesIds() != null && !dto.getResponsablesIds().isEmpty()) {
+            Set<User> responsables = new HashSet<>(userRepository.findAllById(dto.getResponsablesIds()));
+            tarea.setResponsables(responsables);
+        } else {
+            tarea.setResponsables(new HashSet<>());
+        }
+
+        tareaRepository.save(tarea);
+    }
+    public void crearTareaDesdeDTO(TareaCrearDTO dto, Long trabajoId,
+                                   List<Long> responsableIds, List<String> etiquetas) {
+        Tarea tarea = new Tarea();
+        tarea.setNombre(dto.getNombre());
+        tarea.setDescripcion(dto.getDescripcion());
+        tarea.setFechaInicio(dto.getFechaInicio());
+        tarea.setFechaFinal(dto.getFechaFinal());
+        tarea.setDificultad(dto.getDificultad() != null ? dto.getDificultad() : Tarea.Dificultad.MEDIA);
+
+        crearTarea(tarea, trabajoId, responsableIds, etiquetas);
     }
 }
