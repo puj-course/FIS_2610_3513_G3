@@ -7,10 +7,8 @@ on:
     branches: [ main, develop ]
 
 jobs:
-
-  
   # STAGE 1: Compilación
-    build:
+  build:
     name: "Stage 1 - Compilación"
     runs-on: ubuntu-latest
     steps:
@@ -26,9 +24,8 @@ jobs:
       - name: Compilar proyecto
         run: mvn compile --no-transfer-progress
 
-  
   # STAGE 2: Pruebas Unitarias
-   test:
+  test:
     name: "Stage 2 - Pruebas Unitarias"
     runs-on: ubuntu-latest
     needs: build
@@ -77,9 +74,8 @@ jobs:
           path: target/surefire-reports/
           retention-days: 30
 
- 
   # STAGE 3: Cobertura de Código (JaCoCo)
-    coverage:
+  coverage:
     name: "Stage 3 - Cobertura (JaCoCo)"
     runs-on: ubuntu-latest
     needs: test
@@ -116,11 +112,8 @@ jobs:
             --no-transfer-progress \
             -Dsurefire.failIfNoSpecifiedTests=false
 
-      - name: Verificar umbral de cobertura
-        run: |
-          mvn jacoco:check \
-            --no-transfer-progress \
-            || echo "⚠️ Cobertura por debajo del umbral mínimo"
+      - name: Verificar umbral de cobertura (FALLA SI <70%)
+        run: mvn jacoco:check --no-transfer-progress
 
       - name: Subir reporte JaCoCo
         if: always()
@@ -130,9 +123,8 @@ jobs:
           path: target/site/jacoco/
           retention-days: 30
 
-
   # STAGE 4: Análisis Estático (Checkstyle)
-   static-analysis:
+  static-analysis:
     name: "Stage 4 - Análisis Estático Checkstyle"
     runs-on: ubuntu-latest
     needs: coverage
@@ -156,3 +148,5 @@ jobs:
           name: checkstyle-report
           path: target/checkstyle-result.xml
           retention-days: 30
+
+  
