@@ -50,6 +50,9 @@ public class TelegramNotificacionService {
                         response.statusCode(), response.body());
             }
 
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // restaura el flag de interrupción
+            log.error("[Telegram] Excepción al enviar mensaje a chatId={}: {}", chatId, e.getMessage());
         } catch (Exception e) {
             log.error("[Telegram] Excepción al enviar mensaje a chatId={}: {}", chatId, e.getMessage());
         }
