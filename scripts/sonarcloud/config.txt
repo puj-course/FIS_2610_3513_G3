@@ -1,0 +1,4 @@
+ORGANIZATION=puj-course
+PROJECT_KEY=puj-course_entregaya
+SONAR_URL=https://sonarcloud.io
+REPORTS_PATH=docs/reporte
