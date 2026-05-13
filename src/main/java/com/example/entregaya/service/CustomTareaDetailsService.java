@@ -274,7 +274,7 @@ public class CustomTareaDetailsService {
         tarea.setFechaFinal(dto.getFechaFinal());
         tarea.setDificultad(dto.getDificultad());
         tarea.setCompletada(dto.isCompletada());
-        tarea.setEtiquetas(dto.getEtiquetas() != null ? dto.getEtiquetas() : List.of());
+        tarea.setEtiquetas(dto.getEtiquetas() != null ? new ArrayList<>(dto.getEtiquetas()) : new ArrayList<>());
 
         if (dto.getResponsablesIds() != null && !dto.getResponsablesIds().isEmpty()) {
             Set<User> responsables = new HashSet<>(userRepository.findAllById(dto.getResponsablesIds()));

@@ -117,18 +117,22 @@ jobs:
       - name: Descargar código
         uses: actions/checkout@v4
 
+      # FIX: SHA completo en lugar de @v3 (evita supply-chain attacks)
       - name: Configurar QEMU
         uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
 
+      # FIX: SHA completo en lugar de @v3
       - name: Configurar Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
+      # FIX: SHA completo en lugar de @v3
       - name: Login en DockerHub
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # FIX: SHA completo en lugar de @v5
       - name: Construir y publicar imagen
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
@@ -141,6 +145,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # FIX: DOCKERHUB_USERNAME expuesto como env var, no expandido directamente en el string
       - name: Resumen del despliegue
         env:
           DOCKER_IMAGE_USER: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -201,6 +206,7 @@ jobs:
           name: entregaya-jar
           path: target/
 
+      # FIX: SHA completo en lugar de @v2
       - name: Crear GitHub Release y subir .jar
         uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.2.2
         with:
@@ -242,6 +248,7 @@ jobs:
     if: success()
 
     steps:
+      # FIX: DOCKERHUB_USERNAME como env var, no expandido en el string
       - name: Enviar notificación de éxito
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
