@@ -34,7 +34,7 @@ jobs:
 
                   title
 
-                  items(first: 250) {
+                  items(first: 100) {
 
                     nodes {
 
