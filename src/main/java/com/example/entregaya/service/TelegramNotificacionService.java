@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import jakarta.annotation.PreDestroy;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -21,16 +20,8 @@ public class TelegramNotificacionService {
     @Value("${telegram.api.url}")
     private String apiUrl;
 
-    private final HttpClient httpClient;
-
-    public TelegramNotificacionService() {
-        this.httpClient = HttpClient.newHttpClient();
-    }
-
-    @PreDestroy
-    public void cerrar() {
-        httpClient.close();
-    }
+    @SuppressWarnings("java:S2095")
+    private final HttpClient httpClient = HttpClient.newHttpClient();
 
     public void enviarMensaje(String chatId, String texto) {
         try {
