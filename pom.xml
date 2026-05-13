@@ -8,7 +8,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.2</version>
+        <version>3.5.0</version>
         <relativePath/>
     </parent>
 
@@ -19,23 +19,6 @@
     <name>entregaya</name>
     <description>Demo project for Spring Boot</description>
 
-    <url/>
-
-    <licenses>
-        <license/>
-    </licenses>
-
-    <developers>
-        <developer/>
-    </developers>
-
-    <scm>
-        <connection/>
-        <developerConnection/>
-        <tag/>
-        <url/>
-    </scm>
-
     <properties>
         <java.version>17</java.version>
         <sonar.organization>puj-course</sonar.organization>
@@ -43,26 +26,43 @@
 
     <dependencies>
 
-        <!-- Spring Boot -->
+        <!-- ========================= -->
+        <!-- SPRING BOOT -->
+        <!-- ========================= -->
+
+        <!-- Web -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- JPA -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
+        <!-- Thymeleaf -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webmvc</artifactId>
-        </dependency>
-
+        <!-- Security -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
+
+        <!-- Thymeleaf + Security -->
+        <dependency>
+            <groupId>org.thymeleaf.extras</groupId>
+            <artifactId>thymeleaf-extras-springsecurity6</artifactId>
+        </dependency>
+
+        <!-- ========================= -->
+        <!-- DATABASE -->
+        <!-- ========================= -->
 
         <!-- PostgreSQL -->
         <dependency>
@@ -71,36 +71,38 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Thymeleaf Security -->
+        <!-- H2 para pruebas -->
         <dependency>
-            <groupId>org.thymeleaf.extras</groupId>
-            <artifactId>thymeleaf-extras-springsecurity6</artifactId>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
         </dependency>
 
+        <!-- ========================= -->
         <!-- PDF -->
+        <!-- ========================= -->
+
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>pdfbox</artifactId>
             <version>2.0.31</version>
         </dependency>
 
-        <!-- Testing -->
+        <!-- ========================= -->
+        <!-- TESTING -->
+        <!-- ========================= -->
+
+        <!-- Spring Boot Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
 
+        <!-- Spring Security Test -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-test-autoconfigure</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- H2 -->
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -116,13 +118,19 @@
     <build>
         <plugins>
 
-            <!-- Spring Boot -->
+            <!-- ========================= -->
+            <!-- SPRING BOOT -->
+            <!-- ========================= -->
+
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
 
-            <!-- Checkstyle -->
+            <!-- ========================= -->
+            <!-- CHECKSTYLE -->
+            <!-- ========================= -->
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
@@ -147,7 +155,10 @@
                 </executions>
             </plugin>
 
-            <!-- JaCoCo -->
+            <!-- ========================= -->
+            <!-- JACOCO -->
+            <!-- ========================= -->
+
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
@@ -163,6 +174,7 @@
 
                 <executions>
 
+                    <!-- Instrumentación -->
                     <execution>
                         <id>prepare-agent</id>
 
@@ -171,6 +183,7 @@
                         </goals>
                     </execution>
 
+                    <!-- Generar reporte -->
                     <execution>
                         <id>report</id>
                         <phase>verify</phase>
@@ -180,6 +193,7 @@
                         </goals>
                     </execution>
 
+                    <!-- Verificar cobertura mínima -->
                     <execution>
                         <id>check</id>
 
