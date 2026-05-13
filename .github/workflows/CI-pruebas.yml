@@ -167,7 +167,7 @@ jobs:
           path: target/checkstyle-result.xml
           retention-days: 30
 
-    # STAGE 5: SonarQube Quality Gate
+  # STAGE 5: SonarQube Quality Gate
   sonarqube:
     name: "Stage 5 - SonarQube Quality Gate"
     runs-on: ubuntu-latest
@@ -221,29 +221,47 @@ jobs:
 
       - name: Consultar Quality Gate y bloquear si falla
         env:
-            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-            PROJECT_KEY="puj-course_FIS_2610_3513_G3"
-            
-            RESPONSE=$(curl -s -u "$SONAR_TOKEN:" \
-              "https://sonarcloud.io/api/qualitygates/project_status?projectKey=$PROJECT_KEY")
-            
-            echo "Respuesta: $RESPONSE"
-            
-            QG_STATUS=$(echo "$RESPONSE" | jq -r '.projectStatus.status')
-            
-            echo "📊 Quality Gate Status: $QG_STATUS"
-            
-            if [ "$QG_STATUS" != "OK" ]; then
-              echo "❌ Quality Gate FAILED - Bloqueando pipeline"
-              echo "🔗 Ver detalles en: https://sonarcloud.io/dashboard?id=$PROJECT_KEY"
-              exit 1
-            else
-              echo "✅ Quality Gate PASSED"
-            fi
+          PROJECT_KEY="puj-course_FIS_2610_3513_G3"
+          
+          RESPONSE=$(curl -s -u "$SONAR_TOKEN:" \
+            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=$PROJECT_KEY")
+          
+          echo "Respuesta: $RESPONSE"
+          
+          QG_STATUS=$(echo "$RESPONSE" | jq -r '.projectStatus.status')
+          
+          echo "📊 Quality Gate Status: $QG_STATUS"
+          
+          if [ "$QG_STATUS" != "OK" ]; then
+            echo "❌ Quality Gate FAILED - Bloqueando pipeline"
+            echo "🔗 Ver detalles en: https://sonarcloud.io/dashboard?id=$PROJECT_KEY"
+            exit 1
+          else
+            echo "✅ Quality Gate PASSED"
+          fi
 
       - name: Subir badge de SonarQube
         if: always()
         run: |
           echo "## 📊 SonarCloud Quality Gate" >> $GITHUB_STEP_SUMMARY
           echo "[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=puj-course_FIS_2610_3513_G3&metric=alert_status)](https://sonarcloud.io/dashboard?id=puj-course_FIS_2610_3513_G3)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Notificar fallo en Telegram
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d parse_mode="Markdown" \
+            -d text="❌ *CI EntregaYa – Pipeline fallido*
+
+          *Repositorio:* ${{ github.repository }}
+          *Rama:* \`${{ github.ref_name }}\`
+          *Commit:* \`${{ github.sha }}\`
+          *Autor:* ${{ github.actor }}
+
+          [Ver detalle del fallo](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
