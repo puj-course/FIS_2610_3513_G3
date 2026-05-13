@@ -16,7 +16,7 @@ public class LatenciaInterceptor implements HandlerInterceptor {
     private static final String ATTR_INICIO = "latencia_inicio_ms";
 
     /** Umbral en milisegundos a partir del cual se emite una advertencia. */
-    public static final long UMBRAL_MS = 500L;
+    public static final long UMBRAL_MS = 1000L;
 
     /**
      * Se ejecuta ANTES de que el controlador procese la petición.
