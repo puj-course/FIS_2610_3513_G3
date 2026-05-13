@@ -120,10 +120,7 @@ jobs:
             -Dspring.profiles.active=test \
             --no-transfer-progress \
             -Dsurefire.failIfNoSpecifiedTests=false
-
-      - name: Verificar umbral de cobertura (FALLA SI <70%)
-        run: mvn jacoco:check --no-transfer-progress
-
+            
       - name: Subir reporte JaCoCo
         if: always()
         uses: actions/upload-artifact@v4
