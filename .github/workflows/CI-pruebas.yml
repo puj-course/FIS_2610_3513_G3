@@ -5,7 +5,9 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
-
+    
+  workflow_dispatch:
+  
 jobs:
 
   
@@ -156,3 +158,4 @@ jobs:
           name: checkstyle-report
           path: target/checkstyle-result.xml
           retention-days: 30
+
