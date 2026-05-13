@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import jakarta.annotation.PreDestroy;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -11,16 +12,25 @@ import java.net.http.HttpResponse;
 
 @Service
 public class TelegramNotificacionService {
+
     private static final Logger log = LoggerFactory.getLogger(TelegramNotificacionService.class);
 
     @Value("${telegram.bot.token}")
     private String botToken;
 
-    
     @Value("${telegram.api.url}")
     private String apiUrl;
 
-    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final HttpClient httpClient;
+
+    public TelegramNotificacionService() {
+        this.httpClient = HttpClient.newHttpClient();
+    }
+
+    @PreDestroy
+    public void cerrar() {
+        httpClient.close();
+    }
 
     public void enviarMensaje(String chatId, String texto) {
         try {

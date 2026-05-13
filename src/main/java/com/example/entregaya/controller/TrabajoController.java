@@ -293,10 +293,11 @@ public class TrabajoController {
         // Convertir Set a List y ordenar: LIDER primero, luego por username
         List<ColaboradorTrabajo> miembrosOrdenados = new ArrayList<>(trabajo.getColaboradores());
         miembrosOrdenados.sort((m1, m2) -> {
-            // LIDER siempre primero
-            if (m1.getRol() == ColaboradorTrabajo.Rol.LIDER) return -1;
-            if (m2.getRol() == ColaboradorTrabajo.Rol.LIDER) return 1;
-            // Si ambos son COLABORADOR, ordenar por username
+            boolean m1EsLider = m1.getRol() == ColaboradorTrabajo.Rol.LIDER;
+            boolean m2EsLider = m2.getRol() == ColaboradorTrabajo.Rol.LIDER;
+            if (m1EsLider && m2EsLider) return 0;   // ← caso faltante
+            if (m1EsLider) return -1;
+            if (m2EsLider) return 1;
             return m1.getUser().getUsername().compareTo(m2.getUser().getUsername());
         });
 
