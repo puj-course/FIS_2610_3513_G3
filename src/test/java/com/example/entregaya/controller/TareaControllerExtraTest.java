@@ -11,6 +11,7 @@ import com.example.entregaya.service.CustomTrabajoDetailsService;
 import com.example.entregaya.strategy.Lideroeditorstrategy;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.http.HttpStatus;
@@ -413,5 +414,57 @@ class TareaControllerExtraTest {
         trabajoBase.setId(1L);
         trabajoBase.agregarColaborador(u); // sobrecarga sin rol
         Assertions.assertEquals(1, trabajoBase.getColaboradores().size());
+    }
+    @Test
+    @DisplayName("CP_NEW_01: guardarEdicion() con responsableIds y etiquetas no nulos redirige al trabajo")
+    void guardarEdicion_ConResponsablesYEtiquetasNoNulos_RedireccionaAlTrabajo() {
+        // Arrange
+        Mockito.when(customTrabajoDetailsService.verificarPermiso(1L, "lider", lideroeditorstrategy))
+                .thenReturn(true);
+
+        TareaEditarDTO dto = new TareaEditarDTO();
+        dto.setNombre("Tarea con datos reales");
+        dto.setDificultad(com.example.entregaya.model.Tarea.Dificultad.ALTA);
+
+        List<Long>   responsableIds = List.of(10L, 20L);   // <-- no nulo
+        List<String> etiquetas      = List.of("urgente");  // <-- no nulo
+
+        RedirectAttributes ra = new RedirectAttributesModelMap();
+
+        // Act
+        String resultado = tareaController.guardarEdicion(
+                1L, 10L, dto, responsableIds, etiquetas, userDetails, ra);
+
+        // Assert: la rama (!=null ? lista : List.of()) se ejecuta con la lista real.
+        // El servicio está mockeado, por lo tanto solo verificamos la redirección.
+        Assertions.assertEquals("redirect:/trabajos/1", resultado,
+                "Debe redirigir al trabajo tras guardar correctamente");
+
+        // Verificar que el DTO recibió los valores reales (no List.of())
+        Assertions.assertEquals(responsableIds, dto.getResponsablesIds());
+        Assertions.assertEquals(etiquetas,      dto.getEtiquetas());
+    }
+    @Test
+    @DisplayName("CP_NEW_02: guardarEdicion() responsableIds nulo y etiquetas no nulas")
+    void guardarEdicion_ResponsablesNulosYEtiquetasNoNulas_RedireccionaAlTrabajo() {
+        Mockito.when(customTrabajoDetailsService.verificarPermiso(1L, "lider", lideroeditorstrategy))
+                .thenReturn(true);
+
+        TareaEditarDTO dto = new TareaEditarDTO();
+        dto.setNombre("Tarea mezcla");
+        dto.setDificultad(com.example.entregaya.model.Tarea.Dificultad.MEDIA);
+
+        List<String> etiquetas = List.of("backend", "api");  // no nulo
+
+        RedirectAttributes ra = new RedirectAttributesModelMap();
+
+        String resultado = tareaController.guardarEdicion(
+                1L, 10L, dto, null, etiquetas, userDetails, ra);
+
+        Assertions.assertEquals("redirect:/trabajos/1", resultado);
+        // responsableIds era null → DTO debe tener List.of()
+        Assertions.assertTrue(dto.getResponsablesIds().isEmpty());
+        // etiquetas era no nulo → DTO debe tener la lista real
+        Assertions.assertEquals(etiquetas, dto.getEtiquetas());
     }
 }

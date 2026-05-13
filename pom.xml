@@ -167,7 +167,6 @@
                 <configuration>
                     <excludes>
                         <exclude>**/config/**</exclude>
-                        <!-- <exclude>**/dto/**</exclude> -->
                         <exclude>**/*Application.class</exclude>
                     </excludes>
                 </configuration>
