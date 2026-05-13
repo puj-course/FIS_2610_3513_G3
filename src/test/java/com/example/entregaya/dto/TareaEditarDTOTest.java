@@ -28,9 +28,9 @@ class TareaEditarDTOTest {
         assertFalse(dto.isCompletada());
         assertNull(dto.getNombre());
         assertNull(dto.getDescripcion());
-        assertNull(dto.getDificultad());
+        assertEquals(Tarea.Dificultad.MEDIA, dto.getDificultad()); // hereda MEDIA por defecto
     }
-
+    
     // CP02 - NORMAL: Setters y getters funcionan para todos los campos.
     // Entrada: valores válidos para cada campo
     // Resultado esperado: cada getter retorna el valor asignado
@@ -151,8 +151,8 @@ class TareaEditarDTOTest {
     void CP09_ListaEtiquetasVacia_EsAceptada() {
         TareaEditarDTO dto = new TareaEditarDTO();
         dto.setEtiquetas(new ArrayList<>());
-
         assertNotNull(dto.getEtiquetas());
         assertTrue(dto.getEtiquetas().isEmpty());
+
     }
 }
