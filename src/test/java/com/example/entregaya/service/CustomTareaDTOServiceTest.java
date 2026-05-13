@@ -17,6 +17,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -170,7 +171,7 @@ class CustomTareaDTOServiceTest {
         dto.setCompletada(true);
         dto.setFechaInicio(LocalDateTime.now());
         dto.setFechaFinal(LocalDateTime.now().plusDays(5));
-        dto.setEtiquetas(List.of("frontend"));
+        dto.setEtiquetas(new ArrayList<>(List.of("frontend")));
 
         tareaService.editarTareaDesdeDTO(guardada.getId(), dto);
 
