@@ -54,13 +54,13 @@ jobs:
           gh api repos/${{ github.repository }}/milestones?state=all\&per_page=100 \
             > milestones.json
 
-      # Obtener commits
-      - name: Obtener commits
+      # Obtener contributors reales
+      - name: Obtener contributors
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
-          gh api --paginate repos/${{ github.repository }}/commits?per_page=100 \
-            > commits.json
+          gh api repos/${{ github.repository }}/contributors?per_page=100 \
+            > contributors.json
 
       # Generar reporte markdown
       - name: Generar reporte
@@ -82,8 +82,8 @@ jobs:
           const milestones =
             JSON.parse(fs.readFileSync('milestones.json'));
 
-          const commits =
-            JSON.parse(fs.readFileSync('commits.json'));
+          const contributorsData =
+            JSON.parse(fs.readFileSync('contributors.json'));
 
           // Filtrar issues reales
           const realIssues =
@@ -131,23 +131,15 @@ jobs:
               && !pr.merged_at
             );
 
-          // Contar commits por usuario
+          // Obtener commits reales por contributor
           const contributors = {};
 
-          commits.forEach(c => {
+          contributorsData.forEach(c => {
 
-            if (!c.author) return;
+            if (c.login.includes('[bot]')) return;
 
-            const user =
-              c.author.login;
-
-            if (user.includes('[bot]')) return;
-
-            if (!contributors[user]) {
-              contributors[user] = 0;
-            }
-
-            contributors[user]++;
+            contributors[c.login] =
+              c.contributions;
 
           });
 
@@ -409,6 +401,26 @@ jobs:
             `|------|\n`;
 
           featureBranches.slice(0, 20)
+            .forEach(b => {
+
+              reporte +=
+                `| ${b} |\n`;
+
+            });
+
+          reporte += '\n';
+
+          // Tabla ramas personales
+          reporte +=
+            `## Ramas Personales\n\n`;
+
+          reporte +=
+            `| Rama |\n`;
+
+          reporte +=
+            `|------|\n`;
+
+          personalBranches.slice(0, 20)
             .forEach(b => {
 
               reporte +=
