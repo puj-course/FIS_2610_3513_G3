@@ -1,5 +1,8 @@
 # Startup: Scholar.ly 🧠🧠
 
+![CI - Pruebas](https://github.com/puj-course/FIS_2610_3513_G3/actions/workflows/CI-pruebas.yml/badge.svg?branch=develop)
+![Cobertura](https://img.shields.io/badge/cobertura-JaCoCo%2070%25-brightgreen)
+
 Bienvenidos a la Wiki de Scholar.ly y la aplicación EntregaYa
 
 ---

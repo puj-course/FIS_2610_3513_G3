@@ -1,5 +1,7 @@
 package com.example.entregaya.service;
 
+import com.example.entregaya.dto.TrabajoCrearDTO;
+import com.example.entregaya.dto.TrabajoEditarDTO;
 import com.example.entregaya.model.HistorialEvento;
 import com.example.entregaya.repository.HistorialEventoRepository;
 import com.example.entregaya.dto.MiembroRolDTO;
@@ -61,8 +63,8 @@ public class CustomTrabajoDetailsService{
         }
     }
 
- // Crear un nuevo trabajo y agregar al creador como colaborador
- // El creador del trabajo automaticamente lider
+    // Crear un nuevo trabajo y agregar al creador como colaborador
+    // El creador del trabajo automaticamente lider
     public Trabajo crearTrabajo(Trabajo trabajo, String username){
         User user= userRepository.findByUsername(username)
                 .orElseThrow(()-> new RuntimeException("Usuario no encontrado"));
@@ -208,6 +210,7 @@ public class CustomTrabajoDetailsService{
         String usernameEliminado = target.getUser().getUsername();
 
         colaboradorTrabajoRepository.delete(target);
+        trabajo.getColaboradores().remove(target);
 
         // HU-28: Disparar evento de salida
         TrabajoEventoDTO evento = new TrabajoEventoDTO(
@@ -225,7 +228,7 @@ public class CustomTrabajoDetailsService{
      *
      * Este metodo quedo obsoleto usar verificarPermiso(id, username, new SoloLiderStrategy()) en su luagr
      *
-    */
+     */
     @Deprecated
     public boolean puedeEditarTarea(Long trabajoId, String username) {
         return verificarPermiso(trabajoId,username,
@@ -248,7 +251,7 @@ public class CustomTrabajoDetailsService{
      * Actualiza los datos editables de un trabajo existente.
      * Solo se pueden editar: nombre, descripción, fechaInicio y fechaEntrega.
      * No se modifican los colaboradores ni las tareas.
-     * 
+     *
      * @param id ID del trabajo a actualizar
      * @param trabajoEditado Objeto con los nuevos valores
      * @throws IllegalArgumentException si el trabajo no existe
@@ -260,12 +263,12 @@ public class CustomTrabajoDetailsService{
         // Obtener el trabajo actual desde la BD
         Trabajo trabajoExistente = trabajoRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("El trabajo no existe"));
-        
+
         // Validación 1: El nombre no puede estar vacío
         if (trabajoEditado.getNombreTrabajo() == null || trabajoEditado.getNombreTrabajo().trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre del trabajo no puede estar vacío");
         }
-        
+
         // Validación 2: El nombre no puede estar duplicado (excepto si no cambió)
         String nuevoNombre = trabajoEditado.getNombreTrabajo().trim();
         if (!trabajoExistente.getNombreTrabajo().equals(nuevoNombre)) {
@@ -275,13 +278,13 @@ public class CustomTrabajoDetailsService{
                 throw new IllegalArgumentException("Ya existe un trabajo con ese nombre");
             }
         }
-        
+
         // Actualizar solo los campos editables (no tocar colaboradores ni tareas)
         trabajoExistente.setNombreTrabajo(nuevoNombre);
         trabajoExistente.setDescripcion(trabajoEditado.getDescripcion());
         trabajoExistente.setFechaInicio(trabajoEditado.getFechaInicio());
         trabajoExistente.setFechaEntrega(trabajoEditado.getFechaEntrega());
-        
+
         // Guardar cambios en la BD
         trabajoRepository.save(trabajoExistente);
     }
@@ -329,5 +332,31 @@ public class CustomTrabajoDetailsService{
             throw new IllegalArgumentException("El trabajo no existe");
         }
         return historialEventoRepository.findByTrabajoIdOrderByFechaDesc(trabajoId);
+    }
+    public void actualizarTrabajoDesdeDTO(long id, TrabajoEditarDTO dto) {
+        Trabajo trabajo = trabajoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Trabajo no encontrado"));
+
+        // Validar nombre único si cambió
+        if (!trabajo.getNombreTrabajo().equals(dto.getNombreTrabajo())) {
+            if (trabajoRepository.existsByNombreTrabajo(dto.getNombreTrabajo())) {
+                throw new IllegalArgumentException("Ya existe un trabajo con ese nombre.");
+            }
+        }
+
+        trabajo.setNombreTrabajo(dto.getNombreTrabajo());
+        trabajo.setDescripcion(dto.getDescripcion());
+        trabajo.setFechaInicio(dto.getFechaInicio());
+        trabajo.setFechaEntrega(dto.getFechaEntrega());
+        trabajoRepository.save(trabajo);
+    }
+    public void crearTrabajoDesdeDTO(TrabajoCrearDTO dto, String username) {
+        Trabajo trabajo = new Trabajo();
+        trabajo.setNombreTrabajo(dto.getNombreTrabajo());
+        trabajo.setDescripcion(dto.getDescripcion());
+        trabajo.setFechaInicio(dto.getFechaInicio());
+        trabajo.setFechaEntrega(dto.getFechaEntrega());
+
+        crearTrabajo(trabajo, username);
     }
 }

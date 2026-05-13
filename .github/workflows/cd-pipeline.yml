@@ -4,15 +4,40 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-
-permissions:
-  contents: write
+  #Solo ejecuta si el CI pasó exitosamente
+  workflow_run:
+    workflows: ["CI - Pruebas y Cobertura"]
+    branches: [main]
+    types:
+      - completed
 
 jobs:
-  # ── Job 1: Calcular versión una sola vez y compartirla ──────────────────────
+  # Job que verifica si el CI pasó antes de continuar
+  check-ci-status:
+    name: Verificar estado del CI
+    runs-on: ubuntu-22.04
+    # Solo continúa si el workflow fue exitoso o si fue disparado manualmente
+    if: |
+      github.event_name == 'workflow_dispatch' || 
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Verificar conclusión del CI
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
+              echo "❌ CI falló - Bloqueando deploy"
+              exit 1
+            fi
+            echo "✅ CI exitoso - Continuando con deploy"
+          else
+            echo "⚙️ Ejecución manual - Saltando verificación de CI"
+          fi
+
+  # Job 1: Calcular versión una sola vez y compartirla
   setup:
     name: Calcular versión
     runs-on: ubuntu-22.04
+    needs: check-ci-status
     outputs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
@@ -35,7 +60,7 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=v$VERSION-$SHORT_SHA" >> $GITHUB_OUTPUT
 
-  # ── Job 2: Compilar y ejecutar pruebas ──────────────────────────────────────
+  # Job 2: Compilar y ejecutar pruebas
   build-and-test:
     name: Compilar proyecto y pruebas
     runs-on: ubuntu-22.04
@@ -82,7 +107,7 @@ jobs:
           *Autor:* ${{ github.actor }}
           [Ver detalle del fallo](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
 
-  # ── Job 3: Construir imagen Docker y publicar en DockerHub ──────────────────
+  # Job 3: Construir imagen Docker y publicar en DockerHub
   docker-build-push:
     name: Construir y publicar imagen Docker
     runs-on: ubuntu-22.04
@@ -94,22 +119,22 @@ jobs:
 
       # FIX: SHA completo en lugar de @v3 (evita supply-chain attacks)
       - name: Configurar QEMU
-        uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12c2d7f4d2d5a # v3.6.0
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
 
       # FIX: SHA completo en lugar de @v3
       - name: Configurar Docker Buildx
-        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
       # FIX: SHA completo en lugar de @v3
       - name: Login en DockerHub
-        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # FIX: SHA completo en lugar de @v5
       - name: Construir y publicar imagen
-        uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1 # v6.16.0
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
           platforms: linux/amd64,linux/arm64
@@ -163,11 +188,13 @@ jobs:
 
           [Ver detalle del fallo](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
 
-  # ── Job 4: Crear GitHub Release con el .jar ──────────────────────────────────
+  # Job 4: Crear GitHub Release con el .jar
   github-release:
     name: Crear GitHub Release
     runs-on: ubuntu-22.04
     needs: [setup, build-and-test]
+    permissions:
+      contents: write
 
     steps:
       - name: Descargar código
@@ -192,9 +219,7 @@ jobs:
             **Autor:** ${{ github.actor }}
 
             ### Imagen Docker
-            ```bash
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/entregaya:latest
-            ```
           files: target/*.jar
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -215,7 +240,7 @@ jobs:
           *Autor:* ${{ github.actor }}
           [Ver detalle del fallo](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
 
-  # ── Job 5: Notificación de éxito en Telegram ────────────────────────────────
+  # Job 5: Notificación de éxito en Telegram
   notify-success:
     name: Notificar éxito en Telegram
     runs-on: ubuntu-22.04

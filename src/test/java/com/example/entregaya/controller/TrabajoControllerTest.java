@@ -1,5 +1,6 @@
 package com.example.entregaya.controller;
 
+import com.example.entregaya.dto.TrabajoCrearDTO;
 import com.example.entregaya.model.ColaboradorTrabajo;
 import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
@@ -21,6 +22,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import com.example.entregaya.dto.TrabajoEditarDTO;
 
 /**
  * HU-49 - Task #494
@@ -122,12 +124,12 @@ class TrabajoControllerTest {
     // Resultado esperado: "redirect:/trabajos"
     @Test
     void CP03_guardar_Exitoso_RedireccionaATrabajos() {
-        // Act
-        String resultado = trabajoController.guardar(trabajoBase, userLider);
+        TrabajoCrearDTO dto = new TrabajoCrearDTO();
+        dto.setNombreTrabajo("Trabajo Test");
 
-        // Assert
-        Assertions.assertEquals("redirect:/trabajos", resultado,
-                "guardar() debe redirigir a '/trabajos'");
+        String resultado = trabajoController.guardar(dto, userLider);
+
+        Assertions.assertEquals("redirect:/trabajos", resultado);
     }
 
     // CP04 – GET /{id}/editar con LIDER: retorna vista "trabajos/editar"
@@ -189,7 +191,7 @@ class TrabajoControllerTest {
     void CP06_actualizarTrabajo_SiEsLider_RedireccionaADetalle() {
         // Arrange
         RedirectAttributes ra = new RedirectAttributesModelMap();
-        Trabajo editado = new Trabajo();
+        TrabajoEditarDTO editado = new TrabajoEditarDTO();
         editado.setNombreTrabajo("Nombre Actualizado");
         Mockito.when(customTrabajoDetailsService.esLider(1L, "lider")).thenReturn(true);
 
@@ -295,7 +297,7 @@ class TrabajoControllerTest {
     void CP11_actualizarTrabajo_ConNombreVacio_RedireccionaAEditar() {
         // Arrange
         RedirectAttributes ra = new RedirectAttributesModelMap();
-        Trabajo editado = new Trabajo();
+        TrabajoEditarDTO editado = new TrabajoEditarDTO();
         editado.setNombreTrabajo("   ");
         Mockito.when(customTrabajoDetailsService.esLider(1L, "lider")).thenReturn(true);
 
