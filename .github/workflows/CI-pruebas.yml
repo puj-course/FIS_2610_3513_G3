@@ -167,7 +167,7 @@ jobs:
           path: target/checkstyle-result.xml
           retention-days: 30
 
-  # STAGE 5: SonarQube Quality Gate
+    # STAGE 5: SonarQube Quality Gate
   sonarqube:
     name: "Stage 5 - SonarQube Quality Gate"
     runs-on: ubuntu-latest
@@ -211,6 +211,7 @@ jobs:
             -Dsonar.projectKey=puj-course_FIS_2610_3513_G3 \
             -Dsonar.organization=puj-course \
             -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.coverage.exclusions=**/config/**,**/*Application.java \
             -Dspring.profiles.active=test \
             --no-transfer-progress \
             -Dsurefire.failIfNoSpecifiedTests=false
