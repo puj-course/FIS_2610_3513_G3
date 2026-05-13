@@ -21,16 +21,8 @@ public class TelegramNotificacionService {
     @Value("${telegram.api.url}")
     private String apiUrl;
 
-    private final HttpClient httpClient;
-
-    public TelegramNotificacionService() {
-        this.httpClient = HttpClient.newHttpClient();
-    }
-
-    @PreDestroy
-    public void cerrar() {
-        httpClient.close();
-    }
+    @SuppressWarnings("java:S2095")
+    private final HttpClient httpClient = HttpClient.newHttpClient();
 
     public void enviarMensaje(String chatId, String texto) {
         try {
