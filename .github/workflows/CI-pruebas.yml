@@ -3,26 +3,19 @@ name: CI - Pruebas y Cobertura
 on:
   push:
     branches: [ main, develop ]
+
   pull_request:
     branches: [ main, develop ]
 
-jobs:
-<<<<<<< HEAD
+  workflow_dispatch:
 
-  # ════════════════════════════════════════════
+jobs:
+
   # STAGE 1: Compilación
-  # ════════════════════════════════════════════
   build:
     name: "Stage 1 - Compilación"
-    runs-on: ubuntu-22.04
-=======
->>>>>>> origin/develop
-
-  
-  # STAGE 1: Compilación
-    build:
-    name: "Stage 1 - Compilación"
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -33,74 +26,30 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-      - name: Inyectar dependencia H2 para pruebas
-        run: |
-          if ! grep -q 'com.h2database' pom.xml; then
-            sed -i 's|</dependencies>|    <dependency>\n            <groupId>com.h2database</groupId>\n            <artifactId>h2</artifactId>\n            <scope>test</scope>\n        </dependency>\n    </dependencies>|' pom.xml
-          fi
-
       - name: Compilar proyecto
         run: mvn compile --no-transfer-progress
 
-  # ════════════════════════════════════════════
-  # STAGE 2: Pruebas Unitarias
-  # ════════════════════════════════════════════
+  # STAGE 2: Pruebas Unitarias + HU-50
   test:
     name: "Stage 2 - Pruebas Unitarias"
-    runs-on: ubuntu-22.04
-    needs: build
-
-    steps:
-      - name: Descargar codigo fuente
-        uses: actions/checkout@v4
-
-      - name: Configurar Java 17
-=======
-  # STAGE 2 — Pruebas Unitarias
-  test:
-    name: Pruebas Unitarias
-=======
-      - name: Compilar proyecto
-        run: mvn compile --no-transfer-progress
-
-  
-  # STAGE 2: Pruebas Unitarias
-   test:
-    name: "Stage 2 - Pruebas Unitarias"
->>>>>>> origin/develop
     runs-on: ubuntu-latest
     needs: build
+
     steps:
       - uses: actions/checkout@v4
-<<<<<<< HEAD
-      - name: Set up JDK 17
->>>>>>> origin/develop
-=======
 
       - name: Configurar Java 17
->>>>>>> origin/develop
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-<<<<<<< HEAD
-<<<<<<< HEAD
-          cache: maven
-
-      - name: Crear configuracion de pruebas
-        run: |
-          mkdir -p src/test/resources
-          cat > src/test/resources/application-test.properties << 'EOF'
-=======
           cache: maven
 
       - name: Crear configuración de pruebas
         run: |
           mkdir -p src/test/resources
+
           cat > src/test/resources/application-test.properties << 'PROPS'
->>>>>>> origin/develop
           spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
           spring.datasource.driver-class-name=org.h2.Driver
           spring.datasource.username=sa
@@ -111,34 +60,11 @@ jobs:
           spring.security.user.password=test
           telegram.bot.token=dummy
           telegram.bot.chat-id=dummy
-<<<<<<< HEAD
-          EOF
-
-      - name: Inyectar dependencia H2 para pruebas
-        run: |
-          if ! grep -q 'com.h2database' pom.xml; then
-            sed -i 's|</dependencies>|    <dependency>\n            <groupId>com.h2database</groupId>\n            <artifactId>h2</artifactId>\n            <scope>test</scope>\n        </dependency>\n    </dependencies>|' pom.xml
-          fi
-
-      - name: Ejecutar pruebas con Maven
-        run: |
-          mvn test \
-            -Dspring.profiles.active=test \
-            --no-transfer-progress \
-            -Dsurefire.failIfNoSpecifiedTests=false \
-            || true
-
-      - name: Generar reporte HTML del plan de pruebas
-        if: always()
-        run: python3 .github/scripts/generar_reporte.py
-
-      - name: Subir reporte HTML como artefacto
-=======
-=======
           PROPS
 
->>>>>>> origin/develop
-      - name: Ejecutar pruebas
+      # HU-50: Test de latencia
+      # Si algún endpoint supera 500 ms,
+      - name: Ejecutar pruebas (incluye test de latencia)
         run: |
           mvn test \
             -Dspring.profiles.active=test \
@@ -150,80 +76,34 @@ jobs:
         run: python3 .github/scripts/generar_reporte.py
 
       - name: Subir reporte de pruebas
-<<<<<<< HEAD
->>>>>>> origin/develop
-=======
         if: always()
->>>>>>> origin/develop
         uses: actions/upload-artifact@v4
         with:
           name: informe-pruebas-html
           path: target/surefire-reports/
           retention-days: 30
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-      - name: Verificar resultado final de pruebas
-        run: |
-          mvn test \
-            -Dspring.profiles.active=test \
-            --no-transfer-progress \
-            -Dsurefire.failIfNoSpecifiedTests=false
-
-  # ════════════════════════════════════════════
   # STAGE 3: Cobertura de Código (JaCoCo)
-  # ════════════════════════════════════════════
   coverage:
     name: "Stage 3 - Cobertura (JaCoCo)"
-    runs-on: ubuntu-22.04
-    needs: test
-
-    steps:
-      - name: Descargar codigo fuente
-        uses: actions/checkout@v4
-
-      - name: Configurar Java 17
-=======
-  # STAGE 3 — Cobertura
-  coverage:
-    name: Cobertura JaCoCo
-=======
- 
-  # STAGE 3: Cobertura de Código (JaCoCo)
-    coverage:
-    name: "Stage 3 - Cobertura (JaCoCo)"
->>>>>>> origin/develop
     runs-on: ubuntu-latest
     needs: test
+
     steps:
       - uses: actions/checkout@v4
-<<<<<<< HEAD
-      - name: Set up JDK 17
->>>>>>> origin/develop
-=======
 
       - name: Configurar Java 17
->>>>>>> origin/develop
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-<<<<<<< HEAD
-<<<<<<< HEAD
-          cache: maven
-
-      - name: Crear configuracion de pruebas
-        run: |
-          mkdir -p src/test/resources
-          cat > src/test/resources/application-test.properties << 'EOF'
-=======
           cache: maven
 
       - name: Crear configuración de pruebas
         run: |
           mkdir -p src/test/resources
+
           cat > src/test/resources/application-test.properties << 'PROPS'
->>>>>>> origin/develop
           spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
           spring.datasource.driver-class-name=org.h2.Driver
           spring.datasource.username=sa
@@ -234,44 +114,15 @@ jobs:
           spring.security.user.password=test
           telegram.bot.token=dummy
           telegram.bot.chat-id=dummy
-<<<<<<< HEAD
-          EOF
-
-      - name: Inyectar dependencia H2 para pruebas
-        run: |
-          if ! grep -q 'com.h2database' pom.xml; then
-            sed -i 's|</dependencies>|    <dependency>\n            <groupId>com.h2database</groupId>\n            <artifactId>h2</artifactId>\n            <scope>test</scope>\n        </dependency>\n    </dependencies>|' pom.xml
-          fi
-
-      - name: Ejecutar pruebas con cobertura JaCoCo
-        run: |
-          mvn test jacoco:report \
-=======
           PROPS
 
       - name: Ejecutar pruebas con cobertura JaCoCo
         run: |
           mvn verify \
->>>>>>> origin/develop
             -Dspring.profiles.active=test \
             --no-transfer-progress \
             -Dsurefire.failIfNoSpecifiedTests=false
 
-<<<<<<< HEAD
-      - name: Verificar umbral de cobertura (70%)
-        run: |
-          mvn jacoco:check \
-            --no-transfer-progress \
-            || echo "⚠️ Cobertura por debajo del 70%"
-
-      - name: Subir reporte JaCoCo como artefacto
-        uses: actions/upload-artifact@v4
-        if: always()
-=======
-      - name: Ejecutar cobertura
-        run: mvn verify
-      - name: Subir reporte HTML
-=======
       - name: Verificar umbral de cobertura
         run: |
           mvn jacoco:check \
@@ -280,22 +131,18 @@ jobs:
 
       - name: Subir reporte JaCoCo
         if: always()
->>>>>>> origin/develop
         uses: actions/upload-artifact@v4
->>>>>>> origin/develop
         with:
           name: jacoco-report
           path: target/site/jacoco/
           retention-days: 30
-<<<<<<< HEAD
-=======
-
 
   # STAGE 4: Análisis Estático (Checkstyle)
-   static-analysis:
+  static-analysis:
     name: "Stage 4 - Análisis Estático Checkstyle"
     runs-on: ubuntu-latest
     needs: coverage
+
     steps:
       - uses: actions/checkout@v4
 
@@ -307,7 +154,10 @@ jobs:
           cache: maven
 
       - name: Ejecutar Checkstyle
-        run: mvn checkstyle:check --no-transfer-progress || echo "⚠️ Checkstyle encontró problemas"
+        run: |
+          mvn checkstyle:check \
+            --no-transfer-progress \
+            || echo "⚠️ Checkstyle encontró problemas"
 
       - name: Subir reporte Checkstyle
         if: always()
@@ -316,25 +166,102 @@ jobs:
           name: checkstyle-report
           path: target/checkstyle-result.xml
           retention-days: 30
-<<<<<<< HEAD
 
-  # STAGE 5 — SonarQube
-  sonar:
-    name: SonarQube Analysis
+  # STAGE 5: SonarQube Quality Gate
+  sonarqube:
+    name: "Stage 5 - SonarQube Quality Gate"
     runs-on: ubuntu-latest
     needs: static-analysis
+
     steps:
       - uses: actions/checkout@v4
-      - name: Set up JDK 17
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Java 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Analizar con SonarCloud
-        uses: SonarSource/sonarcloud-github-action@master
+          cache: maven
+
+      - name: Crear configuración de pruebas
+        run: |
+          mkdir -p src/test/resources
+
+          cat > src/test/resources/application-test.properties << 'PROPS'
+          spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+          spring.datasource.driver-class-name=org.h2.Driver
+          spring.datasource.username=sa
+          spring.datasource.password=
+          spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+          spring.jpa.hibernate.ddl-auto=create-drop
+          spring.security.user.name=test
+          spring.security.user.password=test
+          telegram.bot.token=dummy
+          telegram.bot.chat-id=dummy
+          PROPS
+
+      - name: Ejecutar análisis de SonarCloud
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
->>>>>>> origin/develop
-=======
->>>>>>> origin/develop
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mvn verify sonar:sonar \
+            -Dsonar.projectKey=puj-course_FIS_2610_3513_G3 \
+            -Dsonar.organization=puj-course \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.coverage.exclusions=**/config/**,**/*Application.java \
+            -Dspring.profiles.active=test \
+            --no-transfer-progress \
+            -Dsurefire.failIfNoSpecifiedTests=false
+
+      - name: Esperar resultado del Quality Gate
+        run: sleep 10
+
+      - name: Consultar Quality Gate y bloquear si falla
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          PROJECT_KEY="puj-course_FIS_2610_3513_G3"
+          
+          RESPONSE=$(curl -s -u "$SONAR_TOKEN:" \
+            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=$PROJECT_KEY")
+          
+          echo "Respuesta: $RESPONSE"
+          
+          QG_STATUS=$(echo "$RESPONSE" | jq -r '.projectStatus.status')
+          
+          echo "📊 Quality Gate Status: $QG_STATUS"
+          
+          if [ "$QG_STATUS" != "OK" ]; then
+            echo "❌ Quality Gate FAILED - Bloqueando pipeline"
+            echo "🔗 Ver detalles en: https://sonarcloud.io/dashboard?id=$PROJECT_KEY"
+            exit 1
+          else
+            echo "✅ Quality Gate PASSED"
+          fi
+
+      - name: Subir badge de SonarQube
+        if: always()
+        run: |
+          echo "## 📊 SonarCloud Quality Gate" >> $GITHUB_STEP_SUMMARY
+          echo "[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=puj-course_FIS_2610_3513_G3&metric=alert_status)](https://sonarcloud.io/dashboard?id=puj-course_FIS_2610_3513_G3)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Notificar fallo en Telegram
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d parse_mode="Markdown" \
+            -d text="❌ *CI EntregaYa – Pipeline fallido*
+
+          *Repositorio:* ${{ github.repository }}
+          *Rama:* \`${{ github.ref_name }}\`
+          *Commit:* \`${{ github.sha }}\`
+          *Autor:* ${{ github.actor }}
+
+          [Ver detalle del fallo](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"

@@ -14,6 +14,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 public class PerfilController {
 
+    private static final String REDIRECT_PERFIL = "redirect:/perfil";
+    private static final String REDIRECT_LOGIN = "redirect:/login";
+
     private final CustomUserDetailsService userDetailsService;
 
     public PerfilController(CustomUserDetailsService userDetailsService) {
@@ -22,8 +25,10 @@ public class PerfilController {
 
     @GetMapping("/perfil")
     public String perfil(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        userDetailsService.findByUsername(userDetails.getUsername())
-                .ifPresent(user -> model.addAttribute("emailActual", user.getEmail()));
+        userDetailsService.findByUsername(userDetails.getUsername()).ifPresent(user -> {
+            model.addAttribute("emailActual", user.getEmail());
+            model.addAttribute("telegramChatIdActual", user.getTelegramChatId());
+        });
         return "perfil";
     }
 
@@ -33,13 +38,12 @@ public class PerfilController {
                                      RedirectAttributes redirectAttributes) {
         try {
             userDetailsService.actualizarUsername(userDetails.getUsername(), nuevoUsername);
-            // Invalidar sesión para que Spring Security refresque el principal
             SecurityContextHolder.clearContext();
             redirectAttributes.addFlashAttribute("successUser", "Usuario actualizado. Por favor inicia sesión de nuevo.");
-            return "redirect:/login";
+            return REDIRECT_LOGIN;
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("errorUser", e.getMessage());
-            return "redirect:/perfil";
+            return REDIRECT_PERFIL;
         }
     }
 
@@ -55,7 +59,7 @@ public class PerfilController {
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("errorPass", e.getMessage());
         }
-        return "redirect:/perfil";
+        return REDIRECT_PERFIL;
     }
 
     @PostMapping("/perfil/actualizar-email")
@@ -68,7 +72,19 @@ public class PerfilController {
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("errorEmail", e.getMessage());
         }
-        return "redirect:/perfil";
+        return REDIRECT_PERFIL;
     }
 
+    @PostMapping("/perfil/actualizar-telegram")
+    public String actualizarTelegram(@RequestParam("telegramChatId") String telegramChatId,
+                                     @AuthenticationPrincipal UserDetails userDetails,
+                                     RedirectAttributes redirectAttributes) {
+        try {
+            userDetailsService.actualizarTelegramChatId(userDetails.getUsername(), telegramChatId);
+            redirectAttributes.addFlashAttribute("successTelegram", "Telegram Chat ID actualizado correctamente.");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorTelegram", e.getMessage());
+        }
+        return REDIRECT_PERFIL;
+    }
 }

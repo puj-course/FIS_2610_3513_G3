@@ -4,11 +4,18 @@ import com.example.entregaya.service.CustomInvitacionDetailsService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class InvitacionController {
+
+    private static final String ERROR_INV = "errorInv";
+    private static final String SUCCESS_INV = "succesInv";
+    private static final String REDIRECT_DASHBOARD = "redirect:/dashboard";
+    private static final String REDIRECT_TRABAJOS = "redirect:/trabajos";
 
     private final CustomInvitacionDetailsService customInvitacionDetailsService;
 
@@ -17,14 +24,15 @@ public class InvitacionController {
     }
 
     @PostMapping("trabajos/{trabajoId}/invitar")
-    public String invitar (@PathVariable Long trabajoId, @RequestParam("destinatario") String destinatario, @AuthenticationPrincipal UserDetails user, RedirectAttributes redirectAttributes) {
+    public String invitar(@PathVariable Long trabajoId, @RequestParam("destinatario") String destinatario,
+                          @AuthenticationPrincipal UserDetails user, RedirectAttributes redirectAttributes) {
         try {
             customInvitacionDetailsService.enviarInvitacion(trabajoId, user.getUsername(), destinatario);
-            redirectAttributes.addFlashAttribute("succesInv", "Invitacion enviada a "+ destinatario);
-        }catch (Exception e){
-            redirectAttributes.addFlashAttribute("errorInv",e.getMessage());
+            redirectAttributes.addFlashAttribute(SUCCESS_INV, "Invitacion enviada a " + destinatario);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute(ERROR_INV, e.getMessage());
         }
-        return "redirect:/trabajos/"+trabajoId;
+        return "redirect:/trabajos/" + trabajoId;
     }
 
     @PostMapping("/invitaciones/{id}/aceptar")
@@ -37,33 +45,35 @@ public class InvitacionController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/dashboard";
+        return REDIRECT_DASHBOARD;
     }
 
     @PostMapping("/invitaciones/{id}/rechazar")
-    public String rechazar (@PathVariable Long id, @AuthenticationPrincipal UserDetails user, RedirectAttributes redirectAttributes) {
+    public String rechazar(@PathVariable Long id, @AuthenticationPrincipal UserDetails user,
+                           RedirectAttributes redirectAttributes) {
         try {
             customInvitacionDetailsService.rechazar(id, user.getUsername());
             redirectAttributes.addFlashAttribute("info", "Invitacion rechazada");
-        }catch (IllegalArgumentException e){
-            redirectAttributes.addFlashAttribute("error",e.getMessage());
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/dashboard";
+        return REDIRECT_DASHBOARD;
     }
+
     @PostMapping("/invitaciones/{id}/cancelar")
     public String cancelar(@PathVariable Long id,
                            @AuthenticationPrincipal UserDetails user,
                            RedirectAttributes redirectAttributes) {
         try {
             Long trabajoId = customInvitacionDetailsService.cancelar(id, user.getUsername());
-            redirectAttributes.addFlashAttribute("succesInv", "Invitación cancelada correctamente");
+            redirectAttributes.addFlashAttribute(SUCCESS_INV, "Invitación cancelada correctamente");
             return "redirect:/trabajos/" + trabajoId;
         } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute("errorInv", e.getMessage());
-            return "redirect:/trabajos";
+            redirectAttributes.addFlashAttribute(ERROR_INV, e.getMessage());
+            return REDIRECT_TRABAJOS;
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorInv", e.getMessage());
-            return "redirect:/trabajos";
+            redirectAttributes.addFlashAttribute(ERROR_INV, e.getMessage());
+            return REDIRECT_TRABAJOS;
         }
     }
 }
