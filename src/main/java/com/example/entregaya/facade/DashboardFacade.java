@@ -2,9 +2,7 @@ package com.example.entregaya.facade;
 
 import com.example.entregaya.dto.DashboardDTO;
 import com.example.entregaya.model.Invitacion;
-import com.example.entregaya.model.Notificacion;
 import com.example.entregaya.model.Trabajo;
-import com.example.entregaya.model.User;
 import com.example.entregaya.repository.NotificacionRepository;
 import com.example.entregaya.repository.UserRepository;
 import com.example.entregaya.service.CustomInvitacionDetailsService;

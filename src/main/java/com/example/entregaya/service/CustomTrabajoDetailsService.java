@@ -1,23 +1,24 @@
 package com.example.entregaya.service;
 
+import com.example.entregaya.dto.MiembroRolDTO;
 import com.example.entregaya.dto.TrabajoCrearDTO;
 import com.example.entregaya.dto.TrabajoEditarDTO;
-import com.example.entregaya.model.HistorialEvento;
-import com.example.entregaya.repository.HistorialEventoRepository;
-import com.example.entregaya.dto.MiembroRolDTO;
 import com.example.entregaya.dto.TrabajoEventoDTO;
 import com.example.entregaya.model.ColaboradorTrabajo;
 import com.example.entregaya.model.ColaboradorTrabajoId;
+import com.example.entregaya.model.HistorialEvento;
 import com.example.entregaya.model.Trabajo;
 import com.example.entregaya.model.User;
 import com.example.entregaya.observer.TrabajoObserver;
 import com.example.entregaya.repository.ColaboradorTrabajoRepository;
+import com.example.entregaya.repository.HistorialEventoRepository;
 import com.example.entregaya.repository.TrabajoRepository;
 import com.example.entregaya.repository.UserRepository;
 import com.example.entregaya.strategy.Permisostrategy;
 import com.example.entregaya.strategy.Sololiderstrategy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -164,8 +165,8 @@ public class CustomTrabajoDetailsService{
                 .orElse(false);
     }
 
-    public void eliminar(long Id) {
-        trabajoRepository.deleteById(Id);
+    public void eliminar(long id) {
+        trabajoRepository.deleteById(id);
     }
 
     /**
@@ -179,8 +180,9 @@ public class CustomTrabajoDetailsService{
         Trabajo trabajo = trabajoRepository.findById(trabajoId)
                 .orElseThrow(() -> new IllegalArgumentException("El trabajo no existe"));
 
-        if(!verificarPermiso(trabajoId,usernameQuienEjecuta,sololiderstrategy))
+        if(!verificarPermiso(trabajoId,usernameQuienEjecuta,sololiderstrategy)) {
             throw new IllegalArgumentException("Solo un lider puede elminar un colaborador");
+        }
 
         // Validar que quien ejecuta la acción sea LIDER
         User ejecutor = userRepository.findByUsername(usernameQuienEjecuta)

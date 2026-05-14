@@ -178,7 +178,9 @@ public class PdfExportService {
 
         // Línea final de la tabla
         float tableWidth = 0;
-        for (float w : COL_WIDTHS) tableWidth += w;
+        for (float w : COL_WIDTHS) {
+            tableWidth += w;
+        }
         cs.setLineWidth(0.5f);
         cs.moveTo(MARGIN, y);
         cs.lineTo(MARGIN + tableWidth, y);
@@ -207,7 +209,9 @@ public class PdfExportService {
     private float dibujarEncabezados(PDPageContentStream cs, float y) throws IOException {
         String[] headers = {"Nombre", "Estado", "Dificultad", "Responsable", "Fecha limite"};
         float tableWidth = 0;
-        for (float w : COL_WIDTHS) tableWidth += w;
+        for (float w : COL_WIDTHS) {
+            tableWidth += w;
+        }
 
         // Fondo gris para encabezados
         cs.setNonStrokingColor(0.85f, 0.85f, 0.85f);
@@ -246,7 +250,9 @@ public class PdfExportService {
      */
     private float dibujarFilaTarea(PDPageContentStream cs, Tarea tarea, float y) throws IOException {
         float tableWidth = 0;
-        for (float w : COL_WIDTHS) tableWidth += w;
+        for (float w : COL_WIDTHS) {
+            tableWidth += w;
+        }
 
         // Borde de la fila
         cs.setLineWidth(0.3f);
@@ -312,8 +318,12 @@ public class PdfExportService {
      * Trunca un texto si excede la longitud máxima.
      */
     private String truncar(String texto, int maxLength) {
-        if (texto == null) return "-";
-        if (texto.length() <= maxLength) return texto;
+        if (texto == null) {
+            return "-";
+        }
+        if (texto.length() <= maxLength) {
+            return texto;
+        }
         return texto.substring(0, maxLength - 3) + "...";
     }
 }

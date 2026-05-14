@@ -2,10 +2,10 @@ package com.example.entregaya.observer;
 
 import com.example.entregaya.dto.TareaEventoDTO;
 import com.example.entregaya.model.Notificacion;
+import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.User;
 import com.example.entregaya.repository.NotificacionRepository;
 import com.example.entregaya.repository.TareaRepository;
-import com.example.entregaya.model.Tarea;
 import org.springframework.stereotype.Component;
 
 import java.util.Set;
@@ -38,12 +38,16 @@ public class NotificacionObserver implements TareaObserver {
     public void actualizar(TareaEventoDTO evento) {
         // Obtener responsables actuales de la tarea
         Tarea tarea = tareaRepository.findById(evento.tareaId()).orElse(null);
-        if (tarea == null) return;
+        if (tarea == null) {
+            return;
+        }
 
         Set<User> responsables = tarea.getResponsables();
 
         // CA6: si no hay responsables, no se generan notificaciones
-        if (responsables == null || responsables.isEmpty()) return;
+        if (responsables == null || responsables.isEmpty()) {
+            return;
+        }
 
         String mensaje = String.format(
                 "La tarea \"%s\" del trabajo \"%s\" fue marcada como %s por %s el %s.",
