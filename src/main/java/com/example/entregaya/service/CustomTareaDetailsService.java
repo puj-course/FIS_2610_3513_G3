@@ -14,7 +14,6 @@ import com.example.entregaya.observer.TareaObserver;
 import com.example.entregaya.repository.TareaRepository;
 import com.example.entregaya.repository.TrabajoRepository;
 import com.example.entregaya.repository.UserRepository;
-import org.springframework.stereotype.Service;
 import com.example.entregaya.strategy.Lideroeditorstrategy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,7 +59,9 @@ public class CustomTareaDetailsService {
     public void eliminarObserver(TareaObserver observer)  { observers.remove(observer); }
 
     private void notificarObservers(TareaEventoDTO evento) {
-        for (TareaObserver observer : observers) observer.actualizar(evento);
+        for (TareaObserver observer : observers) {
+            observer.actualizar(evento);
+        }
     }
 
     // ── Validación de etiquetas (HU-40) ──
@@ -74,7 +75,9 @@ public class CustomTareaDetailsService {
      * @throws IllegalArgumentException si se viola alguna regla
      */
     public List<String> validarEtiquetas(List<String> etiquetas) {
-        if (etiquetas == null) return new ArrayList<>();
+        if (etiquetas == null) {
+            return new ArrayList<>();
+        }
 
         List<String> normalizadas = etiquetas.stream()
                 .filter(e -> e != null && !e.isBlank())
@@ -144,7 +147,9 @@ public class CustomTareaDetailsService {
      * HU-40 (Task #404): Lista de tareas filtradas por etiqueta.
      */
     public List<Tarea> tareasPorEtiqueta(Long trabajoId, String etiqueta) {
-        if (etiqueta == null || etiqueta.isBlank()) return tareas(trabajoId);
+        if (etiqueta == null || etiqueta.isBlank()) {
+            return tareas(trabajoId);
+        }
         return tareaRepository.findByTrabajoIdAndEtiqueta(trabajoId, etiqueta);
     }
 
@@ -206,7 +211,9 @@ public class CustomTareaDetailsService {
     // Calcular el progreso de un trabajo teniendo en cuenta las dificultades de las tareas
     public int calcularProgreso(Long trabajoId) {
         List<Tarea> tareas = tareaRepository.findBytrabajoId(trabajoId);
-        if (tareas.isEmpty()) return 0;
+        if (tareas.isEmpty()) {
+            return 0;
+        }
         int pesoTotal      = tareas.stream().mapToInt(t -> t.getDificultad().getPeso()).sum();
         int pesoCompletado = tareas.stream().filter(Tarea::getIsCompletada)
                                             .mapToInt(t -> t.getDificultad().getPeso()).sum();

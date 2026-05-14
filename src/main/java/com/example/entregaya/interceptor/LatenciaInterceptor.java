@@ -40,7 +40,9 @@ public class LatenciaInterceptor implements HandlerInterceptor {
                                 Object handler,
                                 Exception ex) {
         Object inicio = request.getAttribute(ATTR_INICIO);
-        if (inicio == null) return;
+        if (inicio == null) {
+            return;
+        }
 
         long latencia = System.currentTimeMillis() - (Long) inicio;
         String metodo = request.getMethod();

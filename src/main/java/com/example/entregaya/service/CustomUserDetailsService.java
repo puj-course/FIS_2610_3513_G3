@@ -2,7 +2,9 @@ package com.example.entregaya.service;
 
 import com.example.entregaya.model.User;
 import com.example.entregaya.repository.UserRepository;
-import org.springframework.security.core.userdetails.*;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -125,6 +127,14 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new IllegalArgumentException("El correo '" + nuevoEmail + "' ya está en uso.");
         }
         user.setEmail(nuevoEmail);
+        userRepository.save(user);
+    }
+
+    // Actualizar Telegram Chat ID
+    public void actualizarTelegramChatId(String username, String telegramChatId) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        user.setTelegramChatId(telegramChatId == null || telegramChatId.isBlank() ? null : telegramChatId.trim());
         userRepository.save(user);
     }
 

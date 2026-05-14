@@ -25,8 +25,10 @@ public class PerfilController {
 
     @GetMapping("/perfil")
     public String perfil(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        userDetailsService.findByUsername(userDetails.getUsername())
-                .ifPresent(user -> model.addAttribute("emailActual", user.getEmail()));
+        userDetailsService.findByUsername(userDetails.getUsername()).ifPresent(user -> {
+            model.addAttribute("emailActual", user.getEmail());
+            model.addAttribute("telegramChatIdActual", user.getTelegramChatId());
+        });
         return "perfil";
     }
 
@@ -69,6 +71,19 @@ public class PerfilController {
             redirectAttributes.addFlashAttribute("successEmail", "Correo actualizado correctamente.");
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("errorEmail", e.getMessage());
+        }
+        return REDIRECT_PERFIL;
+    }
+
+    @PostMapping("/perfil/actualizar-telegram")
+    public String actualizarTelegram(@RequestParam("telegramChatId") String telegramChatId,
+                                     @AuthenticationPrincipal UserDetails userDetails,
+                                     RedirectAttributes redirectAttributes) {
+        try {
+            userDetailsService.actualizarTelegramChatId(userDetails.getUsername(), telegramChatId);
+            redirectAttributes.addFlashAttribute("successTelegram", "Telegram Chat ID actualizado correctamente.");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorTelegram", e.getMessage());
         }
         return REDIRECT_PERFIL;
     }

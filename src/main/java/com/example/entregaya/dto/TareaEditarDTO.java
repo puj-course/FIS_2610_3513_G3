@@ -1,6 +1,5 @@
 package com.example.entregaya.dto;
 
-import com.example.entregaya.model.Tarea;
 import java.util.ArrayList;
 import java.util.List;
 
