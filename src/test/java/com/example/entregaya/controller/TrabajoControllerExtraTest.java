@@ -613,7 +613,7 @@ class TrabajoControllerExtraTest {
     void trabajosEspecificos_RetornaVistaEspecificos() {
         Model model = new ExtendedModelMap();
 
-        String resultado = trabajoController.TrabajosEspecificos(model);
+        String resultado = trabajoController.trabajosEspecificos(model);
 
         Assertions.assertEquals("trabajos-especificos", resultado);
         Assertions.assertNotNull(model.asMap().get("trabajo"));
@@ -624,7 +624,7 @@ class TrabajoControllerExtraTest {
         Model model = new ExtendedModelMap();
         Mockito.when(customTrabajoDetailsService.obtenerPorId(1L)).thenReturn(trabajoBase);
 
-        String resultado = trabajoController.DetallesxId(1L, model);
+        String resultado = trabajoController.detallesxId(1L, model);
 
         Assertions.assertEquals("trabajos/detalle", resultado);
     }

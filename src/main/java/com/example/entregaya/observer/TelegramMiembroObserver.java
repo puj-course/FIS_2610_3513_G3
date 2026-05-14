@@ -33,7 +33,9 @@ public class TelegramMiembroObserver implements TrabajoObserver {
     @Override
     public void actualizar(TrabajoEventoDTO evento) {
         Trabajo trabajo = trabajoRepository.findById(evento.trabajoId()).orElse(null);
-        if (trabajo == null) return;
+        if (trabajo == null) {
+            return;
+        }
 
         boolean esIngreso = evento.tipoEvento() == TrabajoEventoDTO.TipoEvento.INGRESO;
 

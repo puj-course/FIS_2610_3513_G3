@@ -1,6 +1,5 @@
 package com.example.entregaya.service;
 
-import com.example.entregaya.model.ColaboradorTrabajo;
 import com.example.entregaya.model.Invitacion;
 import com.example.entregaya.model.Trabajo;
 import com.example.entregaya.model.User;
@@ -10,7 +9,7 @@ import com.example.entregaya.repository.UserRepository;
 import com.example.entregaya.strategy.Lideroeditorstrategy;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.List;
 
 @Service
 public class CustomInvitacionDetailsService {
@@ -88,8 +87,9 @@ public class CustomInvitacionDetailsService {
             throw new IllegalArgumentException("Solo se pueden cancelar invitaciones en estado PENDIENTE");
         }
 
-        if(!customTrabajoDetailsService.verificarPermiso(inv.getTrabajo().getId(),username,lideroeditorstrategy))
+        if(!customTrabajoDetailsService.verificarPermiso(inv.getTrabajo().getId(),username,lideroeditorstrategy)) {
             throw new IllegalArgumentException("No tiene permiso para el usuario");
+        }
 
         Long trabajoId = inv.getTrabajo().getId();
         invitacionRepository.delete(inv);
