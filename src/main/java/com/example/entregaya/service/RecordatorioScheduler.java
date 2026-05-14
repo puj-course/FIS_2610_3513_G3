@@ -32,7 +32,7 @@ public class RecordatorioScheduler {
         this.telegramService = telegramService;
     }
 
-    @Scheduled(cron = "0 * * * * *") // Diario a las 8:00 AM
+    @Scheduled(cron = "0 0 8 * * *") // Diario a las 8:00 AM
     @Transactional
     public void enviarRecordatoriosVencimiento() {
         LocalDateTime ahora = LocalDateTime.now();
