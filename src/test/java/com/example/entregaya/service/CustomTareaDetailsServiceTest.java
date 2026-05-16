@@ -50,11 +50,12 @@ class CustomTareaDetailsServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Crear usuario
+        // Identificadores únicos por test class para no chocar con TrabajoRepositoryTest
+        // (que no es @Transactional y deja datos comprometidos en H2 entre clases).
         usuario = new User();
-        usuario.setUsername("testuser");
+        usuario.setUsername("customtarea-testuser");
         usuario.setPassword("password123");
-        usuario.setEmail("test@example.com");
+        usuario.setEmail("customtarea-test@example.com");
         userRepository.save(usuario);
 
         // Crear trabajo
@@ -63,7 +64,7 @@ class CustomTareaDetailsServiceTest {
         trabajo.setDescripcion("Proyecto para service testing");
         trabajo.setFechaInicio(LocalDateTime.now());
         trabajo.setFechaEntrega(LocalDateTime.now().plusDays(30));
-        trabajo = customTrabajoDetailsService.crearTrabajo(trabajo, "testuser");
+        trabajo = customTrabajoDetailsService.crearTrabajo(trabajo, "customtarea-testuser");
     }
 
     // ========== CP01: Crear tarea sin etiquetas ==========

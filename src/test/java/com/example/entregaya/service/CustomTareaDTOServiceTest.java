@@ -263,4 +263,27 @@ class CustomTareaDTOServiceTest {
                 tareaService.editarTareaDesdeDTO(99999L, dto)
         );
     }
+    @Test
+    @DisplayName("CP_NEW_03: editarTareaDesdeDTO con responsablesIds=null limpia responsables")
+    void CP_NEW_03_editarTareaDesdeDTO_ResponsablesIdsNull_LimpiaResponsables() {
+        // Arrange: crear tarea base
+        com.example.entregaya.model.Tarea tarea = new com.example.entregaya.model.Tarea();
+        tarea.setNombre("Tarea para test null " + System.nanoTime());
+        tarea.setDificultad(com.example.entregaya.model.Tarea.Dificultad.SIMPLE);
+        com.example.entregaya.model.Tarea guardada = tareaService.crearTarea(tarea, trabajo.getId());
+
+        // Construir DTO y asignar null explícitamente (el constructor pone ArrayList vacío)
+        com.example.entregaya.dto.TareaEditarDTO dto = new com.example.entregaya.dto.TareaEditarDTO();
+        dto.setNombre("Nombre editado");
+        dto.setDificultad(com.example.entregaya.model.Tarea.Dificultad.ALTA);
+        dto.setResponsablesIds(null);   // <-- esto activa el cortocircuito del &&
+
+        // Act
+        tareaService.editarTareaDesdeDTO(guardada.getId(), dto);
+
+        // Assert: sin responsables (rama else ejecutada)
+        com.example.entregaya.model.Tarea actualizada = tareaService.findById(guardada.getId());
+        assertTrue(actualizada.getResponsables().isEmpty(),
+                "Con responsablesIds=null el set de responsables debe quedar vacío");
+    }
 }

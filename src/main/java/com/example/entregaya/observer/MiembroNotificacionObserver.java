@@ -34,7 +34,9 @@ public class MiembroNotificacionObserver implements TrabajoObserver {
         // Obtener el trabajo
         Trabajo trabajo = trabajoRepository.findById(evento.trabajoId())
                 .orElse(null);
-        if (trabajo == null) return;
+        if (trabajo == null) {
+            return;
+        }
 
         // 1. Crear notificaciones para los miembros
         crearNotificacionesMiembros(evento, trabajo);

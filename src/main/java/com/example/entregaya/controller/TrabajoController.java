@@ -1,18 +1,19 @@
 package com.example.entregaya.controller;
 
-import com.example.entregaya.dto.*;
-import com.example.entregaya.model.HistorialEvento;
-import java.util.stream.Collectors;
-
+import com.example.entregaya.dto.HistorialEventoDTO;
+import com.example.entregaya.dto.TrabajoCrearDTO;
+import com.example.entregaya.dto.TrabajoEditarDTO;
 import com.example.entregaya.model.ColaboradorTrabajo;
+import com.example.entregaya.model.HistorialEvento;
 import com.example.entregaya.model.Tarea;
 import com.example.entregaya.model.Trabajo;
 import com.example.entregaya.model.User;
 import com.example.entregaya.service.CustomInvitacionDetailsService;
-import com.example.entregaya.service.CustomTrabajoDetailsService;
 import com.example.entregaya.service.CustomTareaDetailsService;
+import com.example.entregaya.service.CustomTrabajoDetailsService;
 import com.example.entregaya.service.PdfExportService;
 import com.example.entregaya.strategy.Lideroeditorstrategy;
+import org.hibernate.Hibernate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,7 +22,15 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
@@ -30,6 +39,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/trabajos")
@@ -173,45 +183,63 @@ public class TrabajoController {
     }
 
     @GetMapping("/{id}")
-    public String detalle(@PathVariable long id, Model model,  @AuthenticationPrincipal UserDetails user) {
-        // Verificar si el usuario actual es LIDER
-        boolean esLider = customTrabajoDetailsService.esLider(id, user.getUsername());
-        boolean puedeGestionar = customTrabajoDetailsService.puedeEditarTarea(id, user.getUsername());
-        model.addAttribute("esLider", esLider);
-        model.addAttribute("puedeGestionar", puedeGestionar);
+    public String detalle(@PathVariable long id, Model model,
+                          @AuthenticationPrincipal UserDetails user) {
+
         Trabajo trabajo = customTrabajoDetailsService.obtenerPorId(id);
         List<Tarea> tareas = customTareaDetailsService.tareas(id);
-        
-        // HU-29 (#317): Obtener tareas con etiquetas de urgencia para display en la vista
-        List<TareaConEtiquetaDTO> tareasConEtiquetas = customTareaDetailsService.tareasConEtiquetas(id);
 
-        trabajo.getColaboradores().size();
-        tareas.forEach(t -> t.getResponsables().size());
+        Hibernate.initialize(trabajo.getColaboradores());
+        tareas.forEach(t -> Hibernate.initialize(t.getResponsables()));
 
-        // Calcular estadísticas
+        agregarAtributosPermisos(id, user.getUsername(), model);
+        agregarEstadisticasTareas(tareas, model);
+        agregarAlertasFechas(tareas, model);
+
+        model.addAttribute("trabajo", trabajo);
+        model.addAttribute("tareas", tareas);
+        model.addAttribute("tareasConEtiquetas", customTareaDetailsService.tareasConEtiquetas(id));
+        model.addAttribute("progreso", customTareaDetailsService.calcularProgreso(id));
+        model.addAttribute("invitaciones", customInvitacionDetailsService.porTrabajo(id));
+        model.addAttribute("miembros", customTrabajoDetailsService.consultarMiembros(id));
+
+        return "trabajos/detalle";
+    }
+    private void agregarAtributosPermisos(long trabajoId, String username, Model model) {
+        model.addAttribute("esLider", customTrabajoDetailsService.esLider(trabajoId, username));
+        model.addAttribute("puedeGestionar", customTrabajoDetailsService.puedeEditarTarea(trabajoId, username));
+    }
+
+    private void agregarEstadisticasTareas(List<Tarea> tareas, Model model) {
+        java.time.LocalDateTime ahora = java.time.LocalDateTime.now();
+
         long completadas = tareas.stream().filter(Tarea::getIsCompletada).count();
-        long pendientes = tareas.stream()
+        long pendientes  = tareas.stream()
                 .filter(t -> !t.getIsCompletada() &&
-                        (t.getFechaInicio() == null || t.getFechaInicio().isAfter(java.time.LocalDateTime.now())))
+                        (t.getFechaInicio() == null || t.getFechaInicio().isAfter(ahora)))
                 .count();
-        long enProgreso = tareas.stream()
+        long enProgreso  = tareas.stream()
                 .filter(t -> !t.getIsCompletada() &&
                         t.getFechaInicio() != null &&
-                        !t.getFechaInicio().isAfter(java.time.LocalDateTime.now()))
+                        !t.getFechaInicio().isAfter(ahora))
                 .count();
 
-        // Obtener próximas entregas (tareas no completadas ordenadas por fecha)
         List<Tarea> proximasEntregas = tareas.stream()
                 .filter(t -> !t.getIsCompletada() && t.getFechaFinal() != null)
                 .sorted((t1, t2) -> t1.getFechaFinal().compareTo(t2.getFechaFinal()))
                 .limit(5)
                 .toList();
 
-        // HU-11: Lógica de comparación de fechas para alertas visuales
-        java.time.LocalDateTime ahora = java.time.LocalDateTime.now();
+        model.addAttribute("completadas", completadas);
+        model.addAttribute("pendientes", pendientes);
+        model.addAttribute("enProgreso", enProgreso);
+        model.addAttribute("proximasEntregas", proximasEntregas);
+    }
+
+    private void agregarAlertasFechas(List<Tarea> tareas, Model model) {
+        java.time.LocalDateTime ahora     = java.time.LocalDateTime.now();
         java.time.LocalDateTime en24Horas = ahora.plusHours(24);
 
-        // Identificar tareas vencidas (fechaFinal < ahora && !completada)
         List<Long> tareasVencidas = tareas.stream()
                 .filter(t -> !t.getIsCompletada() &&
                         t.getFechaFinal() != null &&
@@ -219,7 +247,6 @@ public class TrabajoController {
                 .map(Tarea::getId)
                 .toList();
 
-        // Identificar tareas que vencen pronto (fechaFinal entre ahora y ahora+24h && !completada)
         List<Long> tareasVencenPronto = tareas.stream()
                 .filter(t -> !t.getIsCompletada() &&
                         t.getFechaFinal() != null &&
@@ -228,23 +255,8 @@ public class TrabajoController {
                 .map(Tarea::getId)
                 .toList();
 
-        // Miembros con roles para mostrar en la vista de detalle
-        List<MiembroRolDTO> miembros = customTrabajoDetailsService.consultarMiembros(id);
-
-        model.addAttribute("trabajo", trabajo);
-        model.addAttribute("tareas", tareas);
-        model.addAttribute("tareasConEtiquetas", tareasConEtiquetas);  // HU-29 (#317): Para mostrar badges
-        model.addAttribute("progreso", customTareaDetailsService.calcularProgreso(id));
-        model.addAttribute("completadas", completadas);
-        model.addAttribute("pendientes", pendientes);
-        model.addAttribute("enProgreso", enProgreso);
-        model.addAttribute("proximasEntregas", proximasEntregas);
-        model.addAttribute("invitaciones", customInvitacionDetailsService.porTrabajo(id));
-        model.addAttribute("miembros", miembros);
-        // HU-11: Agregar listas de alertas al modelo
         model.addAttribute("tareasVencidas", tareasVencidas);
         model.addAttribute("tareasVencenPronto", tareasVencenPronto);
-        return "trabajos/detalle";
     }
 
     @PostMapping("/{id}/eliminar")
@@ -275,13 +287,13 @@ public class TrabajoController {
     }
 
     @GetMapping("/trabajos-especificos")
-    public String TrabajosEspecificos(Model model) {
+    public String trabajosEspecificos(Model model) {
         model.addAttribute("trabajo", new Trabajo());
         return "trabajos-especificos";
     }
 
     @GetMapping("/{id}/detalle")
-    public String DetallesxId(@PathVariable long id, Model model) {
+    public String detallesxId(@PathVariable long id, Model model) {
         model.addAttribute("trabajo", customTrabajoDetailsService.obtenerPorId(id));
         return "trabajos/detalle";
     }
@@ -293,10 +305,17 @@ public class TrabajoController {
         // Convertir Set a List y ordenar: LIDER primero, luego por username
         List<ColaboradorTrabajo> miembrosOrdenados = new ArrayList<>(trabajo.getColaboradores());
         miembrosOrdenados.sort((m1, m2) -> {
-            // LIDER siempre primero
-            if (m1.getRol() == ColaboradorTrabajo.Rol.LIDER) return -1;
-            if (m2.getRol() == ColaboradorTrabajo.Rol.LIDER) return 1;
-            // Si ambos son COLABORADOR, ordenar por username
+            boolean m1EsLider = m1.getRol() == ColaboradorTrabajo.Rol.LIDER;
+            boolean m2EsLider = m2.getRol() == ColaboradorTrabajo.Rol.LIDER;
+            if (m1EsLider && m2EsLider) {
+                return 0;   // ← caso faltante
+            }
+            if (m1EsLider) {
+                return -1;
+            }
+            if (m2EsLider) {
+                return 1;
+            }
             return m1.getUser().getUsername().compareTo(m2.getUser().getUsername());
         });
 
@@ -423,7 +442,9 @@ public class TrabajoController {
 
             for (Tarea tarea : tareas) {
                 // Solo incluir tareas que tengan al menos una fecha
-                if (tarea.getFechaInicio() == null && tarea.getFechaFinal() == null) continue;
+                if (tarea.getFechaInicio() == null && tarea.getFechaFinal() == null) {
+                    continue;
+                }
 
                 boolean vencida = !tarea.getIsCompletada()
                         && tarea.getFechaFinal() != null

@@ -28,7 +28,9 @@ public class TareaHistorialObserver implements TareaObserver {
         // Obtener la tarea
         Tarea tarea = tareaRepository.findById(evento.tareaId())
                 .orElse(null);
-        if (tarea == null || tarea.getTrabajo() == null) return;
+        if (tarea == null || tarea.getTrabajo() == null) {
+            return;
+        }
 
         // Registrar en el historial del trabajo
         String descripcion;

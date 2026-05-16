@@ -138,9 +138,9 @@
 
                 <configuration>
                     <configLocation>src/main/resources/checkstyle.xml</configLocation>
-                    <failsOnError>false</failsOnError>
-                    <consoleOutput>false</consoleOutput>
-                    <skip>true</skip>
+                    <failsOnError>true</failsOnError>
+                    <consoleOutput>true</consoleOutput>
+
                 </configuration>
 
                 <executions>
@@ -167,7 +167,6 @@
                 <configuration>
                     <excludes>
                         <exclude>**/config/**</exclude>
-                        <exclude>**/dto/**</exclude>
                         <exclude>**/*Application.class</exclude>
                     </excludes>
                 </configuration>

@@ -1,0 +1,442 @@
+name: Reporte Metodología Agil
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  agile-report:
+    runs-on: ubuntu-22.04
+
+    steps:
+
+      # Clonar repositorio
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Crear carpeta de reportes
+      - name: Crear carpeta reportes
+        run: mkdir -p docs/reporte
+
+      # Obtener todos los issues del repositorio
+      - name: Obtener issues
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          gh api --paginate repos/${{ github.repository }}/issues?state=all\&per_page=100 \
+            > issues.json
+
+      # Obtener pull requests
+      - name: Obtener PRs
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          gh api --paginate repos/${{ github.repository }}/pulls?state=all\&per_page=100 \
+            > prs.json
+
+      # Obtener ramas
+      - name: Obtener ramas
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          gh api repos/${{ github.repository }}/branches?per_page=100 \
+            > branches.json
+
+      # Obtener milestones
+      - name: Obtener milestones
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          gh api repos/${{ github.repository }}/milestones?state=all\&per_page=100 \
+            > milestones.json
+
+      # Obtener commits
+      - name: Obtener commits
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          gh api --paginate repos/${{ github.repository }}/commits?per_page=100 \
+            > commits.json
+
+      # Generar reporte
+      - name: Generar reporte
+        run: |
+
+          node << 'EOF'
+
+          const fs = require('fs');
+
+          // Leer archivos
+          const issues = JSON.parse(fs.readFileSync('issues.json'));
+          const prs = JSON.parse(fs.readFileSync('prs.json'));
+          const branches = JSON.parse(fs.readFileSync('branches.json'));
+          const milestones = JSON.parse(fs.readFileSync('milestones.json'));
+          const commits = JSON.parse(fs.readFileSync('commits.json'));
+
+          // Detectar historias reales
+          function esHistoriaUsuario(title) {
+
+            if (!title) return false;
+
+            const titulo = title.trim();
+
+            const patrones = [
+
+              /^HU[-\s]?\d+/i,
+              /^Historia de Usuario/i,
+              /^Historia de Usuario NF/i,
+              /^R\d+/i
+
+            ];
+
+            const esHU =
+              patrones.some(p => p.test(titulo));
+
+            // Excluir diagramas/documentación
+            const excluidos = [
+
+              /diagrama/i,
+              /uml/i,
+              /ecb/i,
+              /componentes/i,
+              /despliegue/i,
+              /clases/i,
+              /análisis/i
+
+            ];
+
+            const esExcluido =
+              excluidos.some(p => p.test(titulo));
+
+            return esHU && !esExcluido;
+          }
+
+          // Filtrar issues reales
+          const realIssues = issues.filter(i => !i.pull_request);
+
+          // Historias detectadas
+          const historias =
+            realIssues.filter(i =>
+              esHistoriaUsuario(i.title)
+            );
+
+          // Métricas generales
+          const totalIssues =
+            realIssues.length;
+
+          const closedIssues =
+            realIssues.filter(i =>
+              i.state === 'closed'
+            ).length;
+
+          const openIssues =
+            realIssues.filter(i =>
+              i.state === 'open'
+            ).length;
+
+          // Métricas historias
+          const closedHU =
+            historias.filter(i =>
+              i.state === 'closed'
+            ).length;
+
+          const openHU =
+            historias.filter(i =>
+              i.state === 'open'
+            ).length;
+
+          // Pull requests
+          const mergedPRs =
+            prs.filter(pr => pr.merged_at);
+
+          const openPRs =
+            prs.filter(pr => pr.state === 'open');
+
+          const closedPRs =
+            prs.filter(pr =>
+              pr.state === 'closed'
+              && !pr.merged_at
+            );
+
+          // Commits por usuario
+          const commitsPorUsuario = {};
+
+          const uniqueCommits =
+            new Set();
+
+          commits.forEach(commit => {
+
+            if (!commit.author) return;
+
+            const user =
+              commit.author.login;
+
+            if (user.includes('[bot]')) return;
+
+            if (uniqueCommits.has(commit.sha)) return;
+
+            uniqueCommits.add(commit.sha);
+
+            if (!commitsPorUsuario[user]) {
+              commitsPorUsuario[user] = 0;
+            }
+
+            commitsPorUsuario[user]++;
+
+          });
+
+          // Issues por usuario
+          const issuesPorUsuario = {};
+
+          realIssues.forEach(issue => {
+
+            issue.assignees.forEach(user => {
+
+              const login =
+                user.login;
+
+              if (!issuesPorUsuario[login]) {
+
+                issuesPorUsuario[login] = {
+                  assigned: 0,
+                  closed: 0
+                };
+
+              }
+
+              issuesPorUsuario[login].assigned++;
+
+              if (issue.state === 'closed') {
+                issuesPorUsuario[login].closed++;
+              }
+
+            });
+
+          });
+
+          // Branches
+          const branchNames =
+            branches.map(b => b.name);
+
+          const mainBranches =
+            branchNames.filter(b =>
+              ['main', 'develop', 'master'].includes(b)
+            );
+
+          const featureBranches =
+            branchNames.filter(b =>
+              b.startsWith('feature/')
+            );
+
+          const personalBranches =
+            branchNames.filter(b =>
+
+              !['main', 'develop', 'master'].includes(b)
+              && !b.startsWith('feature/')
+
+            );
+
+          // Fecha
+          const fecha =
+            new Date().toISOString().split('T')[0];
+
+          // Crear reporte
+          let reporte = '';
+
+          reporte += `# Reporte General de Metodología Ágil\n\n`;
+          reporte += `Fecha generación: ${fecha}\n\n`;
+
+          // Issues
+          reporte += `# 1. Issues del Proyecto\n\n`;
+
+          reporte += `| Métrica | Valor |\n`;
+          reporte += `|----------|-------|\n`;
+
+          reporte += `| Total Issues | ${totalIssues} |\n`;
+          reporte += `| Issues Cerrados | ${closedIssues} |\n`;
+          reporte += `| Issues Abiertos | ${openIssues} |\n\n`;
+
+          // Historias
+          reporte += `# 2. Historias de Usuario\n\n`;
+
+          reporte += `| Métrica | Valor |\n`;
+          reporte += `|----------|-------|\n`;
+
+          reporte += `| Total Historias | ${historias.length} |\n`;
+          reporte += `| Historias Cerradas | ${closedHU} |\n`;
+          reporte += `| Historias Abiertas | ${openHU} |\n\n`;
+
+          reporte += `## Historias Detectadas\n\n`;
+
+          reporte += `| Historia | Estado |\n`;
+          reporte += `|-----------|--------|\n`;
+
+          historias
+            .sort((a, b) => b.number - a.number)
+            .forEach(h => {
+
+              let titulo =
+                h.title;
+
+              if (titulo.length > 220) {
+                titulo =
+                  titulo.substring(0, 220) + '...';
+              }
+
+              reporte +=
+                `| #${h.number} ${titulo} | ${h.state} |\n`;
+
+            });
+
+          reporte += '\n';
+
+          // PRs
+          reporte += `# 3. Pull Requests\n\n`;
+
+          reporte += `| Métrica | Valor |\n`;
+          reporte += `|----------|-------|\n`;
+
+          reporte += `| Total PRs | ${prs.length} |\n`;
+          reporte += `| PRs Mergeados | ${mergedPRs.length} |\n`;
+          reporte += `| PRs Abiertos | ${openPRs.length} |\n`;
+          reporte += `| PRs Cerrados sin Merge | ${closedPRs.length} |\n\n`;
+
+          // Commits
+          reporte += `# 4. Participación por Commits\n\n`;
+
+          reporte += `| Usuario | Commits |\n`;
+          reporte += `|----------|----------|\n`;
+
+          Object.entries(commitsPorUsuario)
+            .sort((a, b) => b[1] - a[1])
+            .forEach(([user, total]) => {
+
+              reporte +=
+                `| @${user} | ${total} |\n`;
+
+            });
+
+          reporte += '\n';
+
+          // Issues por usuario
+          reporte += `# 5. Participación por Issues\n\n`;
+
+          reporte += `| Usuario | Asignados | Cerrados |\n`;
+          reporte += `|----------|------------|-----------|\n`;
+
+          Object.entries(issuesPorUsuario)
+            .sort((a, b) =>
+              b[1].assigned - a[1].assigned
+            )
+            .forEach(([user, data]) => {
+
+              reporte +=
+                `| @${user} | ${data.assigned} | ${data.closed} |\n`;
+
+            });
+
+          reporte += '\n';
+
+          // Milestones
+          reporte += `# 6. Milestones\n\n`;
+
+          reporte += `| Milestone | Estado | Issues Abiertos | Issues Cerrados |\n`;
+          reporte += `|-------------|---------|------------------|------------------|\n`;
+
+          milestones.forEach(m => {
+
+            reporte +=
+              `| ${m.title} | ${m.state} | ${m.open_issues} | ${m.closed_issues} |\n`;
+
+          });
+
+          reporte += '\n';
+
+          // Branches
+          reporte += `# 7. Estructura de Ramas\n\n`;
+
+          reporte += `- Total ramas: ${branchNames.length}\n`;
+          reporte += `- Ramas principales: ${mainBranches.length}\n`;
+          reporte += `- Feature branches: ${featureBranches.length}\n`;
+          reporte += `- Ramas personales: ${personalBranches.length}\n\n`;
+
+          // Main branches
+          reporte += `## Ramas Principales\n\n`;
+
+          reporte += `| Rama |\n`;
+          reporte += `|------|\n`;
+
+          mainBranches.forEach(b => {
+
+            reporte +=
+              `| ${b} |\n`;
+
+          });
+
+          reporte += '\n';
+
+          // Feature branches
+          reporte += `## Feature Branches\n\n`;
+
+          reporte += `| Rama |\n`;
+          reporte += `|------|\n`;
+
+          featureBranches.forEach(b => {
+
+            reporte +=
+              `| ${b} |\n`;
+
+          });
+
+          reporte += '\n';
+
+          // Personal branches
+          reporte += `## Ramas Personales\n\n`;
+
+          reporte += `| Rama |\n`;
+          reporte += `|------|\n`;
+
+          personalBranches.forEach(b => {
+
+            reporte +=
+              `| ${b} |\n`;
+
+          });
+
+          reporte += '\n';
+
+          // Guardar reporte
+          fs.writeFileSync(
+            'docs/reporte/reporte-metodologia-agil.md',
+            reporte
+          );
+
+          console.log('Reporte generado correctamente');
+
+          EOF
+
+      # Mostrar resumen
+      - name: Mostrar resumen
+        run: |
+          echo "## Reporte generado correctamente" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Archivo generado:" >> $GITHUB_STEP_SUMMARY
+          echo "\`docs/reporte/reporte-metodologia-agil.md\`" >> $GITHUB_STEP_SUMMARY
+
+      # Commit y push
+      - name: Commit y push
+        run: |
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add docs/reporte/
+
+          if git diff --staged --quiet; then
+            echo "No hay cambios"
+          else
+            git commit -m "docs: actualizar reporte metodologia agil [skip ci]"
+            git push
+          fi
