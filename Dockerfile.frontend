@@ -1,0 +1,30 @@
+# ── Etapa 1: Build (copia los resources) ────────────────────────────────────
+FROM maven:3.9.6-eclipse-temurin-17 AS build
+
+WORKDIR /app
+
+COPY pom.xml .
+COPY src/main/resources ./src/main/resources
+
+# ── Etapa 2: Runtime (Nginx para servir archivos estáticos) ──────────────────
+FROM nginx:alpine
+
+WORKDIR /usr/share/nginx/html
+
+# Copiar los resources (HTML, CSS, JS, etc.)
+COPY --from=build /app/src/main/resources .
+
+# Configuración de nginx para SPA
+RUN echo 'server { \
+    listen 80; \
+    location / { \
+        try_files $uri $uri/ /index.html; \
+    } \
+}' > /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+  CMD wget -qO- http://localhost:80/ || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]
