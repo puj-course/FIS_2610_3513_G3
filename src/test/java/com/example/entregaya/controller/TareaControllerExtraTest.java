@@ -368,8 +368,8 @@ class TareaControllerExtraTest {
     @Test
     void user_TelegramChatId_GetterSetter() {
         User u = new User();
-        u.setTelegramChatId("12345");
-        Assertions.assertEquals("12345", u.getTelegramChatId());
+        u.setPhoneNumber("12345");
+        Assertions.assertEquals("12345", u.getPhoneNumber());
     }
 
     @Test
@@ -424,7 +424,7 @@ class TareaControllerExtraTest {
 
         TareaEditarDTO dto = new TareaEditarDTO();
         dto.setNombre("Tarea con datos reales");
-        dto.setDificultad(com.example.entregaya.model.Tarea.Dificultad.ALTA);
+        dto.setDificultad(Tarea.Dificultad.ALTA);
 
         List<Long>   responsableIds = List.of(10L, 20L);   // <-- no nulo
         List<String> etiquetas      = List.of("urgente");  // <-- no nulo
@@ -452,7 +452,7 @@ class TareaControllerExtraTest {
 
         TareaEditarDTO dto = new TareaEditarDTO();
         dto.setNombre("Tarea mezcla");
-        dto.setDificultad(com.example.entregaya.model.Tarea.Dificultad.MEDIA);
+        dto.setDificultad(Tarea.Dificultad.MEDIA);
 
         List<String> etiquetas = List.of("backend", "api");  // no nulo
 

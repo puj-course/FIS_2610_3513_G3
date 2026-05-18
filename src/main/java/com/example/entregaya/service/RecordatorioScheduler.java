@@ -22,14 +22,14 @@ public class RecordatorioScheduler {
 
     private final TareaRepository tareaRepository;
     private final NotificacionRepository notificacionRepository;
-    private final TelegramNotificacionService telegramService;
+    private final TwilioSmsService smsService;
 
     public RecordatorioScheduler(TareaRepository tareaRepository,
                                  NotificacionRepository notificacionRepository,
-                                 TelegramNotificacionService telegramService) {
+                                 TwilioSmsService smsService) {
         this.tareaRepository = tareaRepository;
         this.notificacionRepository = notificacionRepository;
-        this.telegramService = telegramService;
+        this.smsService = smsService;
     }
 
     @Scheduled(cron = "0 0 8 * * *") // Diario a las 8:00 AM
@@ -43,15 +43,14 @@ public class RecordatorioScheduler {
         for (Tarea tarea : tareas) {
             for (User responsable : tarea.getResponsables()) {
                 // Notificación interna
-                String mensaje = "La tarea '" + tarea.getNombre() + "' vence mañana.";
+                String mensaje = "[EntregaYa] La tarea '" + tarea.getNombre() + "' vence mañana.";
                 Notificacion n = new Notificacion(responsable, mensaje, TipoNotificacion.RECORDATORIO_VENCIMIENTO);
                 notificacionRepository.save(n);
 
-                // Notificación Telegram
-                //La hu 2 integra telegramId en user
-                if (responsable.getTelegramChatId() != null && !responsable.getTelegramChatId().isBlank()) {
-                    telegramService.enviarMensaje(responsable.getTelegramChatId(), mensaje);
-                    log.info("[Scheduler] Telegram enviado a usuario={}", responsable.getUsername());
+                // Notificación SMS vía Twilio
+                if (responsable.getPhoneNumber() != null && !responsable.getPhoneNumber().isBlank()) {
+                    smsService.enviarSms(responsable.getPhoneNumber(), mensaje);
+                    log.info("[Scheduler] SMS enviado a usuario={}", responsable.getUsername());
                 }
             }
             tarea.setRecordatorioEnviado(true);

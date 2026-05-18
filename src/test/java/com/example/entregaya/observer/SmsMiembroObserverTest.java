@@ -6,6 +6,7 @@ import com.example.entregaya.model.Trabajo;
 import com.example.entregaya.model.User;
 import com.example.entregaya.repository.TrabajoRepository;
 import com.example.entregaya.service.TwilioSmsService;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -74,7 +75,7 @@ class SmsMiembroObserverTest {
 
         TrabajoEventoDTO evento = new TrabajoEventoDTO(
                 1L, "Proyecto X", TrabajoEventoDTO.TipoEvento.INGRESO,
-                "nuevo", "nuevo");
+                "nuevo", "nuevo", LocalDateTime.now());
 
         observer.actualizar(evento);
 
@@ -99,7 +100,7 @@ class SmsMiembroObserverTest {
         // realizadoPor == afectado -> salida voluntaria
         TrabajoEventoDTO evento = new TrabajoEventoDTO(
                 2L, "Proyecto Y", TrabajoEventoDTO.TipoEvento.SALIDA,
-                "saliente", "saliente");
+                "saliente", "saliente", LocalDateTime.now());
 
         observer.actualizar(evento);
 
@@ -125,7 +126,7 @@ class SmsMiembroObserverTest {
         // realizadoPor != afectado -> eliminacion por lider
         TrabajoEventoDTO evento = new TrabajoEventoDTO(
                 3L, "Proyecto Z", TrabajoEventoDTO.TipoEvento.SALIDA,
-                "eliminado", "lider");
+                "eliminado", "lider", LocalDateTime.now());
 
         observer.actualizar(evento);
 
@@ -151,7 +152,7 @@ class SmsMiembroObserverTest {
 
         TrabajoEventoDTO evento = new TrabajoEventoDTO(
                 4L, "Proyecto Sin Tel", TrabajoEventoDTO.TipoEvento.INGRESO,
-                "nuevo", "nuevo");
+                "nuevo", "nuevo", LocalDateTime.now());
 
         observer.actualizar(evento);
 
@@ -166,7 +167,7 @@ class SmsMiembroObserverTest {
 
         TrabajoEventoDTO evento = new TrabajoEventoDTO(
                 99L, "Inexistente", TrabajoEventoDTO.TipoEvento.INGRESO,
-                "alguien", "alguien");
+                "alguien", "alguien", LocalDateTime.now());
 
         assertDoesNotThrow(() -> observer.actualizar(evento));
         verify(smsService, never()).enviarSms(anyString(), anyString());
@@ -187,7 +188,7 @@ class SmsMiembroObserverTest {
 
         TrabajoEventoDTO evento = new TrabajoEventoDTO(
                 5L, "ProyectoAlpha", TrabajoEventoDTO.TipoEvento.INGRESO,
-                "nuevo", "nuevo");
+                "nuevo", "nuevo", LocalDateTime.now());
 
         observer.actualizar(evento);
 

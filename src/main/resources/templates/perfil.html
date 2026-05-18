@@ -28,12 +28,13 @@
         .form-group label{ display:block; font-size:0.82rem; color:#555; margin-bottom:5px; }
         .form-group input{ width:100%; padding:8px 10px; border:1px solid #ddd; font-size:0.9rem; outline:none; }
         .form-group input:focus{ border-color:#e67e22; }
+        .form-group small{ display:block; margin-top:4px; font-size:0.78rem; color:#888; }
         .btn-primary{ padding:8px 18px; background:#e67e22; color:white; border:none; font-size:0.85rem; cursor:pointer; }
         .btn-primary:hover{ background:#cf6d17; }
         .alert{ padding:10px 14px; font-size:0.85rem; margin-bottom:18px; border:1px solid; }
         .alert-success{ background:#eafaf1; color:#1a7a3a; border-color:#a8d8b0; }
         .alert-error{ background:#fdf0f0; color:#a02020; border-color:#e8b0b0; }
-        .help-text{ font-size:0.78rem; color:#888; margin-top:5px; }
+        .sms-icon{ font-size:1.2rem; margin-right:6px; vertical-align:middle; }
     </style>
 </head>
 <body>
@@ -44,7 +45,6 @@
         <li><a th:href="@{/dashboard}">Dashboard</a></li>
         <li><a th:href="@{/trabajos}">Mis trabajos</a></li>
         <li><a th:href="@{/trabajos/nuevo}">Nuevo trabajo</a></li>
-        <li><a th:href="@{/estadisticas}" class="active">Estadísticas</a></li>
         <li><a th:href="@{/perfil}" class="active">Mi perfil</a></li>
     </ul>
     <div class="sidebar-footer">
@@ -65,15 +65,21 @@
     <div class="content">
         <h1>Mi Perfil</h1>
 
-        <!-- Mensajes de éxito/error -->
-        <div class="alert alert-success" th:if="${successUser}"     th:text="${successUser}"></div>
-        <div class="alert alert-error"   th:if="${errorUser}"       th:text="${errorUser}"></div>
-        <div class="alert alert-success" th:if="${successPass}"     th:text="${successPass}"></div>
-        <div class="alert alert-error"   th:if="${errorPass}"       th:text="${errorPass}"></div>
-        <div class="alert alert-success" th:if="${successEmail}"    th:text="${successEmail}"></div>
-        <div class="alert alert-error"   th:if="${errorEmail}"      th:text="${errorEmail}"></div>
-        <div class="alert alert-success" th:if="${successTelegram}" th:text="${successTelegram}"></div>
-        <div class="alert alert-error"   th:if="${errorTelegram}"   th:text="${errorTelegram}"></div>
+        <!-- Mensajes de éxito/error: username -->
+        <div class="alert alert-success" th:if="${successUser}" th:text="${successUser}"></div>
+        <div class="alert alert-error"   th:if="${errorUser}"   th:text="${errorUser}"></div>
+
+        <!-- Mensajes de éxito/error: contraseña -->
+        <div class="alert alert-success" th:if="${successPass}" th:text="${successPass}"></div>
+        <div class="alert alert-error"   th:if="${errorPass}"   th:text="${errorPass}"></div>
+
+        <!-- Mensajes de éxito/error: email -->
+        <div class="alert alert-success" th:if="${successEmail}" th:text="${successEmail}"></div>
+        <div class="alert alert-error"   th:if="${errorEmail}"   th:text="${errorEmail}"></div>
+
+        <!-- Mensajes de éxito/error: teléfono SMS -->
+        <div class="alert alert-success" th:if="${successPhone}" th:text="${successPhone}"></div>
+        <div class="alert alert-error"   th:if="${errorPhone}"   th:text="${errorPhone}"></div>
 
         <!-- Formulario: cambiar username -->
         <div class="card">
@@ -113,48 +119,52 @@
             </form>
         </div>
 
-        <!-- Formulario: cambiar correo -->
+        <!-- Formulario: cambiar email -->
         <div class="card">
             <h2>Correo electrónico</h2>
             <form th:action="@{/perfil/actualizar-email}" method="post">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                 <div class="form-group">
                     <label>Correo actual</label>
-                    <input type="email" th:value="${emailActual}" disabled/>
+                    <input type="text" th:value="${emailActual}" disabled/>
                 </div>
                 <div class="form-group">
                     <label for="nuevoEmail">Nuevo correo electrónico</label>
-                    <input type="email" id="nuevoEmail" name="nuevoEmail"
-                           placeholder="ejemplo@correo.com" required/>
+                    <input type="email" id="nuevoEmail" name="nuevoEmail" required/>
                 </div>
                 <button type="submit" class="btn-primary">Actualizar correo</button>
             </form>
         </div>
 
-        <!-- Formulario: vincular Telegram -->
+        <!-- Formulario: teléfono para notificaciones SMS (Twilio) -->
         <div class="card">
-            <h2>Notificaciones por Telegram</h2>
-            <form th:action="@{/perfil/actualizar-telegram}" method="post">
+            <h2><span class="sms-icon">📱</span>Notificaciones por SMS</h2>
+            <p style="font-size:0.85rem;color:#666;margin-bottom:16px;">
+                Registra tu número de teléfono para recibir alertas de tareas por SMS.
+                Usa el formato internacional: <strong>+573001234567</strong>
+            </p>
+            <form th:action="@{/perfil/actualizar-telefono}" method="post">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                 <div class="form-group">
-                    <label>Chat ID actual</label>
-                    <input type="text" th:value="${telegramChatIdActual}" placeholder="Sin configurar" disabled/>
+                    <label>Número actual</label>
+                    <input type="text"
+                           th:value="${phoneNumberActual != null ? phoneNumberActual : 'Sin configurar'}"
+                           disabled/>
                 </div>
                 <div class="form-group">
-                    <label for="telegramChatId">Nuevo Chat ID</label>
-                    <input type="text" id="telegramChatId" name="telegramChatId"
-                           placeholder="Ej: 6456238155"/>
-                    <p class="help-text">
-                        Para obtener tu Chat ID: abre Telegram, escríbele a
-                        <strong>@userinfobot</strong> y copia el número que te responde.
-                    </p>
+                    <label for="phoneNumber">Número de teléfono</label>
+                    <input type="tel"
+                           id="phoneNumber"
+                           name="phoneNumber"
+                           placeholder="+573001234567"
+                           th:value="${phoneNumberActual}"/>
+                    <small>Formato E.164: código de país + número. Ej: +57 para Colombia.</small>
                 </div>
-                <button type="submit" class="btn-primary">Guardar Chat ID</button>
+                <button type="submit" class="btn-primary">Guardar número</button>
             </form>
         </div>
 
     </div>
-
 </div>
 
 </body>

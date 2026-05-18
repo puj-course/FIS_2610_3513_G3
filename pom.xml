@@ -89,6 +89,18 @@
         </dependency>
 
         <!-- ========================= -->
+        <!-- SMS - TWILIO -->
+        <!-- Reemplaza la integracion de Telegram (HTTP raw). -->
+        <!-- SDK oficial para envio de SMS reales. -->
+        <!-- ========================= -->
+
+        <dependency>
+            <groupId>com.twilio.sdk</groupId>
+            <artifactId>twilio</artifactId>
+            <version>10.1.0</version>
+        </dependency>
+
+        <!-- ========================= -->
         <!-- TESTING -->
         <!-- ========================= -->
 
@@ -209,7 +221,7 @@
                                         <limit>
                                             <counter>INSTRUCTION</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.70</minimum>
+                                            <minimum>0.80</minimum>
                                         </limit>
                                     </limits>
 

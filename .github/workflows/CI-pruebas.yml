@@ -29,7 +29,7 @@ jobs:
       - name: Compilar proyecto
         run: mvn compile --no-transfer-progress
 
-  # STAGE 2: Pruebas Unitarias + HU-50
+  # STAGE 2: Pruebas Unitarias + HU-50 Latencia
   test:
     name: "Stage 2 - Pruebas Unitarias"
     runs-on: ubuntu-latest
@@ -62,8 +62,8 @@ jobs:
           telegram.bot.chat-id=dummy
           PROPS
 
-      # HU-50: Test de latencia
-      # Si algún endpoint supera 500 ms,
+      # HU-50: El reporte de latencia lee los tiempos de los XMLs de Surefire.
+      # Si algún test supera 500 ms quedará marcado en rojo en el informe.
       - name: Ejecutar pruebas (incluye test de latencia)
         run: |
           mvn test \
@@ -75,12 +75,24 @@ jobs:
         if: always()
         run: python3 .github/scripts/generar_reporte.py
 
-      - name: Subir reporte de pruebas
+      - name: Generar reporte HTML de latencia (HU-50)
+        if: always()
+        run: python3 .github/scripts/generar_reporte_latencia.py
+
+      - name: Subir reporte de pruebas unitarias
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: informe-pruebas-html
-          path: target/surefire-reports/
+          path: target/test-report/
+          retention-days: 30
+
+      - name: Subir reporte de latencia
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: informe-latencia-html
+          path: target/latency-report/
           retention-days: 30
 
   # STAGE 3: Cobertura de Código (JaCoCo)
@@ -155,16 +167,28 @@ jobs:
 
       - name: Ejecutar Checkstyle
         run: |
-          mvn checkstyle:check \
+          mvn checkstyle:checkstyle \
             --no-transfer-progress \
             || echo "⚠️ Checkstyle encontró problemas"
 
-      - name: Subir reporte Checkstyle
+      - name: Generar reporte HTML de Checkstyle
+        if: always()
+        run: python3 .github/scripts/generar_reporte_checkstyle.py
+
+      - name: Subir reporte Checkstyle (XML)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: checkstyle-report
+          name: checkstyle-report-xml
           path: target/checkstyle-result.xml
+          retention-days: 30
+
+      - name: Subir reporte Checkstyle (HTML)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkstyle-report-html
+          path: target/checkstyle-report/
           retention-days: 30
 
   # STAGE 5: SonarQube Quality Gate
