@@ -1,6 +1,5 @@
 version: '3.8'
 
-# ── Servicios ─────────────────────────────────────────────────────────────────
 services:
 
   # ── Base de datos PostgreSQL ────────────────────────────────────────────────
@@ -19,7 +18,9 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./init-scripts:/docker-entrypoint-initdb.d:ro
     networks:
-      - entregaya_network
+      - backend_db
+      - pgadmin_db
+      - tests_db
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-entregaya_user} -d entregaya"]
       interval: 10s
@@ -27,12 +28,12 @@ services:
       retries: 5
       start_period: 10s
 
-  # ── Aplicación Spring Boot ──────────────────────────────────────────────────
-  app:
+  # ── Backend (Spring Boot) ───────────────────────────────────────────────
+  backend:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: entregaya_app
+    container_name: entregaya_backend
     restart: on-failure
     ports:
       - "8081:8081"
@@ -48,13 +49,54 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - entregaya_network
+      - backend_db
+      - frontend_backend
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8081/login || exit 1"]
       interval: 30s
       timeout: 10s
       start_period: 90s
       retries: 3
+
+  # ── Frontend (aplicación web) ────────────────────────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: entregaya_frontend
+    restart: on-failure
+    ports:
+      - "80:80"
+    environment:
+      REACT_APP_API_URL: http://backend:8081
+      NODE_ENV: production
+    depends_on:
+      - backend
+    networks:
+      - frontend_backend
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:80/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── Tests ────────────────────────────────────────────────────────────────────
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.tests
+    container_name: entregaya_tests
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/entregaya_test
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-entregaya_user}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-tu_password_real}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - tests_db  # Tests → DB
+    volumes:
+      - ./target/surefire-reports:/app/target/surefire-reports
 
   # ── pgAdmin (administración web de la DB) ──────────────────────────────────
   pgadmin:
@@ -70,7 +112,7 @@ services:
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     networks:
-      - entregaya_network
+      - pgadmin_db  # pgAdmin → DB (SOLO conexión con DB)
     depends_on:
       - postgres
 
@@ -79,7 +121,9 @@ volumes:
   postgres_data:
   pgadmin_data:
 
-# ── Red interna ───────────────────────────────────────────────────────────────
+# ── Redes específicas para cada comunicación ──────────────────────────────────
 networks:
-  entregaya_network:
-    driver: bridge
+  backend_db:        # Backend ↔ Database
+  pgadmin_db:        # pgAdmin ↔ Database
+  tests_db:          # Tests ↔ Database
+  frontend_backend:  # Frontend → Backend

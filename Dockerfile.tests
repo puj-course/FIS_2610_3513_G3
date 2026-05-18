@@ -1,0 +1,23 @@
+# ── Imagen base con Maven y JDK para compilar y ejecutar tests ──────────────
+FROM maven:3.9.6-eclipse-temurin-17
+
+WORKDIR /app
+
+# Descargar dependencias
+COPY pom.xml .
+RUN mvn dependency:go-offline -q
+
+# Copiar código fuente y tests
+COPY src ./src
+
+# Variables de entorno para tests
+ENV SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/entregaya_test \
+    SPRING_DATASOURCE_USERNAME=entregaya_user \
+    SPRING_DATASOURCE_PASSWORD=tu_password_real \
+    SPRING_PROFILES_ACTIVE=test
+
+# Crear carpeta para reportes
+RUN mkdir -p /app/target/surefire-reports
+
+# Ejecutar tests
+CMD ["mvn", "clean", "test", "-Dmaven.test.failure.ignore=true"]

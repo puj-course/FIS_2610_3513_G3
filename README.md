@@ -71,12 +71,78 @@ Requisitos
 ## Clonar repositorio
 ```bash
 git clone https://github.com/puj-course/FIS_2610_3513_G3.git
+cd FIS_2610_3513_G3
 ```
 
-## Ejecucion Docker
+## 🚀 Despliegue
+
+### Requisitos previos
+- Docker y Docker Compose instalados
+- Git
+
+### 1. Configurar variables de entorno
 ```bash
-docker-compose up -d
+cp .env.example .env
 ```
+
+Editar `.env` con los valores reales:
+
+| Variable | Descripción | Valor por defecto |
+|----------|-------------|-------------------|
+| `DB_USER` | Usuario de PostgreSQL | `entregaya_user` |
+| `DB_PASSWORD` | Contraseña de PostgreSQL | (cambiar) |
+| `DB_NAME` | Nombre de la base de datos | `entregaya` |
+| `DB_HOST` | Host de la BD (nombre del servicio Docker) | `postgres` |
+| `DB_PORT` | Puerto de PostgreSQL | `5432` |
+| `PGADMIN_EMAIL` | Email para pgAdmin | `admin@entregaya.com` |
+| `PGADMIN_PASSWORD` | Contraseña de pgAdmin | (cambiar) |
+| `TELEGRAM_BOT_TOKEN` | Token del bot (obtener de @BotFather) | `SIN_CONFIGURAR` |
+| `TELEGRAM_CHAT_ID` | Chat ID para notificaciones | `SIN_CONFIGURAR` |
+| `SERVER_PORT` | Puerto de la aplicación | `8081` |
+| `SPRING_PROFILES_ACTIVE` | Perfil de Spring | `docker` |
+
+### 2. Levantar los servicios
+```bash
+docker compose up --build -d
+```
+
+### 3. Verificar que todo esté corriendo
+```bash
+docker compose ps
+```
+
+Debe mostrar 3 servicios corriendo:
+
+| Servicio | Puerto | Descripción |
+|----------|--------|-------------|
+| `entregaya_app` | `8081` | Aplicación Spring Boot |
+| `entregaya_db` | `5432` | Base de datos PostgreSQL 15 |
+| `pgadmin_entregaya` | `8080` | Panel de administración de BD |
+
+### 4. Acceder a la aplicación
+- **App:** http://localhost:8081
+- **pgAdmin:** http://localhost:8080
+
+### 5. Ver logs
+```bash
+docker compose logs -f app
+```
+
+### 6. Detener los servicios
+```bash
+docker compose down
+```
+
+Para borrar también los volúmenes (datos de BD):
+```bash
+docker compose down -v
+```
+
+### Red Docker
+Los 3 servicios se comunican por la red interna `entregaya-network`. La app se conecta a PostgreSQL usando el hostname `postgres` (nombre del servicio en docker-compose).
+
+### Pipeline CD
+El pipeline de despliegue continuo se ejecuta automáticamente al hacer push a `main`. Construye la imagen Docker, la publica en DockerHub y notifica por Telegram. Ver evidencias en [`docs/evidencias/`](docs/evidencias/).
 
 ## Depuración con SonarQube
 
