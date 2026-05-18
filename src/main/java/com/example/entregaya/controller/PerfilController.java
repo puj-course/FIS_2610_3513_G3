@@ -27,7 +27,7 @@ public class PerfilController {
     public String perfil(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         userDetailsService.findByUsername(userDetails.getUsername()).ifPresent(user -> {
             model.addAttribute("emailActual", user.getEmail());
-            model.addAttribute("telegramChatIdActual", user.getTelegramChatId());
+            model.addAttribute("phoneNumberActual", user.getPhoneNumber());
         });
         return "perfil";
     }
@@ -75,15 +75,22 @@ public class PerfilController {
         return REDIRECT_PERFIL;
     }
 
-    @PostMapping("/perfil/actualizar-telegram")
-    public String actualizarTelegram(@RequestParam("telegramChatId") String telegramChatId,
+    /**
+     * Actualiza el número de teléfono del usuario para recibir notificaciones SMS (Twilio).
+     * El número debe estar en formato E.164, por ejemplo: +573001234567
+     *
+     * Reemplaza /perfil/actualizar-telegram de la integración anterior.
+     */
+    @PostMapping("/perfil/actualizar-telefono")
+    public String actualizarTelefono(@RequestParam("phoneNumber") String phoneNumber,
                                      @AuthenticationPrincipal UserDetails userDetails,
                                      RedirectAttributes redirectAttributes) {
         try {
-            userDetailsService.actualizarTelegramChatId(userDetails.getUsername(), telegramChatId);
-            redirectAttributes.addFlashAttribute("successTelegram", "Telegram Chat ID actualizado correctamente.");
+            userDetailsService.actualizarPhoneNumber(userDetails.getUsername(), phoneNumber);
+            redirectAttributes.addFlashAttribute("successPhone",
+                    "Número de teléfono actualizado. Recibirás notificaciones SMS en ese número.");
         } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute("errorTelegram", e.getMessage());
+            redirectAttributes.addFlashAttribute("errorPhone", e.getMessage());
         }
         return REDIRECT_PERFIL;
     }

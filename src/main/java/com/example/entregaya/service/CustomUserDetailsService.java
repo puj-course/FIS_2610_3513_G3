@@ -130,11 +130,21 @@ public class CustomUserDetailsService implements UserDetailsService {
         userRepository.save(user);
     }
 
-    // Actualizar Telegram Chat ID
-    public void actualizarTelegramChatId(String username, String telegramChatId) {
+    /**
+     * Actualiza el número de teléfono del usuario (formato E.164, ej. +573001234567).
+     * Se usa para recibir notificaciones SMS vía Twilio.
+     *
+     * Reemplaza actualizarTelegramChatId() de la integración anterior.
+     */
+    public void actualizarPhoneNumber(String username, String phoneNumber) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
-        user.setTelegramChatId(telegramChatId == null || telegramChatId.isBlank() ? null : telegramChatId.trim());
+        if (phoneNumber != null && !phoneNumber.isBlank() &&
+                !phoneNumber.trim().matches("^\\+[1-9]\\d{7,14}$")) {
+            throw new IllegalArgumentException(
+                    "El número de teléfono debe estar en formato E.164 (ej. +573001234567).");
+        }
+        user.setPhoneNumber(phoneNumber == null || phoneNumber.isBlank() ? null : phoneNumber.trim());
         userRepository.save(user);
     }
 
