@@ -139,12 +139,12 @@ class UserModelTest {
     void CP05_settersEmailYTelegram_AsignanCorrectamente() {
         User u = new User();
         u.setEmail("alice@test.com");
-        u.setTelegramChatId("987654321");
+        u.setPhoneNumber("987654321");
         u.setUsername("alice");
         u.setPassword("newpass");
 
         assertEquals("alice@test.com", u.getEmail());
-        assertEquals("987654321", u.getTelegramChatId());
+        assertEquals("987654321", u.getPhoneNumber());
         assertEquals("alice", u.getUsername());
         assertEquals("newpass", u.getPassword());
     }
@@ -155,7 +155,7 @@ class UserModelTest {
     void CP06_telegramChatId_SinAsignar_RetornaNull() {
         User u = new User(1L, "alice", "pass");
 
-        assertNull(u.getTelegramChatId());
+        assertNull(u.getPhoneNumber());
     }
 }
 
