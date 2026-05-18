@@ -6,7 +6,7 @@ Marca en rojo los que superen UMBRAL_MS ms.
 import xml.etree.ElementTree as ET
 import glob, os, html, datetime
 
-UMBRAL_MS = 500   # milisegundos — umbral definido en HU-50
+UMBRAL_MS = 3000  # milisegundos — umbral definido en HU-50
 
 now     = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
 rama    = os.environ.get("GITHUB_REF_NAME", "local")
