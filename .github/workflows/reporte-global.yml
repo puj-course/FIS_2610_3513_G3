@@ -1,0 +1,364 @@
+name: Global Sprint Report
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '59 4 * * 0'
+
+permissions:
+  contents: write
+
+jobs:
+  global-report:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout (historial completo)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Crear carpeta de reportes
+        run: mkdir -p docs/reporte
+
+      # ── 1. Obtener TODOS los issues con paginación ───────────────────────────
+      # La query anterior traía solo 100 items; con paginación se recorren todos.
+      - name: Obtener todos los issues del Project (paginado)
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          node << 'PAGINATOR'
+          const { execSync } = require('child_process');
+          const fs = require('fs');
+
+          let allItems = [];
+          let cursor   = null;
+          let page     = 0;
+
+          while (true) {
+            page++;
+            const afterClause = cursor ? `, after: "${cursor}"` : '';
+
+            const query = `
+              query($org: String!, $num: Int!) {
+                organization(login: $org) {
+                  projectV2(number: $num) {
+                    items(first: 100${afterClause}) {
+                      pageInfo { hasNextPage endCursor }
+                      nodes {
+                        content {
+                          ... on Issue {
+                            number
+                            title
+                            state
+                            assignees(first: 10) { nodes { login } }
+                          }
+                        }
+                        fieldValues(first: 15) {
+                          nodes {
+                            ... on ProjectV2ItemFieldIterationValue {
+                              title
+                              startDate
+                              duration
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            `;
+
+            const result = execSync(
+              `gh api graphql -f query='${query.replace(/'/g,"\\'")}' -f org="puj-course" -F num=61`,
+              { encoding: 'utf8', env: { ...process.env } }
+            );
+
+            const data = JSON.parse(result);
+            const projectItems = data.data.organization.projectV2.items;
+
+            allItems = allItems.concat(projectItems.nodes);
+            console.log(`Página ${page}: ${projectItems.nodes.length} items (total: ${allItems.length})`);
+
+            if (!projectItems.pageInfo.hasNextPage) break;
+            cursor = projectItems.pageInfo.endCursor;
+          }
+
+          fs.writeFileSync('issues_data.json', JSON.stringify({ items: allItems }, null, 2));
+          console.log(`Total items obtenidos: ${allItems.length}`);
+          PAGINATOR
+
+      # ── 2. Exportar historial de commits ────────────────────────────────────
+      - name: Exportar commits por autor
+        run: |
+          git log --format="%ai|%an|%ae" > commits_raw.csv
+          echo "Total commits: $(wc -l < commits_raw.csv)"
+
+      # ── 3. Generar reporte global ────────────────────────────────────────────
+      - name: Generar reporte global
+        run: |
+          node << 'EOF'
+          const fs = require('fs');
+
+          // ── Leer issues ───────────────────────────────────────────────────────
+          const { items } = JSON.parse(fs.readFileSync('issues_data.json', 'utf8'));
+
+          // ── Agrupar por sprint ────────────────────────────────────────────────
+          // Un item puede no tener iteración; se ignora en el reporte por sprint
+          // pero sí se cuenta en el global de issues.
+          const sprintMap = {};   // { sprintName: { startDate, duration, issues[] } }
+
+          for (const item of items) {
+            const issue = item.content;
+            if (!issue || !issue.title) continue;
+
+            // Buscar el campo de iteración entre todos los fieldValues
+            const iteration = item.fieldValues.nodes.find(
+              f => f.title && f.startDate !== undefined
+            );
+
+            if (!iteration) continue;  // issue sin sprint asignado
+
+            const sName = iteration.title.trim();
+
+            if (!sprintMap[sName]) {
+              sprintMap[sName] = {
+                startDate: new Date(iteration.startDate),
+                duration:  typeof iteration.duration === 'number' ? iteration.duration : 14,
+                issues:    []
+              };
+            } else {
+              // Actualizar startDate si hay inconsistencias (tomar la más temprana)
+              const d = new Date(iteration.startDate);
+              if (d < sprintMap[sName].startDate) sprintMap[sName].startDate = d;
+            }
+
+            sprintMap[sName].issues.push({
+              number:    issue.number,
+              title:     issue.title,
+              state:     issue.state,
+              assignees: issue.assignees.nodes.map(a => a.login)
+            });
+          }
+
+          // Ordenar sprints por fecha de inicio
+          const sprints = Object.entries(sprintMap)
+            .sort((a, b) => a[1].startDate - b[1].startDate);
+
+          console.log(`Sprints detectados (${sprints.length}): ${sprints.map(s=>s[0]).join(', ')}`);
+
+          // ── Leer y parsear commits ────────────────────────────────────────────
+          // Usamos | como separador para evitar conflictos con comas en nombres
+          const commitLines = fs.readFileSync('commits_raw.csv', 'utf8')
+            .trim().split('\n')
+            .filter(l => l.includes('|'));
+
+          const allCommits = commitLines.map(line => {
+            const parts  = line.split('|');
+            const dateStr = parts[0].trim();
+            const author  = parts[1] ? parts[1].trim() : 'Unknown';
+            return { date: new Date(dateStr), author };
+          }).filter(c => !isNaN(c.date.getTime()));
+
+          console.log(`Commits parseados: ${allCommits.length}`);
+
+          // ── Asignar commits a sprints por fecha ──────────────────────────────
+          // Estrategia: si hay N sprints, el sprint i cubre desde su startDate
+          // hasta el startDate del siguiente sprint (o hasta hoy si es el último).
+          // Esto evita que commits caigan "entre" sprints por el campo duration.
+          const sprintCommits = {};
+
+          for (let i = 0; i < sprints.length; i++) {
+            const [sName, sData] = sprints[i];
+            const start = sData.startDate;
+
+            // Fin del sprint = inicio del siguiente sprint (o fecha actual)
+            const end = i + 1 < sprints.length
+              ? sprints[i + 1][1].startDate
+              : new Date();
+
+            sprintCommits[sName] = {};
+
+            for (const c of allCommits) {
+              if (c.date >= start && c.date < end) {
+                sprintCommits[sName][c.author] =
+                  (sprintCommits[sName][c.author] || 0) + 1;
+              }
+            }
+          }
+
+          // ── Commits globales ─────────────────────────────────────────────────
+          const globalCommits = {};
+          for (const c of allCommits) {
+            globalCommits[c.author] = (globalCommits[c.author] || 0) + 1;
+          }
+          const totalCommits = allCommits.length;
+
+          const commitsPorSprint = sprints.map(([sName]) =>
+            Object.values(sprintCommits[sName] || {}).reduce((a,b)=>a+b,0)
+          );
+          const promedioPorSprint = sprints.length > 0
+            ? (totalCommits / sprints.length).toFixed(1)
+            : 0;
+
+          // ── Construir markdown ────────────────────────────────────────────────
+          const today = new Date().toISOString().split('T')[0];
+          let md = `# Reporte Global de Sprints — EntregaYa\n\n`;
+          md += `> Generado automáticamente el ${today}\n\n`;
+          md += `---\n\n`;
+
+          // Resumen ejecutivo
+          md += `## Resumen global del proyecto\n\n`;
+          md += `| Métrica | Valor |\n`;
+          md += `|---------|-------|\n`;
+          md += `| Total de sprints | ${sprints.length} |\n`;
+          md += `| Total de commits | ${totalCommits} |\n`;
+          md += `| Promedio de commits por sprint | ${promedioPorSprint} |\n`;
+          md += `| Total de issues con sprint asignado | ${items.filter(i => i.content && i.content.title && i.fieldValues.nodes.some(f => f.title && f.startDate !== undefined)).length} |\n\n`;
+
+          // Tabla global de commits por integrante
+          md += `### Commits por integrante (proyecto completo)\n\n`;
+          md += `| Integrante | Commits totales | % de aporte |\n`;
+          md += `|------------|-----------------|-------------|\n`;
+          const sortedGlobal = Object.entries(globalCommits).sort((a,b) => b[1]-a[1]);
+          for (const [autor, count] of sortedGlobal) {
+            const pct = totalCommits > 0
+              ? ((count / totalCommits) * 100).toFixed(1) : '0.0';
+            md += `| ${autor} | ${count} | ${pct}% |\n`;
+          }
+          md += `\n`;
+
+          // Tabla resumen de commits por sprint (vista compacta)
+          md += `### Commits por sprint (resumen)\n\n`;
+          md += `| Sprint | Commits | Promedio del proyecto |\n`;
+          md += `|--------|---------|----------------------|\n`;
+          for (let i = 0; i < sprints.length; i++) {
+            const [sName] = sprints[i];
+            md += `| ${sName} | ${commitsPorSprint[i]} | ${promedioPorSprint} |\n`;
+          }
+          md += `\n---\n\n`;
+
+          // ── Detalle por sprint ────────────────────────────────────────────────
+          md += `## Detalle por sprint\n\n`;
+
+          for (let i = 0; i < sprints.length; i++) {
+            const [sName, sData] = sprints[i];
+            const endDate = i + 1 < sprints.length
+              ? sprints[i + 1][1].startDate
+              : new Date();
+            const startStr = sData.startDate.toISOString().split('T')[0];
+            const endStr   = endDate.toISOString().split('T')[0];
+
+            md += `### ${sName}\n\n`;
+            md += `**Período:** ${startStr} → ${endStr}\n\n`;
+
+            // Issues
+            const issues    = sData.issues;
+            const cerrados  = issues.filter(i => i.state === 'CLOSED');
+            const abiertos  = issues.filter(i => i.state !== 'CLOSED');
+            const huStories = issues.filter(i => i.title.toUpperCase().includes('HU-'));
+            const totalIss  = issues.length;
+            const pctCumpl  = totalIss > 0
+              ? ((cerrados.length / totalIss) * 100).toFixed(1) : '0.0';
+
+            md += `#### Issues\n\n`;
+            md += `| Métrica | Valor |\n`;
+            md += `|---------|-------|\n`;
+            md += `| Total issues | ${totalIss} |\n`;
+            md += `| Completados | ${cerrados.length} |\n`;
+            md += `| Pendientes | ${abiertos.length} |\n`;
+            md += `| % Cumplimiento | ${pctCumpl}% |\n`;
+            md += `| Historias de usuario | ${huStories.length} |\n\n`;
+
+            if (huStories.length > 0) {
+              md += `**Historias de usuario:**\n`;
+              for (const hu of huStories) {
+                md += `- #${hu.number} ${hu.title}\n`;
+              }
+              md += `\n`;
+            }
+
+            if (cerrados.length > 0) {
+              md += `**Issues completados:**\n`;
+              for (const iss of cerrados) {
+                const asig = iss.assignees.length
+                  ? iss.assignees.map(a => `@${a}`).join(', ')
+                  : 'sin asignar';
+                md += `- #${iss.number} ${iss.title} _(${asig})_\n`;
+              }
+              md += `\n`;
+            }
+
+            if (abiertos.length > 0) {
+              md += `**Issues pendientes:**\n`;
+              for (const iss of abiertos) {
+                const asig = iss.assignees.length
+                  ? iss.assignees.map(a => `@${a}`).join(', ')
+                  : 'sin asignar';
+                md += `- #${iss.number} ${iss.title} _(${asig})_\n`;
+              }
+              md += `\n`;
+            }
+
+            // Issues por integrante
+            const usuariosIss = {};
+            for (const iss of issues) {
+              for (const u of iss.assignees) {
+                if (!usuariosIss[u]) usuariosIss[u] = { asignados: 0, completados: 0 };
+                usuariosIss[u].asignados++;
+                if (iss.state === 'CLOSED') usuariosIss[u].completados++;
+              }
+            }
+            if (Object.keys(usuariosIss).length > 0) {
+              md += `**Issues por integrante:**\n\n`;
+              md += `| Integrante | Asignados | Completados | % Cumplimiento |\n`;
+              md += `|------------|-----------|-------------|----------------|\n`;
+              for (const [u, d] of Object.entries(usuariosIss)) {
+                const p = d.asignados > 0
+                  ? ((d.completados / d.asignados) * 100).toFixed(1) : '0.0';
+                md += `| @${u} | ${d.asignados} | ${d.completados} | ${p}% |\n`;
+              }
+              md += `\n`;
+            }
+
+            // Commits del sprint
+            const commitsSprint    = sprintCommits[sName] || {};
+            const totalCommitsSp   = commitsPorSprint[i];
+
+            md += `#### Commits\n\n`;
+            md += `| Métrica | Valor |\n`;
+            md += `|---------|-------|\n`;
+            md += `| Commits en el sprint | ${totalCommitsSp} |\n`;
+            md += `| Promedio del proyecto | ${promedioPorSprint} |\n\n`;
+
+            if (totalCommitsSp > 0) {
+              md += `**Commits por integrante:**\n\n`;
+              md += `| Integrante | Commits | % de aporte |\n`;
+              md += `|------------|---------|-------------|\n`;
+              const sortedSp = Object.entries(commitsSprint).sort((a,b)=>b[1]-a[1]);
+              for (const [autor, cnt] of sortedSp) {
+                const pct = ((cnt / totalCommitsSp) * 100).toFixed(1);
+                md += `| ${autor} | ${cnt} | ${pct}% |\n`;
+              }
+              md += `\n`;
+            } else {
+              md += `> Sin commits registrados en el período de este sprint.\n\n`;
+            }
+
+            md += `---\n\n`;
+          }
+
+          const fileName = `docs/reporte/reporte-global-${today}.md`;
+          fs.writeFileSync(fileName, md);
+          console.log(`Reporte escrito en: ${fileName}`);
+          EOF
+
+      # ── 4. Commit y push ─────────────────────────────────────────────────────
+      - name: Subir reporte global
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add docs/reporte/
+          git commit -m "docs: reporte global de sprints $(date +%Y-%m-%d)" || echo "Sin cambios"
+          git push

@@ -7,16 +7,16 @@ Fecha generación: 2026-05-13
 | Métrica | Valor |
 |----------|-------|
 | Total Issues | 344 |
-| Issues Cerrados | 332 |
-| Issues Abiertos | 12 |
+| Issues Cerrados | 334 |
+| Issues Abiertos | 10 |
 
 # 2. Historias de Usuario
 
 | Métrica | Valor |
 |----------|-------|
 | Total Historias | 50 |
-| Historias Cerradas | 47 |
-| Historias Abiertas | 3 |
+| Historias Cerradas | 48 |
+| Historias Abiertas | 2 |
 
 ## Historias Detectadas
 
@@ -24,7 +24,7 @@ Fecha generación: 2026-05-13
 |-----------|--------|
 | #568 HU-53: Resolver los 105 open issues de SonarQube Como equipo, quiero reducir los open issues críticos detectados por SonarQube para mejorar la mantenibilidad y seguridad del sistema, asegurando que ningún issue de severi... | open |
 | #564 HU-52: Aumentar la cobertura de pruebas al 80% en SonarQube Como equipo de desarrollo, quiero que las pruebas unitarias cubran al menos el 80% del código de producción verificado en SonarQube, para que el Quality Gate pa... | open |
-| #560 HU-51: Corregir el pipeline CI y validar Quality Gate de SonarQube Como desarrollador, quiero que el archivo CI-pruebas.yml sea un workflow válido de GitHub Actions con sus triggers correctos, y que bloquee el build si e... | open |
+| #560 HU-51: Corregir el pipeline CI y validar Quality Gate de SonarQube Como desarrollador, quiero que el archivo CI-pruebas.yml sea un workflow válido de GitHub Actions con sus triggers correctos, y que bloquee el build si e... | closed |
 | #555 HU-50: Implementar métrica de rendimiento en el código como desarrollador del equipo, quiero medir la latencia de los endpoints REST del sistema de forma automática, para identificar cuellos de botella... | closed |
 | #503 HU-48: Ampliar pruebas unitarias a servicios y repositorios | closed |
 | #497 R2: Pipeline CI con reporte integrado de todas las métricas y pruebas | closed |
@@ -77,8 +77,8 @@ Fecha generación: 2026-05-13
 
 | Métrica | Valor |
 |----------|-------|
-| Total PRs | 284 |
-| PRs Mergeados | 247 |
+| Total PRs | 287 |
+| PRs Mergeados | 250 |
 | PRs Abiertos | 0 |
 | PRs Cerrados sin Merge | 37 |
 
@@ -86,9 +86,9 @@ Fecha generación: 2026-05-13
 
 | Usuario | Commits |
 |----------|----------|
-| @barretordaniel | 218 |
+| @barretordaniel | 233 |
 | @Silverweta20 | 155 |
-| @andresj-castrillo | 110 |
+| @andresj-castrillo | 112 |
 | @echaustre12 | 73 |
 | @Juanjoyt2 | 42 |
 | @actions-user | 10 |
@@ -98,7 +98,7 @@ Fecha generación: 2026-05-13
 
 | Usuario | Asignados | Cerrados |
 |----------|------------|-----------|
-| @andresj-castrillo | 133 | 131 |
+| @andresj-castrillo | 133 | 133 |
 | @echaustre12 | 125 | 125 |
 | @barretordaniel | 120 | 117 |
 | @Silverweta20 | 119 | 115 |
@@ -114,7 +114,7 @@ Fecha generación: 2026-05-13
 | Implementar patrones GoF | open | 0 | 55 |
 | Sprint: Edición, comunicación y visualización de trabajos y tareas | open | 0 | 26 |
 | Segunda Entrega | open | 0 | 27 |
-| Calidad y métricas | open | 12 | 73 |
+| Calidad y métricas | open | 10 | 75 |
 
 # 7. Estructura de Ramas
 
