@@ -35,22 +35,22 @@ class RecordatorioSchedulerTest {
     private NotificacionRepository notificacionRepository;
 
     @Mock
-    private TelegramNotificacionService telegramService;
+    private TwilioSmsService smsService;
 
     @InjectMocks
     private RecordatorioScheduler scheduler;
 
-    private User userSinTelegram;
-    private User userConTelegram;
+    private User userSinPhone;
+    private User userConPhone;
     private Tarea tarea;
 
     @BeforeEach
     void setUp() {
-        userSinTelegram = new User(1L, "alice", "pass");
-        userSinTelegram.setTelegramChatId(null);
+        userSinPhone = new User(1L, "alice", "pass");
+        userSinPhone.setPhoneNumber(null);
 
-        userConTelegram = new User(2L, "bob", "pass");
-        userConTelegram.setTelegramChatId("123456789");
+        userConPhone = new User(2L, "bob", "pass");
+        userConPhone.setPhoneNumber("+573001234567");
 
         tarea = new Tarea();
         tarea.setId(1L);
@@ -69,15 +69,15 @@ class RecordatorioSchedulerTest {
         scheduler.enviarRecordatoriosVencimiento();
 
         verify(notificacionRepository, never()).save(any());
-        verify(telegramService, never()).enviarMensaje(any(), any());
+        verify(smsService, never()).enviarSms(any(), any());
     }
 
-    // CP02 - NORMAL: tarea con responsable sin Telegram solo guarda notificación interna
+    // CP02 - NORMAL: tarea con responsable sin teléfono solo guarda notificación interna
     @Test
-    @DisplayName("CP02: responsable sin telegramChatId recibe notificación interna pero no Telegram")
-    void CP02_enviarRecordatorios_ResponsableSinTelegram_SoloNotificacionInterna() {
+    @DisplayName("CP02: responsable sin phoneNumber recibe notificación interna pero no SMS")
+    void CP02_enviarRecordatorios_ResponsableSinPhone_SoloNotificacionInterna() {
         Set<User> responsables = new HashSet<>();
-        responsables.add(userSinTelegram);
+        responsables.add(userSinPhone);
         tarea.setResponsables(responsables);
 
         when(tareaRepository.findTareasProximasAVencer(any(), any()))
@@ -86,17 +86,17 @@ class RecordatorioSchedulerTest {
         scheduler.enviarRecordatoriosVencimiento();
 
         verify(notificacionRepository, times(1)).save(any(Notificacion.class));
-        verify(telegramService, never()).enviarMensaje(any(), any());
+        verify(smsService, never()).enviarSms(any(), any());
         verify(tareaRepository, times(1)).save(tarea);
         assertTrue(tarea.isRecordatorioEnviado());
     }
 
-    // CP03 - NORMAL: responsable con Telegram recibe notificación interna Y Telegram
+    // CP03 - NORMAL: responsable con teléfono recibe notificación interna Y SMS
     @Test
-    @DisplayName("CP03: responsable con telegramChatId recibe notificación interna y Telegram")
-    void CP03_enviarRecordatorios_ResponsableConTelegram_EnviaAmbas() {
+    @DisplayName("CP03: responsable con phoneNumber recibe notificación interna y SMS")
+    void CP03_enviarRecordatorios_ResponsableConPhone_EnviaAmbas() {
         Set<User> responsables = new HashSet<>();
-        responsables.add(userConTelegram);
+        responsables.add(userConPhone);
         tarea.setResponsables(responsables);
 
         when(tareaRepository.findTareasProximasAVencer(any(), any()))
@@ -105,7 +105,7 @@ class RecordatorioSchedulerTest {
         scheduler.enviarRecordatoriosVencimiento();
 
         verify(notificacionRepository, times(1)).save(any(Notificacion.class));
-        verify(telegramService, times(1)).enviarMensaje(eq("123456789"), anyString());
+        verify(smsService, times(1)).enviarSms(eq("+573001234567"), anyString());
         assertTrue(tarea.isRecordatorioEnviado());
     }
 
@@ -114,7 +114,7 @@ class RecordatorioSchedulerTest {
     @DisplayName("CP04: la notificación guardada contiene el nombre de la tarea")
     void CP04_enviarRecordatorios_MensajeContieneNombreTarea() {
         Set<User> responsables = new HashSet<>();
-        responsables.add(userSinTelegram);
+        responsables.add(userSinPhone);
         tarea.setResponsables(responsables);
 
         when(tareaRepository.findTareasProximasAVencer(any(), any()))
@@ -134,8 +134,8 @@ class RecordatorioSchedulerTest {
     @DisplayName("CP05: tarea con varios responsables genera una notificación por cada uno")
     void CP05_enviarRecordatorios_VariosResponsables_GeneraMultiplesNotificaciones() {
         Set<User> responsables = new HashSet<>();
-        responsables.add(userSinTelegram);
-        responsables.add(userConTelegram);
+        responsables.add(userSinPhone);
+        responsables.add(userConPhone);
         tarea.setResponsables(responsables);
 
         when(tareaRepository.findTareasProximasAVencer(any(), any()))
@@ -144,7 +144,7 @@ class RecordatorioSchedulerTest {
         scheduler.enviarRecordatoriosVencimiento();
 
         verify(notificacionRepository, times(2)).save(any(Notificacion.class));
-        verify(telegramService, times(1)).enviarMensaje(anyString(), anyString());
+        verify(smsService, times(1)).enviarSms(anyString(), anyString());
     }
 
     // CP06 - NORMAL: múltiples tareas se procesan todas
@@ -157,7 +157,7 @@ class RecordatorioSchedulerTest {
         tarea2.setRecordatorioEnviado(false);
 
         Set<User> responsables = new HashSet<>();
-        responsables.add(userSinTelegram);
+        responsables.add(userSinPhone);
         tarea.setResponsables(responsables);
         tarea2.setResponsables(responsables);
 
@@ -184,17 +184,17 @@ class RecordatorioSchedulerTest {
         scheduler.enviarRecordatoriosVencimiento();
 
         verify(notificacionRepository, never()).save(any());
-        verify(telegramService, never()).enviarMensaje(any(), any());
+        verify(smsService, never()).enviarSms(any(), any());
         assertTrue(tarea.isRecordatorioEnviado());
     }
 
-    // CP08 - BORDE: telegramChatId vacío no envía Telegram
+    // CP08 - BORDE: phoneNumber en blanco no envía SMS
     @Test
-    @DisplayName("CP08: telegramChatId en blanco no envía mensaje Telegram")
-    void CP08_enviarRecordatorios_TelegramIdEnBlanco_NoEnviaTelegram() {
-        userConTelegram.setTelegramChatId("   "); // blank, not null
+    @DisplayName("CP08: phoneNumber en blanco no envía SMS")
+    void CP08_enviarRecordatorios_PhoneEnBlanco_NoEnviaSms() {
+        userConPhone.setPhoneNumber("   "); // blank, not null
         Set<User> responsables = new HashSet<>();
-        responsables.add(userConTelegram);
+        responsables.add(userConPhone);
         tarea.setResponsables(responsables);
 
         when(tareaRepository.findTareasProximasAVencer(any(), any()))
@@ -203,6 +203,6 @@ class RecordatorioSchedulerTest {
         scheduler.enviarRecordatoriosVencimiento();
 
         verify(notificacionRepository, times(1)).save(any());
-        verify(telegramService, never()).enviarMensaje(any(), any());
+        verify(smsService, never()).enviarSms(any(), any());
     }
 }

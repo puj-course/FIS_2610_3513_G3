@@ -30,8 +30,13 @@ public class User {
     @Column(unique = true)
     private String email;
 
-    @Column(name = "telegram_chat_id")
-    private String telegramChatId;
+    /**
+     * Número de teléfono del usuario en formato E.164 (ej. +573001234567).
+     * Se usa para enviar notificaciones SMS a través de Twilio.
+     * Reemplaza el campo telegram_chat_id de la integración anterior.
+     */
+    @Column(name = "phone_number")
+    private String phoneNumber;
 
     // Relación a través de ColaboradorTrabajo
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -107,11 +112,11 @@ public class User {
         this.email = email;
     }
 
-    public String getTelegramChatId() {
-        return telegramChatId;
+    public String getPhoneNumber() {
+        return phoneNumber;
     }
 
-    public void setTelegramChatId(String telegramChatId) {
-        this.telegramChatId = telegramChatId;
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 }
